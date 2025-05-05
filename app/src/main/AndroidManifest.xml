@@ -28,6 +28,8 @@
 
         <activity android:name=".presentation.login.SignUpActivity" />
 
+        <activity android:name=".presentation.main.MainActivity" />
+
     </application>
 
 </manifest>

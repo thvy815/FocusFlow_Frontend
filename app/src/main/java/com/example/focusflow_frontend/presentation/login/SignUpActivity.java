@@ -10,8 +10,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.api.UserService;
+import com.example.focusflow_frontend.data.api.UserController;
 import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.utils.ApiClient;
 
 import retrofit2.Call;
@@ -21,7 +22,7 @@ import retrofit2.Response;
 public class SignUpActivity extends AppCompatActivity {
     EditText edtUsername, edtEmail, edtPassword;
     Button btnSignUp;
-    UserService userService;
+    UserController userController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +40,8 @@ public class SignUpActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        userService = ApiClient.getRetrofit().create(UserService.class);
+        // Khởi tạo UserService từ ApiClient
+        userController = ApiClient.getUserController(SignUpActivity.this);
 
         btnSignUp.setOnClickListener(v -> {
             String username = edtUsername.getText().toString().trim();
@@ -51,13 +53,22 @@ public class SignUpActivity extends AppCompatActivity {
                 return;
             }
 
+            if (!isEmailValid(email)) {
+                Toast.makeText(SignUpActivity.this, "Invalid email format", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             User newUser = new User(username, email, password);
 
-            userService.createUser(newUser).enqueue(new Callback<User>() {
+            userController.createUser(newUser).enqueue(new Callback<User>() {
                 @Override
                 public void onResponse(Call<User> call, Response<User> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         Toast.makeText(SignUpActivity.this, "Sign up successful", Toast.LENGTH_SHORT).show();
+
+                        // Chuyển đến màn hình chính
+                        startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                        finish();
                     } else {
                         Toast.makeText(SignUpActivity.this, "Sign up failed", Toast.LENGTH_SHORT).show();
                     }
@@ -69,5 +80,11 @@ public class SignUpActivity extends AppCompatActivity {
                 }
             });
         });
+    }
+
+    // Kiểm tra email hợp lệ
+    private boolean isEmailValid(String email) {
+        String emailPattern = "[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}";
+        return email.matches(emailPattern);
     }
 }
