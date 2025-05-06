@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FocusFlow_Frontend</string>
+    <string name="timeOut">00:00</string>
 </resources>

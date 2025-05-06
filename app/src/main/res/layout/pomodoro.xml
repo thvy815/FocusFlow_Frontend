@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <!-- Top Navigation Bar -->
+    <LinearLayout
+        android:id="@+id/linear_pomo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:gravity="center_vertical"
+        android:background="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Clock Icon -->
+        <ImageView
+            android:id="@+id/clock_icon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/ic_schedule"
+
+            android:contentDescription="clock"
+            android:onClick="FocusStatistic_Click"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp" />
+
+        <!-- Pomo Text -->
+        <TextView
+            android:id="@+id/pomo_tab"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="12dp"
+            android:gravity="center"
+
+            android:text="Pomo"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:textAlignment="center"
+            android:fontFamily="@font/mpr1c_extrabold"
+            android:shadowColor="@color/black"
+            android:shadowRadius="1"
+            android:paddingVertical="8dp" />
+
+        <!-- Add Icon -->
+        <ImageView
+            android:id="@+id/add_icon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/ic_add"
+            android:contentDescription="add"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp" />
+
+        <!-- Menu Icon -->
+        <ImageView
+            android:id="@+id/menu_icon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="20dp"
+            android:src="@drawable/ic_menu"
+            android:contentDescription="menu"
+            android:onClick="menuClick"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp" />
+    </LinearLayout>
+
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/focus_label"
+        android:layout_width="wrap_content"
+        android:layout_height="42dp"
+        android:layout_marginTop="70dp"
+
+        android:text="Focus"
+        android:textSize="28sp"
+        android:textColor="@color/black"
+
+        app:layout_constraintTop_toBottomOf="@id/linear_pomo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        android:fontFamily="@font/mpr1c_bold"
+        android:shadowColor="@color/black"
+        android:shadowRadius="2"
+        />
+
+    <!-- Circle Timer -->
+    <com.example.focusflow_frontend.presentation.pomo.CircleTimerView
+        android:id="@+id/circleView"
+        android:layout_width="330dp"
+        android:layout_height="330dp"
+
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+
+        app:layout_constraintTop_toBottomOf="@id/focus_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Timer Text -->
+    <TextView
+        android:id="@+id/timer_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25:00"
+        android:textSize="42sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="@id/circleView"
+        app:layout_constraintBottom_toBottomOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="@id/circleView"
+        app:layout_constraintEnd_toEndOf="@id/circleView" />
+
+    <ImageView
+        android:id="@+id/imv_paused"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+
+
+        android:src="@drawable/ic_pause"
+        app:layout_constraintTop_toTopOf="@id/circleView"
+        app:layout_constraintBottom_toBottomOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="@id/circleView"
+        app:layout_constraintEnd_toEndOf="@id/circleView"
+        android:visibility="gone" />
+
+    <!-- Buttons shown after start -->
+    <LinearLayout
+        android:id="@+id/afterStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/volume_icon"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:src="@drawable/ic_volume"
+            android:contentDescription="volume"
+            android:onClick="whiteNoiseCick" />
+
+        <ImageView
+            android:id="@+id/paused_icon"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_pause"
+            android:contentDescription="pause"
+            android:onClick="pauseClick"/>
+
+        <ImageView
+            android:id="@+id/stop_icon"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_stop"
+            android:contentDescription="stop"
+            android:onClick="stopClick"/>
+    </LinearLayout>
+
+    <!-- Start Button -->
+    <Button
+        android:id="@+id/start_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+
+        android:text="Start"
+        android:textSize="28sp"
+        android:textColor="@color/white"
+        android:textAlignment="center"
+        android:fontFamily="@font/mpr1c_medium"
+        android:textStyle="bold"
+
+        android:backgroundTint="@color/black"
+        android:onClick="startClick"
+
+        app:layout_constraintTop_toBottomOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <!-- Play Button (shown on resume) -->
+    <ImageView
+        android:id="@+id/play_icon"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/ic_play"
+        android:contentDescription="play"
+        android:visibility="gone"
+        android:onClick="playClick"
+        app:layout_constraintTop_toBottomOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
