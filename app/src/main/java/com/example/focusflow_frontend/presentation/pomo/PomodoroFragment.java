@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.pomo.CircleTimerView;
+import com.example.focusflow_frontend.utils.ViewUtils;
 
 import java.util.Locale;
 
@@ -60,13 +61,13 @@ public class PomodoroFragment extends Fragment {
     }
 
     public void whiteNoiseClick() {
-        Intent intent = new Intent(getActivity(), WhiteNoise.class);
-        startActivity(intent);
+        WhiteNoiseBottomSheet statsSheet = new WhiteNoiseBottomSheet();
+        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 
     public void focusStatisticClick() {
-        Intent intent = new Intent(getActivity(), FocusStatistics.class);
-        startActivity(intent);
+        FocusStatisticsBottomSheet statsSheet = new FocusStatisticsBottomSheet();
+        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 
     public void startClick() {

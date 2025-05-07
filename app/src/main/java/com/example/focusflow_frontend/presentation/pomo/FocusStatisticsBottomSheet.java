@@ -1,59 +1,63 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
-import android.graphics.Color;
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.utils.ViewUtils;
+import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.charts.PieChart;
-//import com.github.mikephil.charting.components.XAxis;
-//import com.github.mikephil.charting.data.Entry;
-//import com.github.mikephil.charting.data.LineData;
-//import com.github.mikephil.charting.data.LineDataSet;
-//import com.github.mikephil.charting.data.PieData;
-//import com.github.mikephil.charting.data.PieDataSet;
-//import com.github.mikephil.charting.data.PieEntry;
-//import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-//import java.util.ArrayList;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-public class FocusStatistics extends AppCompatActivity {
+public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.focus_statistics);
+    private LineChart trendChart;
+    private HorizontalBarChart detailChart;
 
-        paintDetailsChart();
-        paintTrendChart();
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.focus_statistics, container, false);
 
-//        loadData();
+        trendChart = view.findViewById(R.id.Trendchart);
+        detailChart = view.findViewById(R.id.DetailsChart);
+//
+//        paintTrendChart();
+//        paintDetailsChart();
+
+// Set Title Text
+        View textLayout = view.findViewById(R.id.focus_statistics_title);
+        ViewUtils.setTitleText(textLayout,"Focus Statistics");
+
+        ImageView btnAdd = view.findViewById(R.id.btnAdd);
+        btnAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addRecordClick();
+            }
+        });
+
+        return view;
+
+
     }
 
-//    LineChart lineChart;
-//    PieChart pieChart;
-//    int numTodayPomo = 0;
-//    int numToTalPomo = 0;
-//    int numTotalTime = 0;
-//    int latestDuration = 0;
-//
-//    String latestDayPomo = "Apr 6   20:48 - 20:55";
+    public void addRecordClick() {
+        AddRecordBottomSheet statsSheet = new AddRecordBottomSheet();
+        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
+    }
 
-    public void paintTrendChart() {
-//        lineChart = findViewById(R.id.Trendchart);
+//    private void paintTrendChart() {
 //        int[] numPomoDay = new int[7];
-//
-//        //Lấy dữ liệu từ DB: chưa làm
 //        for (int i = 0; i < 7; i++)
 //            numPomoDay[i] = i + 2;
+//
 //        ArrayList<Entry> entries = new ArrayList<>();
-//        entries.add(new Entry(0, numPomoDay[0]));
-//        entries.add(new Entry(1, numPomoDay[1]));
-//        entries.add(new Entry(2, numPomoDay[2]));
-//        entries.add(new Entry(3, numPomoDay[3]));
-//        entries.add(new Entry(4, numPomoDay[4]));
-//        entries.add(new Entry(5, numPomoDay[5]));
-//        entries.add(new Entry(6, numPomoDay[6]));
+//        for (int i = 0; i < 7; i++) {
+//            entries.add(new Entry(i, numPomoDay[i]));
+//        }
 //
 //        LineDataSet dataSet = new LineDataSet(entries, "Pomodoros");
 //        dataSet.setDrawValues(false);
@@ -64,8 +68,7 @@ public class FocusStatistics extends AppCompatActivity {
 //        LineData lineData = new LineData(dataSet);
 //        lineChart.setData(lineData);
 //
-//        // Tên ngày trong tuần
-//        final String[] days = {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"};
+//        String[] days = {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"};
 //        XAxis xAxis = lineChart.getXAxis();
 //        xAxis.setValueFormatter(new IndexAxisValueFormatter(days));
 //        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -76,12 +79,9 @@ public class FocusStatistics extends AppCompatActivity {
 //        lineChart.getDescription().setEnabled(false);
 //        lineChart.getLegend().setEnabled(false);
 //        lineChart.invalidate();
-    }
-
-    public void paintDetailsChart() {
-//        pieChart = findViewById(R.id.DetailsChart);
+//    }
 //
-//        //Dữ liệu từ DB: chưa làm
+//    private void paintDetailsChart() {
 //        int numPomo = 2;
 //        int totalMinutes = 4;
 //
@@ -91,12 +91,11 @@ public class FocusStatistics extends AppCompatActivity {
 //            pieChart.setNoDataTextColor(Color.GRAY);
 //            pieChart.invalidate();
 //        } else {
-//            // Tạo dữ liệu biểu đồ
 //            ArrayList<PieEntry> entries = new ArrayList<>();
 //            entries.add(new PieEntry(totalMinutes));
 //
 //            PieDataSet dataSet = new PieDataSet(entries, "");
-//            dataSet.setColors(Color.BLUE); // Xanh dương
+//            dataSet.setColors(Color.BLUE);
 //            dataSet.setValueTextSize(4f);
 //            dataSet.setValueTextColor(Color.WHITE);
 //            dataSet.setDrawValues(false);
@@ -117,6 +116,6 @@ public class FocusStatistics extends AppCompatActivity {
 //            pieChart.getDescription().setEnabled(false);
 //            pieChart.getLegend().setEnabled(false);
 //            pieChart.invalidate();
-
-        }
-    }
+//        }
+//    }
+}

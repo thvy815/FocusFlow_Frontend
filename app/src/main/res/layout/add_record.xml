@@ -20,7 +20,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <include layout="@layout/item_title_pomodoro"/>
+        <include
+            android:id="@+id/add_record_title"
+            layout="@layout/item_title_pomodoro"/>
 
         <include layout="@layout/item_row_text"/>
 
