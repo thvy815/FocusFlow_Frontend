@@ -18,8 +18,7 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
         View view = inflater.inflate(R.layout.focus_record, container, false);
 
         // Set Title Text
-        View textLayout = view.findViewById(R.id.focus_record_title);
-        ViewUtils.setTitleText(textLayout,"Focus Record");
+        ViewUtils.setTitleText(view, R.id.focus_record_title, R.id.titleText, "Focus Record");
 
         TextView btnAdd = view.findViewById(R.id.btnAdd);
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -28,6 +27,9 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
                 addRecordClick();
             }
         });
+
+        //Back click
+        ViewUtils.backClick(this, view, R.id.focus_record_title, R.id.ic_back);
 
         return view;
     }

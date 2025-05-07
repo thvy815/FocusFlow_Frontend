@@ -20,10 +20,11 @@
         />
 
     <ImageView
+        android:id="@+id/add_num"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:contentDescription="add"
-        android:onClick="sub_numeric"
+        android:onClick="add_numeric"
         android:src="@drawable/ic_add"
         android:padding="8dp"/>
 
@@ -40,6 +41,7 @@
 
 
     <ImageView
+        android:id="@+id/sub_num"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:contentDescription="subtract"

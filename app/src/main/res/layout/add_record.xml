@@ -23,15 +23,24 @@
             android:id="@+id/add_record_title"
             layout="@layout/item_title_pomodoro"/>
 
-        <include layout="@layout/item_row_text"/>
+        <include
+            android:id="@+id/et_task_input"
+            layout="@layout/item_row_text"/>
 
-        <include layout="@layout/item_row_text"/>
+        <include
+            android:id="@+id/start_from_input"
+            layout="@layout/item_row_text"/>
 
-        <include layout="@layout/item_row_text"/>
+        <include
+            android:id="@+id/end_at_input"
+            layout="@layout/item_row_text"/>
 
-        <include layout="@layout/item_numeric_pomo"/>
+        <include
+            android:id="@+id/numeric_pomo_input"
+            layout="@layout/item_numeric_pomo"/>
 
         <LinearLayout
+            android:id="@+id/FocusNote"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"
@@ -69,5 +78,23 @@
                     />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="100dp"
+
+            android:text="Save Record"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/mpr1c_bold"
+
+            android:background="@drawable/bg_card"
+            android:gravity="center"
+
+            app:layout_constraintTop_toBottomOf="@id/FocusNote"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

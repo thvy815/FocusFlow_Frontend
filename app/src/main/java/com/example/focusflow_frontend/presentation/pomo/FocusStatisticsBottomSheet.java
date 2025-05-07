@@ -29,8 +29,7 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 //        paintDetailsChart();
 
 // Set Title Text
-        View textLayout = view.findViewById(R.id.focus_statistics_title);
-        ViewUtils.setTitleText(textLayout,"Focus Statistics");
+        ViewUtils.setTitleText(view, R.id.focus_statistics_title, R.id.titleText, "Focus Statistics");
 
         ImageView btnAdd = view.findViewById(R.id.btnAdd);
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -39,7 +38,7 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                 addRecordClick();
             }
         });
-
+//Chuyển trang Focus Record
         GridLayout gridLayout = view.findViewById(R.id.FocusRecord);
         gridLayout.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -47,6 +46,8 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                 focusRecordClick();
             }
         });
+//Back click
+        ViewUtils.backClick(this, view, R.id.focus_statistics_title, R.id.ic_back);
 
         return view;
 
