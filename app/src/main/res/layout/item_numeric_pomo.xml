@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:paddingVertical="12dp"
+    android:gravity="center_vertical"
+    android:id="@+id/profile_row_layout">
+
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="0dp"
+        android:layout_weight="0.75"
+        android:layout_height="wrap_content"
+        android:text="Pomo"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:fontFamily="@font/mpr1c_medium"
+        />
+
+    <ImageView
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:contentDescription="add"
+        android:onClick="sub_numeric"
+        android:src="@drawable/ic_add"
+        android:padding="8dp"/>
+
+    <TextView
+
+        android:id="@+id/tv_numeric"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="0"
+        android:fontFamily="@font/mpr1c_medium"
+        android:textSize="30dp" />
+
+
+    <ImageView
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:contentDescription="subtract"
+        android:onClick="sub_numeric"
+        android:src="@drawable/ic_subtract"
+        android:padding="8dp"/>
+</LinearLayout>
