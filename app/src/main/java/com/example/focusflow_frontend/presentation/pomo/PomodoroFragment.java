@@ -45,8 +45,10 @@ public class PomodoroFragment extends Fragment {
         Button startButton = view.findViewById(R.id.start_button);
         ImageView playButton = view.findViewById(R.id.play_icon);
         ImageView pauseButton = view.findViewById(R.id.paused_icon);
-        ImageView imvPaused = view.findViewById(R.id.imv_paused);
         ImageView stopButton = view.findViewById(R.id.stop_icon);
+        ImageView imvVolume1 = view.findViewById(R.id.volume_ic);
+        ImageView imvSchedule = view.findViewById(R.id.clock_icon);
+        ImageView imvVolume2 = view.findViewById(R.id.volume_icon);
 
         startButton.setOnClickListener(v -> startClick());
         playButton.setOnClickListener(v -> playClick());
@@ -54,13 +56,14 @@ public class PomodoroFragment extends Fragment {
         stopButton.setOnClickListener(v -> stopClick());
 
         // Gán thêm sự kiện chuyển màn
-        view.findViewById(R.id.volume_icon).setOnClickListener(v -> whiteNoiseClick());
-        view.findViewById(R.id.clock_icon).setOnClickListener(v -> focusStatisticClick());
+        imvVolume1.setOnClickListener(v -> NoiseClick());
+        imvVolume2.setOnClickListener(v -> NoiseClick());
+        imvSchedule.setOnClickListener(v -> focusStatisticClick());
 
         return view;
     }
 
-    public void whiteNoiseClick() {
+    public void NoiseClick() {
         WhiteNoiseBottomSheet statsSheet = new WhiteNoiseBottomSheet();
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
@@ -123,13 +126,9 @@ public class PomodoroFragment extends Fragment {
 
         isPaused = true;
 
-        timerText.setVisibility(View.INVISIBLE);
-        Typeface typeface = ResourcesCompat.getFont(requireContext(), R.font.mpr1c_bold);
-        timerText.setTypeface(typeface);
 
         getView().findViewById(R.id.play_icon).setVisibility(View.VISIBLE);
         getView().findViewById(R.id.paused_icon).setVisibility(View.INVISIBLE);
-        getView().findViewById(R.id.imv_paused).setVisibility(View.VISIBLE);
     }
 
     public void playClick() {
@@ -137,7 +136,6 @@ public class PomodoroFragment extends Fragment {
         onResume();
 
         timerText.setVisibility(View.VISIBLE);
-        getView().findViewById(R.id.imv_paused).setVisibility(View.GONE);
         getView().findViewById(R.id.play_icon).setVisibility(View.INVISIBLE);
         getView().findViewById(R.id.paused_icon).setVisibility(View.VISIBLE);
     }

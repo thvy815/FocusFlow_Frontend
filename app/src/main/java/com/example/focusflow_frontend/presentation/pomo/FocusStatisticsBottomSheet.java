@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 
 import com.example.focusflow_frontend.R;
@@ -39,6 +40,14 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
             }
         });
 
+        GridLayout gridLayout = view.findViewById(R.id.FocusRecord);
+        gridLayout.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                focusRecordClick();
+            }
+        });
+
         return view;
 
 
@@ -49,6 +58,11 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 
+    public void focusRecordClick(){
+        FocusRecordBottomSheet statsSheet = new FocusRecordBottomSheet();
+        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
+    }
+// Paint chart
 //    private void paintTrendChart() {
 //        int[] numPomoDay = new int[7];
 //        for (int i = 0; i < 7; i++)
