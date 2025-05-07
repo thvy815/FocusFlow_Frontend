@@ -59,9 +59,15 @@ public class PomodoroFragment extends Fragment {
         return view;
     }
 
-    public void whiteNoiseClick() {}
+    public void whiteNoiseClick() {
+        Intent intent = new Intent(getActivity(), WhiteNoise.class);
+        startActivity(intent);
+    }
 
-    public void focusStatisticClick() {}
+    public void focusStatisticClick() {
+        Intent intent = new Intent(getActivity(), FocusStatistics.class);
+        startActivity(intent);
+    }
 
     public void startClick() {
         startTime = System.currentTimeMillis();

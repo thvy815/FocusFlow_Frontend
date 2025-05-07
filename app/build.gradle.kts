@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.room.common.jvm)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -46,4 +47,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+
+
+    implementation(libs.mpandroidchart)
 }
