@@ -119,19 +119,24 @@
     <!-- Buttons shown after start -->
     <LinearLayout
         android:id="@+id/afterStart"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
         android:orientation="horizontal"
-        android:visibility="gone"
+
         app:layout_constraintTop_toBottomOf="@id/circleView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center_horizontal"
+        >
 
         <ImageView
             android:id="@+id/volume_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:layout_marginEnd="15dp"
             android:src="@drawable/ic_music_note"
             android:contentDescription="volume" />
 
@@ -140,6 +145,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
             android:src="@drawable/ic_pause"
             android:contentDescription="pause"
             android:onClick="pauseClick"/>
@@ -148,7 +154,7 @@
             android:id="@+id/stop_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="10dp"
             android:src="@drawable/ic_stop"
             android:contentDescription="stop"
             android:onClick="stopClick"/>
@@ -160,7 +166,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-
+        android:visibility="gone"
         android:text="Start"
         android:textSize="28sp"
         android:textColor="@color/white"
@@ -182,7 +188,6 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginTop="40dp"
-        android:layout_marginStart="20dp"
         android:src="@drawable/ic_play"
         android:contentDescription="play"
         android:visibility="gone"

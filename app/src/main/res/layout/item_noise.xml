@@ -4,7 +4,6 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
-    android:paddingVertical="12dp"
     android:gravity="center_vertical"
     android:id="@+id/profile_row_layout">
 
@@ -14,8 +13,8 @@
         android:layout_marginEnd="20dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="20dp"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:src="@drawable/ic_edit"
         android:contentDescription="Next"
         app:tint="@color/black"/>
@@ -25,8 +24,8 @@
         android:layout_marginEnd="20dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="20dp"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:src="@drawable/ic_edit"
         android:contentDescription="Next"
         app:tint="@color/black"/>
@@ -36,8 +35,8 @@
         android:layout_marginEnd="20dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="20dp"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:src="@drawable/ic_edit"
         android:contentDescription="Next"
         app:tint="@color/black"/>
