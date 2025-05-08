@@ -103,18 +103,39 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Timer Text -->
-    <TextView
+    <LinearLayout
         android:id="@+id/timer_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="25:00"
-        android:textSize="42sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
+        android:orientation="horizontal"
+        android:gravity="center"
         app:layout_constraintTop_toTopOf="@id/circleView"
         app:layout_constraintBottom_toBottomOf="@id/circleView"
         app:layout_constraintStart_toStartOf="@id/circleView"
-        app:layout_constraintEnd_toEndOf="@id/circleView" />
+        app:layout_constraintEnd_toEndOf="@id/circleView">
+
+        <NumberPicker
+            android:id="@+id/minute_picker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=":"
+            android:textSize="32sp"
+            android:textColor="@color/black"
+            android:layout_gravity="center_vertical" />
+
+        <NumberPicker
+            android:id="@+id/second_picker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+
 
     <!-- Buttons shown after start -->
     <LinearLayout
@@ -125,6 +146,7 @@
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
         android:orientation="horizontal"
+        android:visibility="gone"
 
         app:layout_constraintTop_toBottomOf="@id/circleView"
         app:layout_constraintStart_toStartOf="parent"
@@ -166,7 +188,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:visibility="gone"
         android:text="Start"
         android:textSize="28sp"
         android:textColor="@color/white"

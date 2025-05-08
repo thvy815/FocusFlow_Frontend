@@ -1,9 +1,12 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.LayoutInflater;
@@ -12,8 +15,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
@@ -21,6 +26,7 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.pomo.CircleTimerView;
 import com.example.focusflow_frontend.utils.ViewUtils;
 
+import java.lang.reflect.Field;
 import java.util.Locale;
 
 public class PomodoroFragment extends Fragment {
@@ -28,18 +34,20 @@ public class PomodoroFragment extends Fragment {
     private TextView timerText;
     private CircleTimerView circleView;
     private CountDownTimer countDownTimer;
-    final long totalTime = 25 * 60 * 1000; // 25 phút
-    long timeLeft = totalTime;
+    long totalTime, timeLeft;
+    int minutes = -1, seconds = -1;
     private boolean isPaused = false;
     long beginTime;
     long startTime, endTime, pauseTime;
+
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.pomodoro, container, false);
 
         // Khởi tạo các view
-        timerText = view.findViewById(R.id.timer_text);
         circleView = view.findViewById(R.id.circleView);
 
         Button startButton = view.findViewById(R.id.start_button);
@@ -60,9 +68,49 @@ public class PomodoroFragment extends Fragment {
         imvVolume2.setOnClickListener(v -> NoiseClick());
         imvSchedule.setOnClickListener(v -> focusStatisticClick());
 
+        NumberPicker minutePicker = view.findViewById(R.id.minute_picker);
+        NumberPicker secondPicker = view.findViewById(R.id.second_picker);
+
+// Set min-max values
+        minutePicker.setMinValue(0);
+        minutePicker.setMaxValue(59);
+        secondPicker.setMinValue(0);
+        secondPicker.setMaxValue(59);
+
+// Optional: set default to 25:00
+        minutePicker.setValue(25);
+        secondPicker.setValue(0);
+
+        int[] minute = new int[1];
+        int[] second = new int[1];
+
+        minutePicker.setOnClickListener(v -> {
+            NumberClick(view, R.id.minute_picker, minute);
+            minutes = minute[0];
+        });
+
+        minutePicker.setOnClickListener(v -> {
+            NumberClick(view, R.id.minute_picker, second);
+            seconds = second[0];
+        });
+
+//        if (minutes == -1 && seconds == -1)
+//        {
+//            minutes = minutePicker.getValue();
+//
+//        }
+
+
+        minutePicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+        secondPicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+
         return view;
     }
 
+    public void NumberClick(View view, int NumberId, int[] Values){
+        NumberPicker c = view.findViewById(NumberId);
+        Values[0] = c.getValue();
+    }
     public void NoiseClick() {
         WhiteNoiseBottomSheet statsSheet = new WhiteNoiseBottomSheet();
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
@@ -87,14 +135,19 @@ public class PomodoroFragment extends Fragment {
 
     public void startTimer() {
         if (isPaused) return;
+        NumberPicker minutePicker = getView().findViewById(R.id.minute_picker);
+        NumberPicker secondPicker = getView().findViewById(R.id.second_picker);
+
         countDownTimer = new CountDownTimer(timeLeft, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                timeLeft = millisUntilFinished;
-                int minutes = (int) (timeLeft / 1000) / 60;
-                int seconds = (int) (timeLeft / 1000) % 60;
+                int minutes = minutePicker.getValue();
+                int seconds = secondPicker.getValue();
+                timeLeft = (minutes * 60 + seconds) * 1000L;
 
+                // Update timer text
                 timerText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+                // Update progress circle
                 float progress = 1f - (float) timeLeft / totalTime;
                 circleView.setProgress(progress);
             }
@@ -107,6 +160,7 @@ public class PomodoroFragment extends Fragment {
         }.start();
     }
 
+
     @Override
     public void onResume() {
         super.onResume();
@@ -115,6 +169,16 @@ public class PomodoroFragment extends Fragment {
             pauseTime = System.currentTimeMillis();
         }
     }
+
+//    private void removeNumberPickerDivider(NumberPicker numberPicker) {
+//        try {
+//            Field dividerField = NumberPicker.class.getDeclaredField("mSelectionDivider");
+//            dividerField.setAccessible(true);
+//            dividerField.set(numberPicker, null); // Xóa drawable
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public void pauseClick() {
         if (countDownTimer != null) {

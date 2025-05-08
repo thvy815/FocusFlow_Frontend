@@ -7,4 +7,5 @@
     <style name="BottomSheetFullHeight" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:layout_height">match_parent</item>
     </style>
+
 </resources>
