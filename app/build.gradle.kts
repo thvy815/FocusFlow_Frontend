@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+    implementation (libs.wheelpicker)
 
 
     implementation(libs.mpandroidchart)

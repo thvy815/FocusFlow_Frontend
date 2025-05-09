@@ -103,8 +103,22 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Timer Text -->
-    <LinearLayout
+    <TextView
         android:id="@+id/timer_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25:00"
+        android:textColor="@color/black"
+        android:textSize="42sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/mpr1c_bold"
+        app:layout_constraintBottom_toBottomOf="@id/circleView"
+        app:layout_constraintEnd_toEndOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="@id/circleView"
+        app:layout_constraintTop_toTopOf="@id/circleView" />
+
+    <LinearLayout
+        android:id="@+id/time_picker_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -114,25 +128,20 @@
         app:layout_constraintStart_toStartOf="@id/circleView"
         app:layout_constraintEnd_toEndOf="@id/circleView">
 
-        <NumberPicker
-            android:id="@+id/minute_picker"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp" />
+        <com.aigestudio.wheelpicker.WheelPicker
+            android:id="@+id/wheelPicker"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            app:wheel_item_text_size="42sp"
+            app:wheel_item_space="40dp"
+            app:wheel_item_text_color="#FFE0E0E0"
+            app:wheel_selected_item_position="@integer/material_motion_duration_long_1"
+            app:wheel_selected_item_text_color="@color/black"
+            />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=":"
-            android:textSize="32sp"
-            android:textColor="@color/black"
-            android:layout_gravity="center_vertical" />
 
-        <NumberPicker
-            android:id="@+id/second_picker"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
 

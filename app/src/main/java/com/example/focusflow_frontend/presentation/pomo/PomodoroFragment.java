@@ -1,12 +1,9 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
-import android.annotation.SuppressLint;
+import static android.view.View.VISIBLE;
+
 import android.app.AlertDialog;
-import android.content.Intent;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
-import android.media.Image;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.LayoutInflater;
@@ -15,37 +12,43 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
-import android.widget.TextView;
 
-import androidx.core.content.ContextCompat;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
+import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.presentation.pomo.CircleTimerView;
-import com.example.focusflow_frontend.utils.ViewUtils;
 
-import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class PomodoroFragment extends Fragment {
-
     private TextView timerText;
     private CircleTimerView circleView;
     private CountDownTimer countDownTimer;
-    long totalTime, timeLeft;
-    int minutes = -1, seconds = -1;
+    long totalTime = 25*60*1000;
+    long timeLeft = totalTime;
     private boolean isPaused = false;
-    long beginTime;
     long startTime, endTime, pauseTime;
-
-
-
+    private int selectedMinute = 25;
+    private boolean isStarted = false;
+    private WheelPicker wheelPicker;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.pomodoro, container, false);
+
+        timerText = view.findViewById(R.id.timer_text);
+        wheelPicker = view.findViewById(R.id.wheelPicker);
+
+        wheelPicker.setVisibility(View.INVISIBLE);
+        wheelPicker.setVisibleItemCount(3);
+        Typeface customTypeface = ResourcesCompat.getFont(requireContext(), R.font.mpr1c_bold);
+        wheelPicker.setTypeface(customTypeface);
 
         // Khởi tạo các view
         circleView = view.findViewById(R.id.circleView);
@@ -68,49 +71,12 @@ public class PomodoroFragment extends Fragment {
         imvVolume2.setOnClickListener(v -> NoiseClick());
         imvSchedule.setOnClickListener(v -> focusStatisticClick());
 
-        NumberPicker minutePicker = view.findViewById(R.id.minute_picker);
-        NumberPicker secondPicker = view.findViewById(R.id.second_picker);
-
-// Set min-max values
-        minutePicker.setMinValue(0);
-        minutePicker.setMaxValue(59);
-        secondPicker.setMinValue(0);
-        secondPicker.setMaxValue(59);
-
-// Optional: set default to 25:00
-        minutePicker.setValue(25);
-        secondPicker.setValue(0);
-
-        int[] minute = new int[1];
-        int[] second = new int[1];
-
-        minutePicker.setOnClickListener(v -> {
-            NumberClick(view, R.id.minute_picker, minute);
-            minutes = minute[0];
-        });
-
-        minutePicker.setOnClickListener(v -> {
-            NumberClick(view, R.id.minute_picker, second);
-            seconds = second[0];
-        });
-
-//        if (minutes == -1 && seconds == -1)
-//        {
-//            minutes = minutePicker.getValue();
-//
-//        }
-
-
-        minutePicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
-        secondPicker.setFormatter(value -> String.format(Locale.getDefault(), "%02d", value));
+        timerText.setOnClickListener(v-> showTimePickerDialog());
 
         return view;
     }
 
-    public void NumberClick(View view, int NumberId, int[] Values){
-        NumberPicker c = view.findViewById(NumberId);
-        Values[0] = c.getValue();
-    }
+// Chuyển trang:
     public void NoiseClick() {
         WhiteNoiseBottomSheet statsSheet = new WhiteNoiseBottomSheet();
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
@@ -121,6 +87,63 @@ public class PomodoroFragment extends Fragment {
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 
+//Bấm thay đổi phút POMO
+    private void showTimePickerDialog() {
+    if (isStarted) {
+        return;
+    }
+
+    // Hiển thị WheelPicker bên trong CircleTimerView
+    wheelPicker.setVisibility(View.VISIBLE);
+    timerText.setVisibility(View.INVISIBLE);
+
+    // Lấy giá trị hiện tại từ timerText và xác định chỉ số của WheelPicker
+    String currentTime = timerText.getText().toString();
+    int currentMinute = Integer.parseInt(currentTime.split(":")[0]);
+
+    // Tạo danh sách các lựa chọn thời gian
+    List<String> timeOptions = new ArrayList<>();
+    for (int i = 15; i <= 60; i++) {
+        timeOptions.add(i + ":00");
+    }
+
+    wheelPicker.setData(timeOptions);
+
+    wheelPicker.setSelectedItemPosition(timeOptions.indexOf(currentMinute + ":00"));
+
+    wheelPicker.setOnItemSelectedListener((picker, data, position) -> {
+        String selectedText = (String) data;
+        selectedMinute = Integer.parseInt(selectedText.split(":")[0]);
+
+        updateTimerDisplay(selectedMinute);
+        totalTime = selectedMinute * 60 * 1000;
+        timeLeft = totalTime;
+    });
+
+    // Ẩn WheelPicker sau khi người dùng chọn thời gian và hiển thị lại timerText
+    wheelPicker.setOnItemSelectedListener((picker, data, position) -> {
+        String selectedText = (String) data;
+        selectedMinute = Integer.parseInt(selectedText.split(":")[0]);
+
+        // Cập nhật thời gian
+        updateTimerDisplay(selectedMinute);
+        totalTime = selectedMinute * 60 * 1000;
+        timeLeft = totalTime;
+
+        // Ẩn WheelPicker sau khi chọn và hiển thị lại timerText
+        wheelPicker.setVisibility(View.GONE);
+        timerText.setVisibility(View.VISIBLE);  // Hiển thị lại timerText
+        Toast.makeText(getContext(), "Đặt thời gian: " + selectedMinute + " phút", Toast.LENGTH_SHORT).show();
+    });
+}
+
+
+    private void updateTimerDisplay(int minutes) {
+        TextView timerText = getView().findViewById(R.id.timer_text);
+        timerText.setText(String.format(Locale.getDefault(), "%02d:00", minutes));
+    }
+
+// Bấm nút START:
     public void startClick() {
         startTime = System.currentTimeMillis();
         pauseTime = startTime;
@@ -129,25 +152,23 @@ public class PomodoroFragment extends Fragment {
         LinearLayout afterStart = getView().findViewById(R.id.afterStart);
 
         startButton.setVisibility(View.GONE);
-        afterStart.setVisibility(View.VISIBLE);
+        afterStart.setVisibility(VISIBLE);
         startTimer();
     }
-
     public void startTimer() {
         if (isPaused) return;
-        NumberPicker minutePicker = getView().findViewById(R.id.minute_picker);
-        NumberPicker secondPicker = getView().findViewById(R.id.second_picker);
-
+        isStarted = true;
         countDownTimer = new CountDownTimer(timeLeft, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                int minutes = minutePicker.getValue();
-                int seconds = secondPicker.getValue();
-                timeLeft = (minutes * 60 + seconds) * 1000L;
+                timeLeft = millisUntilFinished;
+                int minutes = (int) (timeLeft / 1000) / 60;
+                int seconds = (int) (timeLeft / 1000) % 60;
 
-                // Update timer text
+                // Cập nhật thời gian hiển thị trên TextView
                 timerText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
-                // Update progress circle
+
+                // Cập nhật tiến trình vòng tròn
                 float progress = 1f - (float) timeLeft / totalTime;
                 circleView.setProgress(progress);
             }
@@ -159,8 +180,6 @@ public class PomodoroFragment extends Fragment {
             }
         }.start();
     }
-
-
     @Override
     public void onResume() {
         super.onResume();
@@ -170,16 +189,7 @@ public class PomodoroFragment extends Fragment {
         }
     }
 
-//    private void removeNumberPickerDivider(NumberPicker numberPicker) {
-//        try {
-//            Field dividerField = NumberPicker.class.getDeclaredField("mSelectionDivider");
-//            dividerField.setAccessible(true);
-//            dividerField.set(numberPicker, null); // Xóa drawable
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
+// Bấm nút PAUSE:
     public void pauseClick() {
         if (countDownTimer != null) {
             countDownTimer.cancel();
@@ -191,19 +201,20 @@ public class PomodoroFragment extends Fragment {
         isPaused = true;
 
 
-        getView().findViewById(R.id.play_icon).setVisibility(View.VISIBLE);
+        getView().findViewById(R.id.play_icon).setVisibility(VISIBLE);
         getView().findViewById(R.id.paused_icon).setVisibility(View.INVISIBLE);
     }
 
+// Bấm nút PLAY:
     public void playClick() {
         isPaused = false;
         onResume();
 
-        timerText.setVisibility(View.VISIBLE);
         getView().findViewById(R.id.play_icon).setVisibility(View.INVISIBLE);
-        getView().findViewById(R.id.paused_icon).setVisibility(View.VISIBLE);
+        getView().findViewById(R.id.paused_icon).setVisibility(VISIBLE);
     }
 
+// Bấm nút STOP:
     public void stopClick() {
         int minTime = 20 * 60 * 1000;
         if (timeLeft > minTime) {
@@ -213,6 +224,7 @@ public class PomodoroFragment extends Fragment {
         }
     }
 
+//Bấm QUIT:
     private void showDialogLessThan5min() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Abandon This Focus?");
@@ -221,7 +233,6 @@ public class PomodoroFragment extends Fragment {
         builder.setPositiveButton("QUIT", (dialog, which) -> restartFragment());
         builder.create().show();
     }
-
     private void showDialogMoreThan5min() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("End the Pomo in Advance?");
@@ -241,7 +252,6 @@ public class PomodoroFragment extends Fragment {
         builder.setPositiveButton("QUIT", (dialog, which) -> restartFragment());
         builder.create().show();
     }
-
     private void restartFragment() {
         requireActivity().getSupportFragmentManager()
                 .beginTransaction()
