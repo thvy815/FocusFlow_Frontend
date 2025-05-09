@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.focusflow_frontend"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -37,6 +37,10 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation ("androidx.fragment:fragment:1.5.4")
+    implementation ("androidx.core:core:1.13.0")
+    implementation("com.kizitonwose.calendar:view:2.3.0")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
