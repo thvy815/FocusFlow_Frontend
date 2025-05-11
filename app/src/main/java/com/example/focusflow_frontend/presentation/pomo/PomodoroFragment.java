@@ -1,11 +1,20 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
+import static android.content.Context.VIBRATOR_MANAGER_SERVICE;
 import static android.view.View.VISIBLE;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
+import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
@@ -28,7 +38,7 @@ import java.util.Locale;
 
 public class PomodoroFragment extends Fragment {
     private TextView timerText;
-    private CircleTimerView circleView;
+//    private CircleTimerView circleView;
     private CountDownTimer countDownTimer;
     long totalTime = 25*60*1000;
     long timeLeft = totalTime;
@@ -50,8 +60,8 @@ public class PomodoroFragment extends Fragment {
         Typeface customTypeface = ResourcesCompat.getFont(requireContext(), R.font.mpr1c_bold);
         wheelPicker.setTypeface(customTypeface);
 
-        // Khởi tạo các view
-        circleView = view.findViewById(R.id.circleView);
+//        // Khởi tạo các view
+//        circleView = view.findViewById(R.id.circleView);
 
         Button startButton = view.findViewById(R.id.start_button);
         ImageView playButton = view.findViewById(R.id.play_icon);
@@ -92,8 +102,7 @@ public class PomodoroFragment extends Fragment {
     if (isStarted) {
         return;
     }
-
-    // Hiển thị WheelPicker bên trong CircleTimerView
+    //Hien thi wheelPicker
     wheelPicker.setVisibility(View.VISIBLE);
     timerText.setVisibility(View.INVISIBLE);
 
@@ -103,7 +112,7 @@ public class PomodoroFragment extends Fragment {
 
     // Tạo danh sách các lựa chọn thời gian
     List<String> timeOptions = new ArrayList<>();
-    for (int i = 15; i <= 60; i++) {
+    for (int i = 1; i <= 60; i++) {
         timeOptions.add(i + ":00");
     }
 
@@ -145,11 +154,51 @@ public class PomodoroFragment extends Fragment {
 
 // Bấm nút START:
     public void startClick() {
+        if (wheelPicker.getVisibility() == View.VISIBLE) {
+            Toast.makeText(getContext(), "Vui lòng chọn thời gian trước khi bắt đầu", Toast.LENGTH_SHORT).show();
+            return;
+        }
         startTime = System.currentTimeMillis();
         pauseTime = startTime;
 
+        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
+
         Button startButton = getView().findViewById(R.id.start_button);
         LinearLayout afterStart = getView().findViewById(R.id.afterStart);
+        TextView timerText = getView().findViewById(R.id.timer_text);
+        ImageView play_icon = getView().findViewById(R.id.play_icon);
+
+        int parentWidth = layout.getWidth();
+        int parentHeight = layout.getHeight();
+
+        int textWidth = timerText.getWidth();
+        int textHeight = timerText.getHeight();
+
+        // Tính khoảng cách cần di chuyển để đến giữa
+        float targetX = (parentWidth - textWidth) / 2f - timerText.getX();
+        float targetY = (parentHeight - textHeight) / 2f - timerText.getY();
+
+        timerText.animate()
+                .translationXBy(targetX)
+                .translationYBy(targetY)
+                .setDuration(500)
+                .start();
+
+        afterStart.animate()
+                .translationXBy(targetX)
+                .translationYBy((targetY + 20))
+                .start();
+        play_icon.animate()
+                .translationXBy(targetX)
+                .translationYBy((targetY + 20))
+                .start();
+
+        float currentSizePx = timerText.getTextSize(); // already in pixels
+        float targetSizePx = 80;
+
+        ObjectAnimator scaleAnimator = ObjectAnimator.ofFloat(timerText, "textSize", currentSizePx, targetSizePx);
+//        scaleAnimator.setDuration(600);
+        scaleAnimator.start();
 
         startButton.setVisibility(View.GONE);
         afterStart.setVisibility(VISIBLE);
@@ -167,16 +216,12 @@ public class PomodoroFragment extends Fragment {
 
                 // Cập nhật thời gian hiển thị trên TextView
                 timerText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
-
-                // Cập nhật tiến trình vòng tròn
-                float progress = 1f - (float) timeLeft / totalTime;
-                circleView.setProgress(progress);
             }
 
             @Override
             public void onFinish() {
+                Toast.makeText(getContext(), "Time's up!", Toast.LENGTH_SHORT).show();
                 timerText.setText(getString(R.string.timeOut));
-                circleView.setProgress(1f);
             }
         }.start();
     }
@@ -266,4 +311,7 @@ public class PomodoroFragment extends Fragment {
     private void saveRecordToServer(long startTime, long endTime, long duration) {
         // TODO: Gửi dữ liệu tổng hợp lên server
     }
+
+
+
 }
