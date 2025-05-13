@@ -18,9 +18,6 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class MissionFragment extends Fragment {
 
     private ImageView imgPet;
@@ -33,11 +30,6 @@ public class MissionFragment extends Fragment {
     private Button buttonApplyEdit;
 
     private MissionViewModel viewModel;
-
-    // Dummy data for testing: [tasksCompletedCount, pomoSessionsCount, allTasksDoneFlag]
-    private final int[] dummyTaskCounts = {2, 3, 5, 3, 4};
-    private final int[] dummyPomoCounts = {1, 4, 2, 3, 0};
-    private final boolean[] dummyAllTasks = {false, false, true, true, false};
 
     @Nullable
     @Override
@@ -68,16 +60,8 @@ public class MissionFragment extends Fragment {
         buttonApplyEdit = view.findViewById(R.id.buttonApplyEdit);
 
         // Navigation buttons
-        btnNextPet.setOnClickListener(v -> {
-            viewModel.nextPet();
-            simulateForCurrentPet();
-            updateUI();
-        });
-        btnPrevPet.setOnClickListener(v -> {
-            viewModel.prevPet();
-            simulateForCurrentPet();
-            updateUI();
-        });
+        btnNextPet.setOnClickListener(v -> { viewModel.nextPet(); updateUI(); });
+        btnPrevPet.setOnClickListener(v -> { viewModel.prevPet(); updateUI(); });
 
         // Rename pet
         buttonEdit.setOnClickListener(v -> {
@@ -95,31 +79,15 @@ public class MissionFragment extends Fragment {
             updateUI();
         });
 
-        // Initial simulation and UI update
-        simulateForCurrentPet();
+        // Initial UI
         updateUI();
-
         return view;
     }
 
-    /**
-     * Simulate task/pomo/all-tasks data for current pet index
-     */
-    private void simulateForCurrentPet() {
-        viewModel.resetTestData();
-        int idx = viewModel.getCurrentPetIndex();
-        int tasks = dummyTaskCounts[idx];
-        int pomos = dummyPomoCounts[idx];
-        boolean allTasks = dummyAllTasks[idx];
-        if (tasks >= 3) {
-            viewModel.applyTaskStatus(0, true, 1);
-        }
-        if (pomos >= 3) {
-            viewModel.applyTaskStatus(1, true, 3);
-        }
-        if (allTasks) {
-            viewModel.applyTaskStatus(2, true, 3);
-        }
+    //Ham de check hoan thanh task
+    public void syncTaskStatus(int taskIndex, boolean isCompleted, int point) {
+        viewModel.applyTaskStatus(taskIndex, isCompleted, point);
+        updateUI();
     }
 
     private void updateUI() {

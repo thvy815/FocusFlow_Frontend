@@ -41,6 +41,9 @@ dependencies {
     implementation ("androidx.core:core:1.13.0")
     implementation("com.kizitonwose.calendar:view:2.3.0")
     implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
