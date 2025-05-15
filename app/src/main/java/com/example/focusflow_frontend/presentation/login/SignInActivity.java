@@ -4,20 +4,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.api.UserController;
-import com.example.focusflow_frontend.data.model.SignInRequest;
-import com.example.focusflow_frontend.data.model.SignInResponse;
-import com.example.focusflow_frontend.presentation.main.MainActivity;
-import com.example.focusflow_frontend.utils.ApiClient;
-import com.example.focusflow_frontend.utils.TokenManager;
+import androidx.lifecycle.ViewModelProvider;
 
-import retrofit2.*;
+import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
+import com.example.focusflow_frontend.utils.TokenManager;
 
 public class SignInActivity extends AppCompatActivity {
     EditText edtEmail, edtPassword;
     Button btnSignIn;
-    UserController userController;
+    AuthViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,41 +32,28 @@ public class SignInActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Khởi tạo UserController từ ApiClient
-        userController = ApiClient.getUserController(SignInActivity.this);
+        // ViewModel
+        viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         // Sign In
         btnSignIn.setOnClickListener(v -> {
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
+            viewModel.signIn(email, password);
+        });
 
-            // Gửi yêu cầu đăng nhập
-            SignInRequest signinRequest = new SignInRequest(email, password);
-            userController.signIn(signinRequest).enqueue(new Callback<SignInResponse>() {
-                @Override
-                public void onResponse(Call<SignInResponse> call, Response<SignInResponse> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        // Lấy JWT từ response và lưu vào SharedPreferences
-                        String token = response.body().getToken();
+        // Dữ liệu đăng nhập đúng
+        viewModel.signInResult.observe(this, result -> {
+            TokenManager.saveToken(this, result.getToken());
+            TokenManager.saveUserId(this, result.getUserId());
+            Toast.makeText(this, "Sign in successful", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        });
 
-                        // Lưu token vào SharedPreferences
-                        TokenManager.saveToken(SignInActivity.this, token);
-
-                        Toast.makeText(SignInActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
-
-                        // Chuyển đến màn hình chính
-                        startActivity(new Intent(SignInActivity.this, MainActivity.class));
-                        finish();
-                    } else {
-                        Toast.makeText(SignInActivity.this, "Wrong email or password", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<SignInResponse> call, Throwable t) {
-                    Toast.makeText(SignInActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+        // Dữ liệu đăng nhập sai
+        viewModel.errorMessage.observe(this, error -> {
+            Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
         });
     }
 }

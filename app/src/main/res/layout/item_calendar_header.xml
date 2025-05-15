@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Tên tháng -->
+    <TextView
+        android:id="@+id/monthHeaderText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="May 2025"
+        android:fontFamily="@font/mpr1c_extrabold"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="15dp"
+        android:textColor="@android:color/black"
+        android:layout_gravity="start" />
+
+    <!-- Dòng thứ trong tuần -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:weightSum="7"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Mon"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Tue"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Wed"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Thu"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Fri"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Sat"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:text="Sun"
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+    </LinearLayout>
+</LinearLayout>

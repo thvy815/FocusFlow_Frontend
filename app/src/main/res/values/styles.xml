@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Style cho phần Header của Calendar -->
+    <style name="CalendarHeaderText">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#000000</item>
+        <item name="android:fontFamily">@font/mpr1c_extrabold</item>
+    </style>
+
+    <!-- Style cho thứ của Calendar -->
+    <style name="CalendarWeekText">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#333333</item>
+        <item name="android:fontFamily">@font/mpr1c_bold</item>
+    </style>
+
+    <!-- Style cho ngày của Calendar -->
+    <style name="CalendarDateText">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#333333</item>
+        <item name="android:fontFamily">@font/mpr1c_medium</item>
+    </style>
+</resources>

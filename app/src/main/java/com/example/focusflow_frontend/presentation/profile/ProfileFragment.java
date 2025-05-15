@@ -1,4 +1,6 @@
 package com.example.focusflow_frontend.presentation.profile;
 
-public class ProfileFragment {
+import androidx.fragment.app.Fragment;
+
+public class ProfileFragment extends Fragment {
 }
