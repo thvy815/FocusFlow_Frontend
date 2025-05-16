@@ -19,6 +19,9 @@ import androidx.fragment.app.FragmentManager;
 
 import com.example.focusflow_frontend.R;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 public class ProfileFragment extends Fragment {
     @Override
@@ -27,12 +30,20 @@ public class ProfileFragment extends Fragment {
 
         LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
 
+        // Giả sử đây là danh sách badge người dùng đạt được, mới nhất nằm cuối
+        List<Integer> userBadges = getUserBadges(); // Trả về danh sách drawable resource ID
+
         achievementLayout.removeAllViews();
 
-        for (int i = 0; i < 3; i++) {
+// Lấy 3 badge cuối cùng, nếu chưa đủ thì lấy hết
+        int startIndex = Math.max(userBadges.size() - 3, 0);
+
+        for (int i = startIndex; i < userBadges.size(); i++) {
             ImageView imageView = new ImageView(view.getContext());
 
-            imageView.setImageResource(R.drawable.ic_fire);
+            // Lấy drawable từ badge của user
+            int badgeResId = userBadges.get(i);
+            imageView.setImageResource(badgeResId);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
             params.setMargins(10, 0, 10, 0);
@@ -40,6 +51,7 @@ public class ProfileFragment extends Fragment {
 
             achievementLayout.addView(imageView);
         }
+
 
         ImageView btnSettings = view.findViewById(R.id.btnSetting);
         btnSettings.setOnClickListener(v -> settingClick());
@@ -57,7 +69,8 @@ public class ProfileFragment extends Fragment {
         final int[] imageResIds = {
                 R.drawable.avatar1,
                 R.drawable.avatar2,
-                R.drawable.avatar3
+                R.drawable.avatar3,
+                R.drawable.avatar4
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -153,6 +166,15 @@ public class ProfileFragment extends Fragment {
             imageView.setImageResource(imageResIds[position]);
             return imageView;
         }
+    }
+
+    public List<Integer> getUserBadges() {
+        // Tạo danh sách tĩnh các badge (drawable resource)
+        return Arrays.asList(
+                R.drawable.badge1000,
+                R.drawable.badge100,
+                R.drawable.badge7
+        );
     }
 
 
