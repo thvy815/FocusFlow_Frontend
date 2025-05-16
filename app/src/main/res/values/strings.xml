@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">FocusFlow_Frontend</string>
+    <string name="streak">Streak</string>
+    <string name="fire_icon">fire icon</string>
+    <string name="a_0">0</string>
+    <string name="day_streak">day streak</string>
+    <string name="mission">Mission</string>
+    <string name="previous_pet">Previous pet</string>
+    <string name="next_pet">Next pet</string>
+    <string name="pet_name">Pet name</string>
+    <string name="edit_pet_name">Edit pet name</string>
+    <string name="a_1_10">1/10</string>
+    <string name="complete_3_tasks_n_1_growth_point">Complete 3 tasks\n+1 growth point.</string>
+    <string name="complete_3_pomodoro_sessions_n_3_growth_points">Complete 3 Pomodoro sessions\n+3 growth points</string>
+    <string name="complete_all_tasks_for_the_day_n_3_growth_points">Complete all tasks for the day\n+3 growth points.</string>
 </resources>

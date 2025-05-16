@@ -135,7 +135,11 @@ public class StreakFragment extends Fragment {
 
         // Dummy data for testing
         List<Task> dummyTasks = new ArrayList<>();
-            // Database here
+        dummyTasks.add(new Task(LocalDate.now().minusDays(4), true));
+        dummyTasks.add(new Task(LocalDate.now().minusDays(3), true));
+        dummyTasks.add(new Task(LocalDate.now().minusDays(2), false));
+        dummyTasks.add(new Task(LocalDate.now().minusDays(1), true));
+        dummyTasks.add(new Task(LocalDate.now(), false));
         syncTasks(dummyTasks);
 
         // Navigate to MissionFragment
