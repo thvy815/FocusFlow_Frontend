@@ -1,4 +1,4 @@
-package com.example.focusflow_frontend.presentation.mission;
+package com.example.focusflow_frontend.data.viewmodel;
 
 import android.content.Context;
 import android.content.SharedPreferences;

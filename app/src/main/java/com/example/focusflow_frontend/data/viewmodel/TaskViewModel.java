@@ -24,6 +24,8 @@ public class TaskViewModel extends AndroidViewModel {
     private MutableLiveData<List<Task>> taskList = new MutableLiveData<>();
     public MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private MutableLiveData<Boolean> taskCreatedSuccess = new MutableLiveData<>();
+    private MutableLiveData<Boolean> updateSuccess = new MutableLiveData<>();
+    private MutableLiveData<Boolean> deleteSuccess = new MutableLiveData<>();
     private TaskController taskController;
 
     public TaskViewModel(@NonNull Application application) {
@@ -33,19 +35,17 @@ public class TaskViewModel extends AndroidViewModel {
         taskController = ApiClient.getRetrofit(context).create(TaskController.class);
     }
 
-    // Trả về LiveData của danh sách task
     public LiveData<List<Task>> getTaskList() {
         return taskList;
     }
-
-    // Trả về LiveData của lỗi (nếu có)
     public LiveData<String> getErrorMessage() {
         return errorMessage;
     }
-
     public LiveData<Boolean> getTaskCreatedSuccess() {
         return taskCreatedSuccess;
     }
+    public LiveData<Boolean> getUpdateSuccess() { return updateSuccess; }
+    public LiveData<Boolean> getDeleteSuccess() { return deleteSuccess; }
 
     public void fetchTasks(int userId) {
         taskController.getTasksByUser(userId).enqueue(new Callback<List<Task>>() {
@@ -55,15 +55,6 @@ public class TaskViewModel extends AndroidViewModel {
                     taskList.setValue(response.body());
                 }
                 else {
-                    String error = "Code: " + response.code();
-                    try {
-                        if (response.errorBody() != null) {
-                            error += ", Body: " + response.errorBody().string();
-                        }
-                    } catch (IOException e) {
-                        error += ", Exception: " + e.getMessage();
-                    }
-                    Log.e("FetchTasks", error);
                     errorMessage.postValue("Không lấy được danh sách task.");
                 }
             }
@@ -102,12 +93,35 @@ public class TaskViewModel extends AndroidViewModel {
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
                     Log.d("TaskUpdate", "Updated successfully");
+                    updateSuccess.postValue(true);  // báo thành công
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 Log.e("TaskUpdate", "Update failed: " + t.getMessage());
+                updateSuccess.postValue(false); // báo thất bại
+            }
+        });
+    }
+
+    public void deleteTask(int taskId) {
+        taskController.deleteTask(taskId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("TaskDelete", "Deleted successfully");
+                    deleteSuccess.postValue(true);
+                } else {
+                    Log.e("TaskDelete", "Delete failed: response not successful");
+                    deleteSuccess.postValue(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("TaskDelete", "Delete failed: " + t.getMessage());
+                deleteSuccess.postValue(false);
             }
         });
     }

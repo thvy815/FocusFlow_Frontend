@@ -1,7 +1,9 @@
 package com.example.focusflow_frontend.data.model;
 
-public class Task {
-    private long id;
+import java.io.Serializable;
+
+public class Task implements Serializable {
+    private Integer id;
     private int userId;
     private String title;
     private String description;
@@ -31,8 +33,8 @@ public class Task {
     }
 
     // Getters and Setters
-    public long getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }

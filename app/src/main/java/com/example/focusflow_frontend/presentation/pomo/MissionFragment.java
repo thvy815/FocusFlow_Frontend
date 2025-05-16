@@ -1,4 +1,4 @@
-package com.example.focusflow_frontend.presentation.mission;
+package com.example.focusflow_frontend.presentation.pomo;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,9 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
-
-import java.util.Arrays;
-import java.util.List;
+import com.example.focusflow_frontend.data.viewmodel.MissionViewModel;
 
 public class MissionFragment extends Fragment {
 

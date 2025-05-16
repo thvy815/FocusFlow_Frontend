@@ -25,11 +25,12 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
     private EditText editTitle, editDescription;
     private TextView nameTag, namePriority, nameDate;
-    private Button btnAddTask, btnCancel;
+    private Button btnAddTask, btnCancel, btnDeleteTask;
     private ConstraintLayout btnSelectTag, btnSelectPriority, btnSelectDate;
     private String selectedTime = "", selectedReminder = "", selectedRepeat = "";
     private int userId;
     private TaskViewModel taskViewModel;
+    private Task editingTask = null;
 
     public interface OnTaskAddedListener {
         void onTaskAdded();
@@ -53,10 +54,16 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         namePriority = view.findViewById(R.id.namePriority);
         nameDate = view.findViewById(R.id.nameDate);
         btnAddTask = view.findViewById(R.id.btnAddTask);
+        btnDeleteTask = view.findViewById(R.id.btnDeleteTask);
         btnCancel = view.findViewById(R.id.btnCancel);
         btnSelectTag = view.findViewById(R.id.btn_select_tag);
         btnSelectPriority = view.findViewById(R.id.btn_select_priority);
         btnSelectDate = view.findViewById(R.id.btn_select_date);
+
+        // Nhận Task từ arguments
+        if (getArguments() != null && getArguments().containsKey("task")) {
+            editingTask = (Task) getArguments().getSerializable("task");
+        }
 
         // ViewModel
         taskViewModel = new ViewModelProvider(
@@ -64,18 +71,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                 ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())
         ).get(TaskViewModel.class);
 
-        taskViewModel.getTaskCreatedSuccess().observe(getViewLifecycleOwner(), success -> {
-            if (success != null && success) {
-                if (listener != null) {
-                    listener.onTaskAdded(); // Thông báo task đã được thêm thành công
-                }
-                dismiss();
-            } else if (success != null && !success) {
-                Toast.makeText(getContext(), "Add task failed, please try again", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Xử lý nút Add
+        // Xử lý nút Add (Edit)
         btnAddTask.setOnClickListener(v -> {
             String title = editTitle.getText().toString().trim();
             String desc = editDescription.getText().toString().trim();
@@ -89,28 +85,91 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             }
 
             userId = TokenManager.getUserId(requireContext());
+            int priorityLevel = convertPriorityToLevel(priority);
 
-            int priorityLevel;
-            switch (priority.toLowerCase()) {
-                case "low": priorityLevel = 1; break;
-                case "medium": priorityLevel = 2; break;
-                case "high": priorityLevel = 3; break;
-                default: priorityLevel = 0; break;
+            if (editingTask != null) {
+                // Chỉnh sửa task
+                editingTask.setTitle(title);
+                editingTask.setDescription(desc);
+                editingTask.setDueDate(date);
+                editingTask.setTime(selectedTime);
+                editingTask.setTag(tag);
+                editingTask.setPriority(priorityLevel);
+                editingTask.setReminderStyle(selectedReminder);
+                editingTask.setRepeatStyle(selectedRepeat);
+
+                taskViewModel.updateTask(editingTask);
+                Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
+                dismiss();
             }
+            else {
+                // Thêm task mới
+                Task newTask = new Task();
+                newTask.setId(null);
+                newTask.setUserId(userId);
+                newTask.setTitle(title);
+                newTask.setDescription(desc);
+                newTask.setDueDate(date);
+                newTask.setTime(selectedTime);
+                newTask.setTag(tag);
+                newTask.setPriority(priorityLevel);
+                newTask.setReminderStyle(selectedReminder);
+                newTask.setRepeatStyle(selectedRepeat);
 
-            Task newTask = new Task();
-            newTask.setUserId(userId);
-            newTask.setTitle(title);
-            newTask.setDescription(desc);
-            newTask.setDueDate(date);
-            newTask.setTime(selectedTime);
-            newTask.setTag(tag);
-            newTask.setPriority(priorityLevel);
-            newTask.setReminderStyle(selectedReminder);
-            newTask.setRepeatStyle(selectedRepeat);
+                taskViewModel.getTaskCreatedSuccess().observe(getViewLifecycleOwner(), success -> {
+                    if (success != null && success) {
+                        if (listener != null) listener.onTaskAdded(); // Thông báo task đã được thêm thành công
+                        dismiss();
+                    } else {
+                        Toast.makeText(getContext(), "Add task failed, please try again", Toast.LENGTH_SHORT).show();
+                    }
+                });
 
-            // Gọi ViewModel để tạo task mới
-            taskViewModel.createTask(newTask);
+                // Gọi ViewModel để tạo task mới
+                taskViewModel.createTask(newTask);
+            }
+        });
+
+        // Xử lý nút Delete
+        if (editingTask != null) {
+            // Chế độ sửa
+            btnAddTask.setText("Done");
+            btnDeleteTask.setVisibility(View.VISIBLE);
+
+            editTitle.setText(editingTask.getTitle());
+            editDescription.setText(editingTask.getDescription());
+            nameTag.setText(editingTask.getTag());
+            namePriority.setText(convertPriorityToText(editingTask.getPriority()));
+            nameDate.setText(editingTask.getDueDate());
+
+            selectedTime = editingTask.getTime();
+            selectedReminder = editingTask.getReminderStyle();
+            selectedRepeat = editingTask.getRepeatStyle();
+        } else {
+            // Chế độ thêm mới
+            btnAddTask.setText("Add");
+            btnDeleteTask.setVisibility(View.GONE);
+        }
+        btnDeleteTask.setOnClickListener(v -> {
+            if (editingTask != null) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Delete Task")
+                        .setMessage("Are you sure you want to delete this task?")
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            taskViewModel.deleteTask(editingTask.getId());
+                            taskViewModel.getDeleteSuccess().observe(getViewLifecycleOwner(), success -> {
+                                if (success != null && success) {
+                                    Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+                                    if (listener != null) listener.onTaskAdded(); // Cập nhật lại danh sách sau khi xoá
+                                    dismiss();
+                                } else {
+                                    Toast.makeText(getContext(), "Delete failed, try again", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
         });
 
         // Xử lý nút Cancel
@@ -132,6 +191,24 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         btnSelectDate.setOnClickListener(v -> showDateBottomSheet());
 
         return view;
+    }
+
+    private int convertPriorityToLevel(String priority) {
+        switch (priority.toLowerCase()) {
+            case "low": return 1;
+            case "medium": return 2;
+            case "high": return 3;
+            default: return 0;
+        }
+    }
+
+    private String convertPriorityToText(int level) {
+        switch (level) {
+            case 1: return "Low";
+            case 2: return "Medium";
+            case 3: return "High";
+            default: return "None";
+        }
     }
 
     private void showDateBottomSheet() {

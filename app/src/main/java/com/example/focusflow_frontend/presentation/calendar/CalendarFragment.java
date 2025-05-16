@@ -57,7 +57,7 @@ public class CalendarFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerViewTasks);
         ImageButton btnAddTask = view.findViewById(R.id.btn_add_task);
 
-        // Add Task
+        // Button Add Task
         btnAddTask.setOnClickListener(v -> {
             AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
             bottomSheet.setOnTaskAddedListener(() -> {
@@ -75,7 +75,28 @@ public class CalendarFragment extends Fragment {
             public void onTaskChecked(Task task, boolean isChecked) {
                 task.setCompleted(isChecked);
                 taskViewModel.updateTask(task); // cập nhật DB
-                updateTaskOrder(task); // cập nhật UI
+                // Đợi update thành công rồi fetch lại danh sách
+                taskViewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
+                    if (success != null && success) {
+                        taskViewModel.fetchTasks(userId);
+                    } else {
+                        Toast.makeText(getContext(), "Update task failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }, new TaskAdapter.OnTaskClickListener() {
+            @Override
+            public void onTaskClick(Task task) {
+                // Truyền task vào để chỉnh sửa
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("task", task);  // Task phải implements Serializable
+
+                AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
+                bottomSheet.setArguments(bundle);
+                bottomSheet.setOnTaskAddedListener(() -> {
+                    taskViewModel.fetchTasks(userId);
+                });
+                bottomSheet.show(getChildFragmentManager(), "EditTask");
             }
         });
         recyclerView.setAdapter(taskAdapter);
@@ -178,26 +199,6 @@ public class CalendarFragment extends Fragment {
         filteredTasks.addAll(uncompletedTasks);
         filteredTasks.addAll(completedTasks);
 
-        taskAdapter.notifyDataSetChanged();
-    }
-
-    private void updateTaskOrder(Task task) {
-        filteredTasks.remove(task);
-        if (task.isCompleted()) {
-            // Nếu hoàn thành → thêm cuối
-            filteredTasks.add(task);
-        } else {
-            // Nếu là task chưa hoàn thành → thêm vào cuối nhóm "chưa hoàn thành"
-            int insertIndex = 0;
-            for (int i = 0; i < filteredTasks.size(); i++) {
-                if (filteredTasks.get(i).isCompleted()) {
-                    insertIndex = i;
-                    break;
-                }
-                insertIndex = i + 1;
-            }
-            filteredTasks.add(insertIndex, task);
-        }
         taskAdapter.notifyDataSetChanged();
     }
 

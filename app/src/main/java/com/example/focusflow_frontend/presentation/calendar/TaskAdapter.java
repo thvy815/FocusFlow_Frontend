@@ -16,14 +16,25 @@ import java.util.List;
 public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder>{
     private List<Task> taskList;
     private OnTaskCheckedListener onTaskCheckedListener;
+    private OnTaskClickListener onTaskClickListener;
 
     public interface OnTaskCheckedListener {
         void onTaskChecked(Task task, boolean isChecked);
     }
 
+    public interface OnTaskClickListener {
+        void onTaskClick(Task task);
+    }
+
     public TaskAdapter(List<Task> taskList, OnTaskCheckedListener listener) {
         this.taskList = taskList;
         this.onTaskCheckedListener = listener;
+    }
+
+    public TaskAdapter(List<Task> tasks, OnTaskCheckedListener listener, OnTaskClickListener clickListener) {
+        this.taskList = tasks;
+        this.onTaskCheckedListener = listener;
+        this.onTaskClickListener = clickListener;
     }
 
     public class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -40,6 +51,14 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
             tagName = itemView.findViewById(R.id.tagName);
             priorityName = itemView.findViewById(R.id.priorityName);
             checkboxCompleted = itemView.findViewById(R.id.checkboxCompleted);
+
+            // Xử lý click vào toàn bộ item để chỉnh sửa task
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && onTaskClickListener != null) {
+                    onTaskClickListener.onTaskClick(taskList.get(position));
+                }
+            });
         }
 
         // Gán dữ liệu của từng item
