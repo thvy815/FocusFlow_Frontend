@@ -37,6 +37,11 @@ public class TokenManager {
         return preferences.getInt(KEY_USER_ID, -1); // -1 nếu chưa lưu
     }
 
+    public static void clearUserId(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().remove(KEY_USER_ID).apply();
+    }
+
     public static void saveRememberMe(Context context, boolean remember) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
                 .edit().putBoolean(KEY_REMEMBER, remember).apply();

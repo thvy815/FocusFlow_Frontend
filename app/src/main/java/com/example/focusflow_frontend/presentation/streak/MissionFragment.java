@@ -1,4 +1,4 @@
-package com.example.focusflow_frontend.presentation.pomo;
+package com.example.focusflow_frontend.presentation.streak;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

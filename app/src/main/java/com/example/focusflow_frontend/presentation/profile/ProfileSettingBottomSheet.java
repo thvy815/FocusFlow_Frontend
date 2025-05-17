@@ -1,6 +1,9 @@
 package com.example.focusflow_frontend.presentation.profile;
 
 import android.app.Dialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Layout;
@@ -16,6 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.presentation.login.SignInActivity;
+import com.example.focusflow_frontend.utils.TokenManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -90,7 +95,21 @@ public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
             dismiss();
         });
         view.findViewById(R.id.Logout).setOnClickListener(v -> {
-            Toast.makeText(getContext(), "loading Logged out", Toast.LENGTH_SHORT).show();
+            // Xóa dữ liệu đăng nhập
+            TokenManager.clearToken(requireContext());
+            TokenManager.clearUserId(requireContext());
+            TokenManager.saveRememberMe(requireContext(), false);
+
+            // Thông báo
+            Toast.makeText(getContext(), "Logged out", Toast.LENGTH_SHORT).show();
+
+            // Chuyển về màn hình đăng nhập
+            Intent intent = new Intent(requireContext(), SignInActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear toàn bộ stack
+            startActivity(intent);
+
+            // Đóng BottomSheet
+            dismiss();
         });
 
         return view;
