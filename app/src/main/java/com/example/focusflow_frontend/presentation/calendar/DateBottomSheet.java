@@ -32,6 +32,17 @@ public class DateBottomSheet extends BottomSheetDialogFragment {
         this.listener = listener;
     }
 
+    private String initDate = "";
+    private String initTime = "";
+    private String initReminder = "";
+    private String initRepeat = "";
+    public void setInitialDateTime(String date, String time, String reminder, String repeat) {
+        this.initDate = date;
+        this.initTime = time;
+        this.initReminder = reminder;
+        this.initRepeat = repeat;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -43,8 +54,35 @@ public class DateBottomSheet extends BottomSheetDialogFragment {
         TextView nameReminder = sheetView.findViewById(R.id.nameReminder);
         TextView nameRepeat = sheetView.findViewById(R.id.nameRepeat);
 
-        // CalendarView
         final long[] selectedDate = {System.currentTimeMillis()};
+
+        // --- Set lại Calendar theo initDate ---
+        if (!initDate.isEmpty()) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                Date date = sdf.parse(initDate);
+                if (date != null) {
+                    long timeInMillis = date.getTime();
+                    calendarView.setDate(timeInMillis, false, true);
+                    selectedDate[0] = timeInMillis;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Set thời gian, reminder, repeat task
+        if (!initTime.isEmpty()) {
+            nameTime.setText(initTime);
+        }
+        if (!initReminder.isEmpty()) {
+            nameReminder.setText(initReminder);
+        }
+        if (!initRepeat.isEmpty()) {
+            nameRepeat.setText(initRepeat);
+        }
+
+        // CalendarView
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
             Calendar calendar = Calendar.getInstance();
             calendar.set(year, month, dayOfMonth);

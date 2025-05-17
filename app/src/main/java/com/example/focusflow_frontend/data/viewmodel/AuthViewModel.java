@@ -27,8 +27,8 @@ public class AuthViewModel extends AndroidViewModel {
         userController = ApiClient.getUserController(application.getApplicationContext());
     }
 
-    public void signIn(String email, String password) {
-        SignInRequest request = new SignInRequest(email, password);
+    public void signIn(String email, String password, boolean rememberMe) {
+        SignInRequest request = new SignInRequest(email, password, rememberMe);
         userController.signIn(request).enqueue(new Callback<SignInResponse>() {
             @Override
             public void onResponse(Call<SignInResponse> call, Response<SignInResponse> response) {

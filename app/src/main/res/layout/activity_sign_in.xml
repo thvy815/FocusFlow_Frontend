@@ -71,12 +71,12 @@
 
     <!-- Remember -->
     <CheckBox
-        android:id="@+id/cb_remember"
+        android:id="@+id/cb_remember_me"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="35dp"
         android:layout_marginTop="10dp"
-        android:text="Remember"
+        android:text="Remember me"
         android:fontFamily="@font/mpr1c_medium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_password" />
@@ -108,7 +108,7 @@
         android:fontFamily="@font/mpr1c_extrabold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cb_remember" />
+        app:layout_constraintTop_toBottomOf="@+id/cb_remember_me" />
 
     <!-- Sign Up Link -->
     <TextView

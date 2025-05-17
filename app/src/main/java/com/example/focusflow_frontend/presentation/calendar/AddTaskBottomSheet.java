@@ -213,6 +213,15 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
     private void showDateBottomSheet() {
         DateBottomSheet dateSheet = new DateBottomSheet();
+
+        // Truyền dữ liệu task đã chọn vào dateSheet
+        dateSheet.setInitialDateTime(
+                nameDate.getText().toString(),
+                selectedTime,
+                selectedReminder,
+                selectedRepeat
+        );
+
         dateSheet.setOnDateSelectedListener((date, time, reminder, repeat) -> {
             nameDate.setText(date);
             selectedTime = time;
