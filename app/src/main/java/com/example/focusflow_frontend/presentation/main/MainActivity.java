@@ -8,9 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.calendar.CalendarFragment;
-import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
 import com.example.focusflow_frontend.presentation.profile.ProfileFragment;
-import com.example.focusflow_frontend.presentation.streak.StreakFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,21 +24,11 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         // Default fragment
-        loadFragment(new CalendarFragment());
+        loadFragment(new ProfileFragment());
 
         // Chọn menu dưới
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
-
-            if (item.getItemId() == R.id.nav_profile) {
-                selectedFragment = new ProfileFragment();
-            } else if (item.getItemId() == R.id.nav_calendar) {
-                selectedFragment = new CalendarFragment();
-            } else if (item.getItemId() == R.id.nav_pomodoro) {
-                selectedFragment = new PomodoroFragment();
-            } else if (item.getItemId() == R.id.nav_streak) {
-                selectedFragment = new StreakFragment();
-            }
 
             if (selectedFragment != null) {
                 loadFragment(selectedFragment);
