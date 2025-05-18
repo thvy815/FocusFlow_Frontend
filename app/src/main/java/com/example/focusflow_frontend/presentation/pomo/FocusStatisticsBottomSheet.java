@@ -93,7 +93,6 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 //        paintTrendChart();
 //        paintDetailsChart();
 
-
         return view;
 
 
@@ -108,74 +107,4 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
         FocusRecordBottomSheet statsSheet = new FocusRecordBottomSheet();
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
-// Paint chart
-//    private void paintTrendChart() {
-//        int[] numPomoDay = new int[7];
-//        for (int i = 0; i < 7; i++)
-//            numPomoDay[i] = i + 2;
-//
-//        ArrayList<Entry> entries = new ArrayList<>();
-//        for (int i = 0; i < 7; i++) {
-//            entries.add(new Entry(i, numPomoDay[i]));
-//        }
-//
-//        LineDataSet dataSet = new LineDataSet(entries, "Pomodoros");
-//        dataSet.setDrawValues(false);
-//        dataSet.setDrawCircles(true);
-//        dataSet.setDrawCircleHole(false);
-//        dataSet.setLineWidth(2f);
-//
-//        LineData lineData = new LineData(dataSet);
-//        lineChart.setData(lineData);
-//
-//        String[] days = {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"};
-//        XAxis xAxis = lineChart.getXAxis();
-//        xAxis.setValueFormatter(new IndexAxisValueFormatter(days));
-//        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-//        xAxis.setGranularity(1f);
-//        xAxis.setDrawGridLines(false);
-//
-//        lineChart.getAxisRight().setEnabled(false);
-//        lineChart.getDescription().setEnabled(false);
-//        lineChart.getLegend().setEnabled(false);
-//        lineChart.invalidate();
-//    }
-//
-//    private void paintDetailsChart() {
-//        int numPomo = 2;
-//        int totalMinutes = 4;
-//
-//        if (numPomo == 0) {
-//            pieChart.clear();
-//            pieChart.setNoDataText("No data");
-//            pieChart.setNoDataTextColor(Color.GRAY);
-//            pieChart.invalidate();
-//        } else {
-//            ArrayList<PieEntry> entries = new ArrayList<>();
-//            entries.add(new PieEntry(totalMinutes));
-//
-//            PieDataSet dataSet = new PieDataSet(entries, "");
-//            dataSet.setColors(Color.BLUE);
-//            dataSet.setValueTextSize(4f);
-//            dataSet.setValueTextColor(Color.WHITE);
-//            dataSet.setDrawValues(false);
-//            dataSet.setSliceSpace(0.5f);
-//
-//            PieData data = new PieData(dataSet);
-//
-//            pieChart.setData(data);
-//            pieChart.setDrawEntryLabels(false);
-//            pieChart.setUsePercentValues(false);
-//            pieChart.setCenterText(" " + totalMinutes);
-//            pieChart.setCenterTextSize(20f);
-//            pieChart.setCenterTextColor(Color.GRAY);
-//            pieChart.setDrawHoleEnabled(true);
-//            pieChart.setHoleRadius(85f);
-//            pieChart.setTransparentCircleRadius(90f);
-//            pieChart.setDrawRoundedSlices(true);
-//            pieChart.getDescription().setEnabled(false);
-//            pieChart.getLegend().setEnabled(false);
-//            pieChart.invalidate();
-//        }
-//    }
 }

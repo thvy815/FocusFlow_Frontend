@@ -1,10 +1,14 @@
 package com.example.focusflow_frontend.utils;
 
+import android.content.Context;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.presentation.pomo.WhiteNoisePlayer;
+
+import java.util.List;
 
 public class ViewUtils {
 
@@ -32,6 +36,47 @@ public class ViewUtils {
         }
     }
 
+    //Set white_noise:
+    public static void setWhiteNoise(View rootView, int rootId, int noiseId, int imageVoice){
+        if (rootView == null) return;
+        View NoiseLayout = rootView.findViewById(rootId);
+        if (NoiseLayout != null){
+            ImageView noise = NoiseLayout.findViewById(noiseId);
+            if (noise != null)
+                noise.setImageResource(imageVoice);
+        }
+    }
+
+    public static void setVolume(View rootView, int rootId, int noiseId, int id, WhiteNoisePlayer whiteNoisePlayer) {
+        if (rootView == null || whiteNoisePlayer == null) return;
+        View noiseLayout = rootView.findViewById(rootId);
+        if (noiseLayout != null) {
+            ImageView noise = noiseLayout.findViewById(noiseId);
+            if (noise != null) {
+                Context context = rootView.getContext();
+                noise.setOnClickListener(v -> {
+                    if (context != null) {
+                        whiteNoisePlayer.startWhiteNoise(context, id);
+                    }
+                });
+            }
+        }
+    }
+
+    public static void stopVolume(View rootView, int rootId, int noiseId, WhiteNoisePlayer whiteNoisePlayer) {
+        if (rootView == null || whiteNoisePlayer == null) return;
+        View noiseLayout = rootView.findViewById(rootId);
+        if (noiseLayout != null) {
+            ImageView noise = noiseLayout.findViewById(noiseId);
+            if (noise != null) {
+                noise.setOnClickListener(v -> {
+                        whiteNoisePlayer.stopWhiteNoise();
+                });
+            }
+        }
+    }
+
+
     public static void backClick(androidx.fragment.app.Fragment fragment, View rootView, int rootId, int backIcon){
         if (rootView != null){
             View textLayout = rootView.findViewById(rootId);
@@ -53,6 +98,7 @@ public class ViewUtils {
                     .popBackStack();
         }
     }
+
 
 
 

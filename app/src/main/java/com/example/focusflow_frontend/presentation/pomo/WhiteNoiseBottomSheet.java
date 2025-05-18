@@ -2,11 +2,13 @@ package com.example.focusflow_frontend.presentation.pomo;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.media.MediaPlayer;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.utils.ViewUtils;
@@ -60,6 +62,30 @@ public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
             ViewUtils.handleBackClick(this);
         });
 
+//        MediaPlayer testPlayer = MediaPlayer.create(requireContext(), R.raw.clock_sound);
+//        testPlayer.start();
+//        testPlayer.setOnErrorListener((mp, what, extra) -> {
+//            Log.e("WhiteNoise", "MediaPlayer error: what=" + what + ", extra=" + extra);
+//            return true;
+//        });
+
+
+        ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise1, R.drawable.volume_off);
+        ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise2, R.drawable.clock);
+        ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise3, R.drawable.fan);
+
+        ViewUtils.setWhiteNoise(view, R.id.Row2, R.id.noise1, R.drawable.rain);
+        ViewUtils.setWhiteNoise(view, R.id.Row2, R.id.noise2, R.drawable.underwater);
+        ViewUtils.setWhiteNoise(view, R.id.Row2, R.id.noise3, 0);
+
+        WhiteNoisePlayer whiteNoisePlayer = new WhiteNoisePlayer();
+
+        ViewUtils.stopVolume(view, R.id.Row1, R.id.noise1, whiteNoisePlayer);
+        ViewUtils.setVolume(view, R.id.Row1, R.id.noise2, R.raw.clock_sound, whiteNoisePlayer);
+        ViewUtils.setVolume(view, R.id.Row1, R.id.noise3, R.raw.fan_sound, whiteNoisePlayer);
+
+        ViewUtils.setVolume(view, R.id.Row2, R.id.noise1, R.raw.rain_sound, whiteNoisePlayer);
+        ViewUtils.setVolume(view, R.id.Row2, R.id.noise2, R.raw.underwater_sound, whiteNoisePlayer);
         return view;
     }
 }

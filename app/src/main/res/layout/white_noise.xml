@@ -87,26 +87,11 @@
             android:gravity="center_horizontal">
 
             <include
-                android:id="@+id/emailRow"
+                android:id="@+id/Row1"
                 layout="@layout/item_noise" />
 
             <include
-                android:id="@+id/emailRow"
-                layout="@layout/item_noise" />
-
-            <include
-                android:id="@+id/emailRow"
-                layout="@layout/item_noise" />
-
-            <include
-                android:id="@+id/emailRow"
-                layout="@layout/item_noise" />
-
-            <include
-                android:id="@+id/emailRow"
-                layout="@layout/item_noise" />
-            <include
-                android:id="@+id/emailRow"
+                android:id="@+id/Row2"
                 layout="@layout/item_noise" />
 
         </LinearLayout>
