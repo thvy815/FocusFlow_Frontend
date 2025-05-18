@@ -1,0 +1,99 @@
+package com.example.focusflow_frontend.data.model;
+
+import android.os.Build;
+
+
+public class Pomodoro {
+
+    public Pomodoro(){}
+    public Pomodoro(int id, int userId, int taskId, String startAt, String endAt, String dueDate, int totalTime, boolean isDeleted) {
+        this.id = id;
+        this.userId = userId;
+        this.taskId = taskId;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.dueDate = dueDate;
+        this.totalTime = totalTime;
+        this.isDeleted = isDeleted;
+    }
+
+    private Integer id;
+    private int userId;
+    private int taskId;
+    private String startAt;
+    private String endAt;
+    private String dueDate;
+    private long totalTime;
+    private boolean isDeleted;
+
+    public Pomodoro(int userId, int taskId, String startAt, String dueDate, boolean isDeleted) {
+        this.userId = userId;
+        this.taskId = taskId;
+        this.startAt = startAt;
+        this.dueDate = dueDate;
+        this.isDeleted = isDeleted;
+    }
+
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getStartAt() {
+        return startAt;
+    }
+
+    public void setStartAt(String startAt) {
+        this.startAt = startAt;
+    }
+
+    public String getEndAt() {
+        return endAt;
+    }
+
+    public void setEndAt(String endAt) {
+        this.endAt = endAt;
+    }
+
+    public String getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(String dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public long getTotalTime() {
+        return totalTime;
+    }
+
+    public void setTotalTime(long totalTime) {
+        this.totalTime = totalTime;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+}

@@ -2,6 +2,8 @@ package com.example.focusflow_frontend.utils;
 
 import android.content.Context;
 
+import com.example.focusflow_frontend.data.api.PomodoroController;
+import com.example.focusflow_frontend.data.api.PomodoroDetailController;
 import com.example.focusflow_frontend.data.api.UserController;
 
 import okhttp3.Interceptor;
@@ -42,6 +44,7 @@ public class ApiClient {
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create())
+                    .client(httpClient.build())
                     .build();
         }
         return retrofit;
@@ -50,5 +53,13 @@ public class ApiClient {
     // Lấy UserController từ Retrofit
     public static UserController getUserController(Context context) {
         return getRetrofit(context).create(UserController.class);
+    }
+
+    public static PomodoroController getPomodoroController(Context context) {
+        return getRetrofit(context).create(PomodoroController.class);
+    }
+
+    public static PomodoroDetailController getPomodoroDetailController(Context context) {
+        return getRetrofit(context).create(PomodoroDetailController.class);
     }
 }

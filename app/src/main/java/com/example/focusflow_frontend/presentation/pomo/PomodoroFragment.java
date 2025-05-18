@@ -12,9 +12,6 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
-import android.os.VibratorManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,14 +22,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.utils.ViewUtils;
+import com.example.focusflow_frontend.data.api.PomodoroController;
+import com.example.focusflow_frontend.data.api.PomodoroDetailController;
+import com.example.focusflow_frontend.data.model.Pomodoro;
 
+import java.sql.Time;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -50,10 +53,14 @@ public class PomodoroFragment extends Fragment {
     private WheelPicker wheelPicker;
     private WhiteNoisePlayer whiteNoisePlayer = new WhiteNoisePlayer();
     private WhiteNoiseBottomSheet bottomSheet = new WhiteNoiseBottomSheet(whiteNoisePlayer);
+    private PomodoroViewModel pomodoroViewModel;
+    private Pomodoro currPomodoro;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.pomodoro, container, false);
+
+        pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
 
         timerText = view.findViewById(R.id.timer_text);
         wheelPicker = view.findViewById(R.id.wheelPicker);
@@ -63,9 +70,6 @@ public class PomodoroFragment extends Fragment {
         Typeface customTypeface = ResourcesCompat.getFont(requireContext(), R.font.mpr1c_bold);
         wheelPicker.setTypeface(customTypeface);
 
-//        // Khởi tạo các view
-//        circleView = view.findViewById(R.id.circleView);
-
         Button startButton = view.findViewById(R.id.start_button);
         ImageView playButton = view.findViewById(R.id.play_icon);
         ImageView pauseButton = view.findViewById(R.id.paused_icon);
@@ -74,7 +78,9 @@ public class PomodoroFragment extends Fragment {
         ImageView imvSchedule = view.findViewById(R.id.clock_icon);
         ImageView imvVolume2 = view.findViewById(R.id.volume_icon);
 
-        startButton.setOnClickListener(v -> startClick());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startButton.setOnClickListener(v -> startClick());
+        }
         playButton.setOnClickListener(v -> playClick());
         pauseButton.setOnClickListener(v -> pauseClick());
         stopButton.setOnClickListener(v -> stopClick());
@@ -84,25 +90,21 @@ public class PomodoroFragment extends Fragment {
 
         timerText.setOnClickListener(v-> showTimePickerDialog());
 
-
         View.OnClickListener openWhiteNoiseListener = v -> {
             bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
         };
-
         imvVolume1.setOnClickListener(openWhiteNoiseListener);
         imvVolume2.setOnClickListener(openWhiteNoiseListener);
+
 
         return view;
     }
 
 // Chuyển trang:
-
-
     public void focusStatisticClick() {
         FocusStatisticsBottomSheet statsSheet = new FocusStatisticsBottomSheet();
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
-
 //Bấm thay đổi phút POMO
     private void showTimePickerDialog() {
     if (isStarted) {
@@ -151,14 +153,13 @@ public class PomodoroFragment extends Fragment {
         Toast.makeText(getContext(), "Đặt thời gian: " + selectedMinute + " phút", Toast.LENGTH_SHORT).show();
     });
 }
-
-
     private void updateTimerDisplay(int minutes) {
         TextView timerText = getView().findViewById(R.id.timer_text);
         timerText.setText(String.format(Locale.getDefault(), "%02d:00", minutes));
     }
 
 // Bấm nút START:
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void startClick() {
         if (wheelPicker.getVisibility() == View.VISIBLE) {
             Toast.makeText(getContext(), "Vui lòng chọn thời gian trước khi bắt đầu", Toast.LENGTH_SHORT).show();
@@ -166,48 +167,13 @@ public class PomodoroFragment extends Fragment {
         }
         startTime = System.currentTimeMillis();
         pauseTime = startTime;
+        LocalDate dueDate = LocalDate.now();;
 
-        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
+        animateTimerToCenter();
+        SavePomodoro(startTime,1,17,dueDate);
 
-        Button startButton = getView().findViewById(R.id.start_button);
-        LinearLayout afterStart = getView().findViewById(R.id.afterStart);
-        TextView timerText = getView().findViewById(R.id.timer_text);
-        ImageView play_icon = getView().findViewById(R.id.play_icon);
-
-        int parentWidth = layout.getWidth();
-        int parentHeight = layout.getHeight();
-
-        int textWidth = timerText.getWidth();
-        int textHeight = timerText.getHeight();
-
-        // Tính khoảng cách cần di chuyển để đến giữa
-        float targetX = (parentWidth - textWidth) / 2f - timerText.getX();
-        float targetY = (parentHeight - textHeight) / 2f - timerText.getY();
-
-        timerText.animate()
-                .translationXBy(targetX)
-                .translationYBy(targetY)
-                .setDuration(500)
-                .start();
-
-        afterStart.animate()
-                .translationXBy(targetX)
-                .translationYBy((targetY + 20))
-                .start();
-        play_icon.animate()
-                .translationXBy(targetX)
-                .translationYBy((targetY + 20))
-                .start();
-
-        float currentSizePx = timerText.getTextSize(); // already in pixels
-        float targetSizePx = 80;
-
-        ObjectAnimator scaleAnimator = ObjectAnimator.ofFloat(timerText, "textSize", currentSizePx, targetSizePx);
-//        scaleAnimator.setDuration(600);
-        scaleAnimator.start();
-
-        startButton.setVisibility(View.GONE);
-        afterStart.setVisibility(VISIBLE);
+        getView().findViewById(R.id.start_button).setVisibility(View.GONE);
+        getView().findViewById(R.id.afterStart).setVisibility(VISIBLE);
         startTimer();
     }
     public void startTimer() {
@@ -228,6 +194,26 @@ public class PomodoroFragment extends Fragment {
             public void onFinish() {
                 Toast.makeText(getContext(), "Time's up!", Toast.LENGTH_SHORT).show();
                 timerText.setText(getString(R.string.timeOut));
+
+                endTime = System.currentTimeMillis();
+                Time en = new Time(endTime);
+
+                long focusDuration = endTime - pauseTime;
+                long pomoDuration = endTime - startTime;
+
+                currPomodoro.setEndAt(en.toString());
+                currPomodoro.setTotalTime(pomoDuration);
+
+                int pomoId = currPomodoro.getId();
+                int userId = currPomodoro.getUserId();
+                int taskId = currPomodoro.getTaskId();
+
+                pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
+                pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
+
+
+
+
             }
         }.start();
     }
@@ -246,7 +232,10 @@ public class PomodoroFragment extends Fragment {
             countDownTimer.cancel();
             endTime = System.currentTimeMillis();
             long focusDuration = endTime - pauseTime;
-            saveFocusToServer(pauseTime, endTime, focusDuration);
+            int pomoId = currPomodoro.getId();
+            int userId = currPomodoro.getUserId();
+            int taskId = currPomodoro.getTaskId();
+            pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
         }
         whiteNoisePlayer.stopWhiteNoise();
         isPaused = true;
@@ -267,8 +256,9 @@ public class PomodoroFragment extends Fragment {
 
 // Bấm nút STOP:
     public void stopClick() {
-        int minTime = 20 * 60 * 1000;
-        if (timeLeft > minTime) {
+        endTime = System.currentTimeMillis();
+        long minTime = endTime - startTime;
+        if (minTime < 5*60*1000) {
             showDialogLessThan5min();
         } else {
             showDialogMoreThan5min();
@@ -292,11 +282,22 @@ public class PomodoroFragment extends Fragment {
 
         builder.setNeutralButton("Save", (dialog, which) -> {
             endTime = System.currentTimeMillis();
+
             long focusDuration = endTime - pauseTime;
             long pomoDuration = endTime - startTime;
 
-            saveFocusToServer(startTime, endTime, focusDuration);
-            saveRecordToServer(startTime, endTime, pomoDuration);
+            Time en = new Time(endTime);
+
+            currPomodoro.setEndAt(en.toString());
+            currPomodoro.setTotalTime(pomoDuration);
+
+            int pomoId = currPomodoro.getId();
+            int userId = currPomodoro.getUserId();
+            int taskId = currPomodoro.getTaskId();
+
+            pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
+            pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
+
             restartFragment();
         });
 
@@ -313,13 +314,74 @@ public class PomodoroFragment extends Fragment {
         whiteNoisePlayer.stopWhiteNoise();
     }
 
-    private void saveFocusToServer(long startTime, long endTime, long duration) {
-        // TODO: Gửi dữ liệu lên server
+    private void animateTimerToCenter() {
+        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
+
+        Button startButton = getView().findViewById(R.id.start_button);
+        LinearLayout afterStart = getView().findViewById(R.id.afterStart);
+        TextView timerText = getView().findViewById(R.id.timer_text);
+        ImageView play_icon = getView().findViewById(R.id.play_icon);
+
+        // Lấy kích thước cha và các view
+        int parentWidth = layout.getWidth();
+        int parentHeight = layout.getHeight();
+
+        int textWidth = timerText.getWidth();
+        int textHeight = timerText.getHeight();
+
+        // Tính khoảng cách di chuyển đến tâm
+        float targetX = (parentWidth - textWidth) / 2f - timerText.getX();
+        float targetY = (parentHeight - textHeight) / 2f - timerText.getY();
+
+        // Di chuyển timerText về giữa
+        timerText.animate()
+                .translationXBy(targetX)
+                .translationYBy(targetY)
+                .setDuration(500)
+                .start();
+
+        // Di chuyển afterStart và playIcon theo
+        afterStart.animate()
+                .translationXBy(targetX)
+                .translationYBy(targetY + 20)
+                .setDuration(500)
+                .start();
+
+        play_icon.animate()
+                .translationXBy(targetX)
+                .translationYBy(targetY + 20)
+                .setDuration(500)
+                .start();
+
+        // Thu/phóng kích thước chữ timerText từ currentSizePx đến 80px
+        float currentSizePx = timerText.getTextSize();
+        float targetSizePx = 80f;
+
+        ObjectAnimator scaleAnimator = ObjectAnimator.ofFloat(timerText, "textSize", currentSizePx, targetSizePx);
+        scaleAnimator.setDuration(500);
+        scaleAnimator.start();
     }
 
-    private void saveRecordToServer(long startTime, long endTime, long duration) {
-        // TODO: Gửi dữ liệu tổng hợp lên server
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void SavePomodoro(long startTime, int userId, int taskId, LocalDate dueDate){
+        //API LƯU DB:
+//        String userJson = sharedPreferences.getString("currentUser", "");
+//        Gson gson = new Gson();
+//        User currentUser = gson.fromJson(userJson, User.class);
+//        int userId = currentUser.getId();
+
+        pomodoroViewModel.getLastCreatedPomodoro().observe(getViewLifecycleOwner(), pomodoro -> {
+            if (pomodoro != null) {
+                currPomodoro = pomodoro;
+                Toast.makeText(getContext(), "Pomodoro created with ID: " + pomodoro.getId(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Failed to create Pomodoro", Toast.LENGTH_SHORT).show();
+            }
+        });
+        pomodoroViewModel.createPomodoro(getContext(), userId, taskId, startTime, dueDate, false);
     }
+
+
 
 
 
