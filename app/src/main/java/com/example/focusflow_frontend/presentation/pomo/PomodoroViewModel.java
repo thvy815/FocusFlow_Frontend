@@ -12,10 +12,17 @@ import com.example.focusflow_frontend.data.api.PomodoroDetailController;
 import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.model.PomodoroDetail;
 import com.example.focusflow_frontend.utils.ApiClient;
+import com.example.focusflow_frontend.utils.ViewUtils;
 
 import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,6 +52,36 @@ public class PomodoroViewModel extends ViewModel {
                 if (response.isSuccessful()) {
                     Pomodoro createdPomodoro = response.body();
                     lastCreatedPomodoro.postValue(createdPomodoro);
+                    Log.d("PomodoroVM", "Pomodoro saved successfully.");
+                } else {
+                    Log.e("PomodoroVM", "Failed to save: " + response.code() + ", " + response.errorBody().toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Pomodoro> call, Throwable t) {
+                Log.e("PomodoroVM", "Error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void createPomodorofull(Context context, int userId, int taskId,
+                               long startAt, long endAt, LocalDate dueDate, long totalTime, boolean isDeleted) {
+
+        Time st = new Time(startAt);
+        Time en = new Time(endAt);
+        String endAtStr = en.toString();
+        String startAtStr = st.toString();
+        String dueDateStr = dueDate.toString();
+
+        Pomodoro pomodoro = new Pomodoro(userId, taskId, startAtStr, endAtStr, dueDateStr, totalTime, false);
+
+        PomodoroController controller = ApiClient.getPomodoroController(context);
+
+        controller.createPomodoro(pomodoro).enqueue(new Callback<Pomodoro>() {
+            @Override
+            public void onResponse(Call<Pomodoro> call, Response<Pomodoro> response) {
+                if (response.isSuccessful()) {
                     Log.d("PomodoroVM", "Pomodoro saved successfully.");
                 } else {
                     Log.e("PomodoroVM", "Failed to save: " + response.code() + ", " + response.errorBody().toString());
@@ -110,13 +147,10 @@ public class PomodoroViewModel extends ViewModel {
     }
 
     //Hàm get:
-
     private final MutableLiveData<List<Pomodoro>> pomodoroList = new MutableLiveData<>();
-
     public LiveData<List<Pomodoro>> getPomodoroList() {
         return pomodoroList;
     }
-
     public void getAllPomodoro(Context context, int userId) {
 
         PomodoroController controller = ApiClient.getPomodoroController(context);
@@ -141,10 +175,10 @@ public class PomodoroViewModel extends ViewModel {
 
     //GET DETAILS:
     private final MutableLiveData<List<PomodoroDetail>> pomodoroDetailList = new MutableLiveData<>();
-
     public LiveData<List<PomodoroDetail>> getPomodoroDetailList() {
         return pomodoroDetailList;
     }
+
     public void getPomodoroDetailsByPomodoroId(Context context, int pomodoroId) {
 
         PomodoroDetailController controller = ApiClient.getPomodoroDetailController(context);
@@ -166,6 +200,67 @@ public class PomodoroViewModel extends ViewModel {
         });
     }
 
+    private final MutableLiveData<Map<String, Integer>> dailyDurationMap = new MutableLiveData<>();
 
+    public LiveData<Map<String, Integer>> getDailyDurationMap() {
+        return dailyDurationMap;}
+
+    // Hàm lấy tất cả pomodoro của user
+    public void fetchPomodorosByUser(Context context, int userId) {
+        PomodoroController controller = ApiClient.getPomodoroController(context);
+        controller.getPomodorosByUser(userId).enqueue(new Callback<List<Pomodoro>>() {
+            @Override
+            public void onResponse(Call<List<Pomodoro>> call, Response<List<Pomodoro>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    pomodoroList.postValue(response.body());
+                    // Tính tổng thời gian mỗi ngày trong tuần hiện tại
+                    calculateWeeklyDurations(response.body());
+                } else {
+                    Log.e("PomodoroVM", "Failed to get pomodoros: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Pomodoro>> call, Throwable t) {
+                Log.e("PomodoroVM", "API error: " + t.getMessage());
+            }
+        });
+    }
+
+    // Lấy mảng 7 ngày tuần hiện tại dạng "yyyy-MM-dd"
+    private String[] getCurrentWeekDates() {
+        String[] dates = new String[7];
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+        Calendar cal = Calendar.getInstance();
+        // Đưa về thứ 2 đầu tuần
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+
+        for (int i = 0; i < 7; i++) {
+            dates[i] = sdf.format(cal.getTime());
+            cal.add(Calendar.DATE, 1);
+        }
+        return dates;
+    }
+    // Tính tổng thời gian (phút) của pomodoro trong tuần hiện tại, theo từng ngày
+    private void calculateWeeklyDurations(List<Pomodoro> pomodoros) {
+        String[] weekDates = getCurrentWeekDates();
+        Map<String, Integer> durationMap = new LinkedHashMap<>();
+        for (String date : weekDates) {
+            durationMap.put(date, 0);
+        }
+
+        for (Pomodoro p : pomodoros) {
+            String startAt = p.getStartAt(); // Giả sử format "yyyy-MM-dd HH:mm:ss"
+            if (startAt == null) continue;
+            String datePart = startAt.split(" ")[0];
+            if (durationMap.containsKey(datePart)) {
+                int oldDuration = durationMap.get(datePart);
+                int addDuration = (int) p.getTotalTime(); // totalTime tính bằng phút
+                durationMap.put(datePart, oldDuration + addDuration);
+            }
+        }
+        dailyDurationMap.postValue(durationMap);
+    }
 
 }

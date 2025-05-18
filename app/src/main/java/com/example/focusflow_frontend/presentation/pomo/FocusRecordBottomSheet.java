@@ -118,6 +118,9 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
     }
     public void addRecordClick() {
         AddRecordBottomSheet statsSheet = new AddRecordBottomSheet();
+        Bundle args = new Bundle();
+        args.putInt("userId", userId);
+        statsSheet.setArguments(args);
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 }

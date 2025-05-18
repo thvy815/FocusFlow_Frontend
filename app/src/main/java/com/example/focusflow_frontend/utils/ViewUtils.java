@@ -8,6 +8,9 @@ import android.widget.TextView;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.pomo.WhiteNoisePlayer;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class ViewUtils {
@@ -98,6 +101,21 @@ public class ViewUtils {
                     .popBackStack();
         }
     }
+
+        public static List<String> getDatesOfCurrentWeek() {
+            List<String> dates = new ArrayList<>();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+            Calendar cal = Calendar.getInstance();
+            // Đặt ngày về thứ 2 đầu tuần
+            cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+
+            for (int i = 0; i < 7; i++) {
+                dates.add(sdf.format(cal.getTime()));
+                cal.add(Calendar.DAY_OF_MONTH, 1);
+            }
+            return dates;
+        }
 
 
 

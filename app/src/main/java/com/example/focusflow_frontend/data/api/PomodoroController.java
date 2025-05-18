@@ -30,4 +30,10 @@ public interface PomodoroController {
     @DELETE("/api/pomodoro/{id}")
     Call<Void> deletePomodoro(@Path("id") int id);
 
+    @GET("/api/pomodoro/user/{userId}/range")
+    Call<List<Pomodoro>> getPomodoroByUserIdAndDateRange(
+            @Path("userId") int userId,
+            @Query("startDate") String startDate,
+            @Query("endDate") String endDate
+    );
 }

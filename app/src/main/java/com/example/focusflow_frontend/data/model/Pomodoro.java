@@ -6,8 +6,7 @@ import android.os.Build;
 public class Pomodoro {
 
     public Pomodoro(){}
-    public Pomodoro(int id, int userId, int taskId, String startAt, String endAt, String dueDate, int totalTime, boolean isDeleted) {
-        this.id = id;
+    public Pomodoro(int userId, int taskId, String startAt, String endAt, String dueDate, long totalTime, boolean isDeleted) {
         this.userId = userId;
         this.taskId = taskId;
         this.startAt = startAt;

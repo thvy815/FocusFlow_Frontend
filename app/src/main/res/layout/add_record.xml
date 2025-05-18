@@ -28,21 +28,115 @@
             android:id="@+id/add_record_title"
             layout="@layout/item_title_pomodoro"/>
 
-        <include
-            android:id="@+id/et_task_input"
-            layout="@layout/item_row_text"/>
+        <LinearLayout
+            android:id="@+id/task_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
 
-        <include
-            android:id="@+id/start_from_input"
-            layout="@layout/item_row_text"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Task"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical"
+                android:fontFamily="@font/mpr1c_medium" />
 
-        <include
-            android:id="@+id/end_at_input"
-            layout="@layout/item_row_text"/>
+            <Spinner
+                android:id="@+id/spinnerTask"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
 
-        <include
-            android:id="@+id/numeric_pomo_input"
-            layout="@layout/item_numeric_pomo"/>
+        <LinearLayout
+            android:id="@+id/time_start_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Start"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/mpr1c_medium" />
+
+            <TextView
+                android:id="@+id/tvStartTime"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="00:00:00"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/time_end_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="End"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/mpr1c_medium" />
+
+            <TextView
+                android:id="@+id/tvEndTime"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="00:00:00"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/date_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Date"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/mpr1c_medium"/>
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:text="Select Date"
+                android:textSize="16sp"
+                android:background="?android:attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"/>
+        </LinearLayout>
+
 
         <LinearLayout
             android:id="@+id/FocusNote"
@@ -88,7 +182,7 @@
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="100dp"
+            android:layout_marginTop="70dp"
 
             android:text="Save Record"
             android:textSize="20sp"
