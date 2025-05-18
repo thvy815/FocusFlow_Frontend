@@ -1,13 +1,9 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
-import static android.content.Context.VIBRATOR_MANAGER_SERVICE;
 import static android.view.View.VISIBLE;
-
-import static androidx.core.content.ContextCompat.getSystemService;
 
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,13 +23,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.api.PomodoroController;
-import com.example.focusflow_frontend.data.api.PomodoroDetailController;
 import com.example.focusflow_frontend.data.model.Pomodoro;
-
 import java.sql.Time;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -42,7 +34,6 @@ import java.util.Locale;
 
 public class PomodoroFragment extends Fragment {
     private TextView timerText;
-//    private CircleTimerView circleView;
     private CountDownTimer countDownTimer;
     long totalTime = 25*60*1000;
     long timeLeft = totalTime;
@@ -55,6 +46,7 @@ public class PomodoroFragment extends Fragment {
     private WhiteNoiseBottomSheet bottomSheet = new WhiteNoiseBottomSheet(whiteNoisePlayer);
     private PomodoroViewModel pomodoroViewModel;
     private Pomodoro currPomodoro;
+    private int userId,taskId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -87,7 +79,6 @@ public class PomodoroFragment extends Fragment {
 
         // Gán thêm sự kiện chuyển màn
         imvSchedule.setOnClickListener(v -> focusStatisticClick());
-
         timerText.setOnClickListener(v-> showTimePickerDialog());
 
         View.OnClickListener openWhiteNoiseListener = v -> {
@@ -103,6 +94,12 @@ public class PomodoroFragment extends Fragment {
 // Chuyển trang:
     public void focusStatisticClick() {
         FocusStatisticsBottomSheet statsSheet = new FocusStatisticsBottomSheet();
+        Bundle args = new Bundle();
+        if (currPomodoro != null)
+            args.putInt("userId", userId);
+        else
+            args.putInt("userId", -1);
+        statsSheet.setArguments(args);
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 //Bấm thay đổi phút POMO
@@ -205,8 +202,8 @@ public class PomodoroFragment extends Fragment {
                 currPomodoro.setTotalTime(pomoDuration);
 
                 int pomoId = currPomodoro.getId();
-                int userId = currPomodoro.getUserId();
-                int taskId = currPomodoro.getTaskId();
+                userId = currPomodoro.getUserId();
+                taskId = currPomodoro.getTaskId();
 
                 pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
                 pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
@@ -233,8 +230,8 @@ public class PomodoroFragment extends Fragment {
             endTime = System.currentTimeMillis();
             long focusDuration = endTime - pauseTime;
             int pomoId = currPomodoro.getId();
-            int userId = currPomodoro.getUserId();
-            int taskId = currPomodoro.getTaskId();
+            userId = currPomodoro.getUserId();
+            taskId = currPomodoro.getTaskId();
             pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
         }
         whiteNoisePlayer.stopWhiteNoise();
@@ -292,8 +289,8 @@ public class PomodoroFragment extends Fragment {
             currPomodoro.setTotalTime(pomoDuration);
 
             int pomoId = currPomodoro.getId();
-            int userId = currPomodoro.getUserId();
-            int taskId = currPomodoro.getTaskId();
+            userId = currPomodoro.getUserId();
+            taskId = currPomodoro.getTaskId();
 
             pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
             pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
@@ -364,12 +361,6 @@ public class PomodoroFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void SavePomodoro(long startTime, int userId, int taskId, LocalDate dueDate){
-        //API LƯU DB:
-//        String userJson = sharedPreferences.getString("currentUser", "");
-//        Gson gson = new Gson();
-//        User currentUser = gson.fromJson(userJson, User.class);
-//        int userId = currentUser.getId();
-
         pomodoroViewModel.getLastCreatedPomodoro().observe(getViewLifecycleOwner(), pomodoro -> {
             if (pomodoro != null) {
                 currPomodoro = pomodoro;

@@ -8,14 +8,25 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.utils.ViewUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
+
+    private RecyclerView recyclerView;
+    private FocusRecordAdapter adapter;
+    private PomodoroViewModel viewModel;
+    private int userId, pomodoroId;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -56,7 +67,12 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_record, container, false);
+        userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
 
+        if (userId == -1)
+        {
+            Toast.makeText(getContext(),"Không có thông tin người dùng",Toast.LENGTH_SHORT);
+        }
         // Set Title Text
         ViewUtils.setTitleText(view, R.id.focus_record_title, R.id.titleText, "Focus Record");
 
@@ -71,9 +87,35 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
         //Back click
         ViewUtils.backClick(this, view, R.id.focus_record_title, R.id.ic_back);
 
+        // RecyclerView setup
+        recyclerView = view.findViewById(R.id.focusRecyclerView);
+        adapter = new FocusRecordAdapter();
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setAdapter(adapter);
+
+        // ViewModel
+        viewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
+        observeData();
+        viewModel.getAllPomodoro(getContext(), userId);
+
+        adapter.setOnItemClickListener(detail -> {
+            DetailRecordBottomSheet statsSheet = new DetailRecordBottomSheet();
+            Bundle args = new Bundle();
+            args.putInt("pomodoroId", pomodoroId);
+            statsSheet.setArguments(args);
+            statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
+        });
+
+        setCancelable(false);
+
         return view;
     }
 
+    private void observeData() {
+        viewModel.getPomodoroList().observe(getViewLifecycleOwner(), details -> {
+            if (details != null) adapter.setRecords(details);
+        });
+    }
     public void addRecordClick() {
         AddRecordBottomSheet statsSheet = new AddRecordBottomSheet();
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());

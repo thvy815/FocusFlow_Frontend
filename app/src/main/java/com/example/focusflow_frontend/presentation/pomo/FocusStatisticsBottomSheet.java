@@ -10,6 +10,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.utils.ViewUtils;
@@ -23,6 +24,8 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 
     private LineChart trendChart;
     private HorizontalBarChart detailChart;
+    private  int userId;
+    private  PomodoroViewModel viewModel;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -62,6 +65,9 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_statistics, container, false);
+
+       userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
+
 
 // Set Title Text
         ViewUtils.setTitleText(view, R.id.focus_statistics_title, R.id.titleText, "Focus Statistics");
@@ -103,6 +109,9 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 
     public void focusRecordClick(){
         FocusRecordBottomSheet statsSheet = new FocusRecordBottomSheet();
+        Bundle args = new Bundle();
+        args.putInt("userId", userId);
+        statsSheet.setArguments(args);
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
 }

@@ -16,14 +16,39 @@
             android:padding="12dp"
             android:src="@drawable/ic_pause" />
 
-        <TextView
-            android:id="@+id/timeRange"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:text="timeRange"
-            android:fontFamily="@font/mpr1c_medium"/>
+            android:layout_marginStart="10dp">
+
+            <TextView
+                android:id="@+id/txtStartTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="startAt"
+                android:textSize="16sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_height="wrap_content"
+                android:text="-"
+                android:textSize="16sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+
+            <TextView
+                android:id="@+id/txtEndTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="endAt"
+                android:textSize="16sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/duration"

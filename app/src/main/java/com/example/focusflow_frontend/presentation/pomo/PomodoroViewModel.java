@@ -139,6 +139,32 @@ public class PomodoroViewModel extends ViewModel {
         });
     }
 
+    //GET DETAILS:
+    private final MutableLiveData<List<PomodoroDetail>> pomodoroDetailList = new MutableLiveData<>();
+
+    public LiveData<List<PomodoroDetail>> getPomodoroDetailList() {
+        return pomodoroDetailList;
+    }
+    public void getPomodoroDetailsByPomodoroId(Context context, int pomodoroId) {
+
+        PomodoroDetailController controller = ApiClient.getPomodoroDetailController(context);
+
+        controller.getPomodoroDetailsByPomodoroId(pomodoroId).enqueue(new Callback<List<PomodoroDetail>>() {
+            @Override
+            public void onResponse(Call<List<PomodoroDetail>> call, Response<List<PomodoroDetail>> response) {
+                if (response.isSuccessful()) {
+                    pomodoroDetailList.setValue(response.body());
+                    Log.d("PomodoroVM", "Get all details.");
+                } else {
+                    Log.e("PomodoroVM", "Failed to get: " + response.code() + ", " + response.errorBody().toString());
+                }
+            }
+            @Override
+            public void onFailure(Call<List<PomodoroDetail>> call, Throwable t) {
+                Log.e("PomodoroVM", "Error: " + t.getMessage());
+            }
+        });
+    }
 
 
 
