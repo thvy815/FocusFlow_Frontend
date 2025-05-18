@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.utils.ViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,8 @@ public class PomodoroFragment extends Fragment {
     private int selectedMinute = 25;
     private boolean isStarted = false;
     private WheelPicker wheelPicker;
+    private WhiteNoisePlayer whiteNoisePlayer = new WhiteNoisePlayer();
+    private WhiteNoiseBottomSheet bottomSheet = new WhiteNoiseBottomSheet(whiteNoisePlayer);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,20 +80,23 @@ public class PomodoroFragment extends Fragment {
         stopButton.setOnClickListener(v -> stopClick());
 
         // Gán thêm sự kiện chuyển màn
-        imvVolume1.setOnClickListener(v -> NoiseClick());
-        imvVolume2.setOnClickListener(v -> NoiseClick());
         imvSchedule.setOnClickListener(v -> focusStatisticClick());
 
         timerText.setOnClickListener(v-> showTimePickerDialog());
+
+
+        View.OnClickListener openWhiteNoiseListener = v -> {
+            bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
+        };
+
+        imvVolume1.setOnClickListener(openWhiteNoiseListener);
+        imvVolume2.setOnClickListener(openWhiteNoiseListener);
 
         return view;
     }
 
 // Chuyển trang:
-    public void NoiseClick() {
-        WhiteNoiseBottomSheet statsSheet = new WhiteNoiseBottomSheet();
-        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
-    }
+
 
     public void focusStatisticClick() {
         FocusStatisticsBottomSheet statsSheet = new FocusStatisticsBottomSheet();
@@ -242,7 +248,7 @@ public class PomodoroFragment extends Fragment {
             long focusDuration = endTime - pauseTime;
             saveFocusToServer(pauseTime, endTime, focusDuration);
         }
-
+        whiteNoisePlayer.stopWhiteNoise();
         isPaused = true;
 
 
@@ -294,7 +300,9 @@ public class PomodoroFragment extends Fragment {
             restartFragment();
         });
 
-        builder.setPositiveButton("QUIT", (dialog, which) -> restartFragment());
+        builder.setPositiveButton("QUIT", (dialog, which) -> {
+            restartFragment();
+        });
         builder.create().show();
     }
     private void restartFragment() {
@@ -302,6 +310,7 @@ public class PomodoroFragment extends Fragment {
                 .beginTransaction()
                 .replace(R.id.fragment_container, new PomodoroFragment())
                 .commit();
+        whiteNoisePlayer.stopWhiteNoise();
     }
 
     private void saveFocusToServer(long startTime, long endTime, long duration) {

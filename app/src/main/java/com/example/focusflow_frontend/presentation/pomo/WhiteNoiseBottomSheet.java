@@ -17,8 +17,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
+    private WhiteNoisePlayer whiteNoisePlayer;
 
-    @Override
+    public WhiteNoiseBottomSheet(WhiteNoisePlayer player) {
+        this.whiteNoisePlayer = player;}
+
+
+        @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
 
@@ -78,7 +83,6 @@ public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
         ViewUtils.setWhiteNoise(view, R.id.Row2, R.id.noise2, R.drawable.underwater);
         ViewUtils.setWhiteNoise(view, R.id.Row2, R.id.noise3, 0);
 
-        WhiteNoisePlayer whiteNoisePlayer = new WhiteNoisePlayer();
 
         ViewUtils.stopVolume(view, R.id.Row1, R.id.noise1, whiteNoisePlayer);
         ViewUtils.setVolume(view, R.id.Row1, R.id.noise2, R.raw.clock_sound, whiteNoisePlayer);

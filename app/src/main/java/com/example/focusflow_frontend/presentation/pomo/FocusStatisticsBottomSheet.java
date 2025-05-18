@@ -94,8 +94,6 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 //        paintDetailsChart();
 
         return view;
-
-
     }
 
     public void addRecordClick() {

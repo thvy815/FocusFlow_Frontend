@@ -58,14 +58,13 @@
         <!-- Menu Icon -->
         <ImageView
             android:id="@+id/volume_ic"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:layout_marginEnd="20dp"
-            android:src="@drawable/ic_music_note"
-            android:contentDescription="volume"
             android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="volume"
             android:padding="12dp"
-            />
+            android:src="@drawable/ic_music_note" />
     </LinearLayout>
 
 <!--    &lt;!&ndash; Circle Timer &ndash;&gt;-->
