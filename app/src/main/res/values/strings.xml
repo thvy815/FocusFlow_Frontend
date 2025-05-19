@@ -13,4 +13,5 @@
     <string name="complete_3_tasks_n_1_growth_point">Complete 3 tasks\n+1 growth point.</string>
     <string name="complete_3_pomodoro_sessions_n_3_growth_points">Complete 3 Pomodoro sessions\n+3 growth points</string>
     <string name="complete_all_tasks_for_the_day_n_3_growth_points">Complete all tasks for the day\n+3 growth points.</string>
+    <string name="timeOut">00:00</string>
 </resources>

@@ -16,7 +16,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven{url=uri("https://jitpack.io")}
+        maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://maven.joyyinc.com/nexus/content/groups/public/") }
     }
 }
 

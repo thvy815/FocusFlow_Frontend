@@ -2,6 +2,9 @@ package com.example.focusflow_frontend.utils;
 
 import android.content.Context;
 
+import com.example.focusflow_frontend.data.api.PomodoroController;
+import com.example.focusflow_frontend.data.api.PomodoroDetailController;
+
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -44,5 +47,13 @@ public class ApiClient {
                     .build();
         }
         return retrofit;
+    }
+
+    public static PomodoroController getPomodoroController(Context context) {
+        return getRetrofit(context).create(PomodoroController.class);
+    }
+
+    public static PomodoroDetailController getPomodoroDetailController(Context context) {
+        return getRetrofit(context).create(PomodoroDetailController.class);
     }
 }

@@ -9,6 +9,9 @@ activity = "1.10.1"
 constraintlayout = "2.2.1"
 retrofit = "2.9.0"
 gson = "2.10.1"
+roomCommonJvm = "2.7.1"
+mpandroidchart = "v3.1.0"
+wheelpicker = "1.1.3"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -21,6 +24,9 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
+mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version = "v3.1.0" }
+wheelpicker = { group = "cn.aigestudio.wheelpicker", name = "WheelPicker", version.ref = "wheelpicker" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

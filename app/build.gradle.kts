@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation("com.kizitonwose.calendar:view:2.3.0")
     implementation("com.google.firebase:firebase-messaging:23.0.0")
+    implementation(libs.room.common.jvm)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -48,4 +49,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+    implementation (libs.wheelpicker)
+
+    implementation(libs.mpandroidchart)
 }
