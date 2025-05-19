@@ -1,6 +1,8 @@
 package com.example.focusflow_frontend.data.viewmodel;
 
 import android.app.Application;
+import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -11,7 +13,12 @@ import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.utils.ApiClient;
+import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -24,7 +31,9 @@ public class AuthViewModel extends AndroidViewModel {
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
-        userController = ApiClient.getUserController(application.getApplicationContext());
+        // Khởi tạo UserController thông qua ApiClient
+        Context context = getApplication().getApplicationContext();
+        userController = ApiClient.getRetrofit(context).create(UserController.class);
     }
 
     public void signIn(String email, String password, boolean rememberMe) {
@@ -61,6 +70,36 @@ public class AuthViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 errorMessage.postValue("Error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void updateFcmToken(int userId) {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                String fcmToken = task.getResult();
+
+                Map<String, String> request = new HashMap<>();
+                request.put("userId", String.valueOf(userId));
+                request.put("fcmToken", fcmToken);
+
+                userController.updateFcmToken(request).enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            Log.d("AuthViewModel", "FCM token updated successfully");
+                        } else {
+                            Log.e("AuthViewModel", "Failed to update FCM token");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Log.e("AuthViewModel", "Error updating FCM token: " + t.getMessage());
+                    }
+                });
+            } else {
+                Log.e("AuthViewModel", "Failed to get FCM token: " + task.getException());
             }
         });
     }

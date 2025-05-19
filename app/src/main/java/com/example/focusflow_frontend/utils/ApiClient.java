@@ -2,8 +2,6 @@ package com.example.focusflow_frontend.utils;
 
 import android.content.Context;
 
-import com.example.focusflow_frontend.data.api.UserController;
-
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -46,10 +44,5 @@ public class ApiClient {
                     .build();
         }
         return retrofit;
-    }
-
-    // Lấy UserController từ Retrofit
-    public static UserController getUserController(Context context) {
-        return getRetrofit(context).create(UserController.class);
     }
 }

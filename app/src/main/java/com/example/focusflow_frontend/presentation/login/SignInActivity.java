@@ -10,6 +10,7 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.utils.TokenManager;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class SignInActivity extends AppCompatActivity {
     EditText edtEmail, edtPassword;
@@ -64,6 +65,17 @@ public class SignInActivity extends AppCompatActivity {
             } else {
                 TokenManager.saveRememberMe(this, false);
             }
+
+            // Lấy FCM token (notification)
+            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String fcmToken = task.getResult();
+                    int userId = result.getUserId(); // Lấy từ backend trả về
+
+                    // Gọi API cập nhật FCM token lên server
+                    viewModel.updateFcmToken(userId);
+                }
+            });
 
             Toast.makeText(this, "Sign in successful", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, MainActivity.class));

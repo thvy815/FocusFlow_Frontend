@@ -4,6 +4,9 @@ import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
 
+import java.util.Map;
+
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -21,7 +24,11 @@ public interface UserController {
     @DELETE("/api/user/now")
     Call<Void> deleteCurrentUser();
 
-    // Phương thức đăng nhập và nhận JWT
+    // API đăng nhập và nhận JWT
     @POST("/auth/signin")
     Call<SignInResponse> signIn(@Body SignInRequest loginRequest);
+
+    // API update FCM Token
+    @POST("api/user/update-fcm-token")
+    Call<ResponseBody> updateFcmToken(@Body Map<String, String> request);
 }
