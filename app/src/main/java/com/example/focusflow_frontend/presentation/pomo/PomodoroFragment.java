@@ -26,6 +26,8 @@ import androidx.lifecycle.ViewModelProvider;
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Pomodoro;
+import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
+
 import java.sql.Time;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -365,6 +367,6 @@ public class PomodoroFragment extends Fragment {
                 Toast.makeText(getContext(), "Failed to create Pomodoro", Toast.LENGTH_SHORT).show();
             }
         });
-        pomodoroViewModel.createPomodoro(getContext(), userId, taskId, startTime, dueDate, false);
+        pomodoroViewModel.createPomodoro(getContext(), userId, taskId, startTime, dueDate);
     }
 }

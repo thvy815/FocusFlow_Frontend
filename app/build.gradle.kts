@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation("com.kizitonwose.calendar:view:2.3.0")
-    implementation("com.google.firebase:firebase-messaging:23.0.0")
+    //implementation("com.google.firebase:firebase-messaging:23.0.0")
     implementation(libs.room.common.jvm)
 
     testImplementation(libs.junit)

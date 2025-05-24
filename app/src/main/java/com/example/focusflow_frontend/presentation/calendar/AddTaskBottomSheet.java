@@ -60,9 +60,17 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         btnSelectPriority = view.findViewById(R.id.btn_select_priority);
         btnSelectDate = view.findViewById(R.id.btn_select_date);
 
-        // Nhận Task từ arguments
-        if (getArguments() != null && getArguments().containsKey("task")) {
-            editingTask = (Task) getArguments().getSerializable("task");
+        if (getArguments() != null) {
+            // Nhận Task (nếu có)
+            if (getArguments().containsKey("task")) {
+                editingTask = (Task) getArguments().getSerializable("task");
+            }
+
+            // Nhận ngày được chọn từ CalendarFragment
+            if (getArguments().containsKey("selected_date") && editingTask == null) {
+                String selectedDate = getArguments().getString("selected_date");
+                nameDate.setText(selectedDate);
+            }
         }
 
         // ViewModel

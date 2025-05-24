@@ -29,6 +29,6 @@ public interface UserController {
     Call<SignInResponse> signIn(@Body SignInRequest loginRequest);
 
     // API update FCM Token
-    @POST("api/user/update-fcm-token")
-    Call<ResponseBody> updateFcmToken(@Body Map<String, String> request);
+//    @POST("api/user/update-fcm-token")
+//    Call<ResponseBody> updateFcmToken(@Body Map<String, String> request);
 }

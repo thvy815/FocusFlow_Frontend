@@ -59,4 +59,38 @@
         app:srcCompat="@drawable/ic_add"
         app:tint="@color/white" />
 
+    <!-- Streak -->
+    <LinearLayout
+        android:id="@+id/streakContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imgStreakIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="Streak Icon"
+            android:src="@drawable/ic_fire_color" />
+
+        <TextView
+            android:id="@+id/tvStreakCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:text="5"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:fontFamily="@font/mpr1c_extrabold" />
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.example.focusflow_frontend.presentation.calendar;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
     private List<Task> taskList;
     private OnTaskCheckedListener onTaskCheckedListener;
     private OnTaskClickListener onTaskClickListener;
+    private OnTaskLongClickListener onTaskLongClickListener;
 
     public interface OnTaskCheckedListener {
         void onTaskChecked(Task task, boolean isChecked);
@@ -26,15 +28,21 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
         void onTaskClick(Task task);
     }
 
-    public TaskAdapter(List<Task> taskList, OnTaskCheckedListener listener) {
-        this.taskList = taskList;
-        this.onTaskCheckedListener = listener;
+    public interface OnTaskLongClickListener {
+        void onTaskLongClick(Task task);
     }
 
     public TaskAdapter(List<Task> tasks, OnTaskCheckedListener listener, OnTaskClickListener clickListener) {
         this.taskList = tasks;
         this.onTaskCheckedListener = listener;
         this.onTaskClickListener = clickListener;
+    }
+
+    public TaskAdapter(List<Task> tasks, OnTaskCheckedListener listener, OnTaskClickListener clickListener, OnTaskLongClickListener longClickListener) {
+        this.taskList = tasks;
+        this.onTaskCheckedListener = listener;
+        this.onTaskClickListener = clickListener;
+        this.onTaskLongClickListener = longClickListener;
     }
 
     public class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -52,12 +60,21 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
             priorityName = itemView.findViewById(R.id.priorityName);
             checkboxCompleted = itemView.findViewById(R.id.checkboxCompleted);
 
-            // Xử lý click vào toàn bộ item để chỉnh sửa task
+            // Xử lý click vào item để chỉnh sửa task
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && onTaskClickListener != null) {
                     onTaskClickListener.onTaskClick(taskList.get(position));
                 }
+            });
+
+            // Xử lý long click vào item để hiện dialog
+            itemView.setOnLongClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && onTaskLongClickListener != null) {
+                    onTaskLongClickListener.onTaskLongClick(taskList.get(position));
+                }
+                return true;
             });
         }
 
@@ -67,19 +84,29 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
             taskTitle.setText(task.getTitle());
 
             // Tag
-            if (task.getTag() != null && !task.getTag().isEmpty()) {
+            if (task.getTag() == null || task.getTag().isEmpty() || task.getTag().equals("None")) {
+                tagName.setVisibility(View.GONE);
+            } else {
                 tagName.setText("#" + task.getTag());
                 tagName.setVisibility(View.VISIBLE);
-            } else {
-                tagName.setVisibility(View.GONE);
             }
 
             // Priority
             String priorityText = null;
+            int priorityColor = 0;
             switch (task.getPriority()) {
-                case 1: priorityText = "Low"; break;
-                case 2: priorityText = "Medium"; break;
-                case 3: priorityText = "High"; break;
+                case 1:
+                    priorityText = "Low";
+                    priorityColor = Color.parseColor("#4CAF50"); // xanh lá
+                    break;
+                case 2:
+                    priorityText = "Medium";
+                    priorityColor = Color.parseColor("#FF9800"); // cam
+                    break;
+                case 3:
+                    priorityText = "High";
+                    priorityColor = Color.parseColor("#F44336"); // đỏ
+                    break;
             }
             if (priorityText != null) {
                 priorityName.setText(priorityText);

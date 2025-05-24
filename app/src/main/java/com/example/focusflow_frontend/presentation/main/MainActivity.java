@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.calendar.CalendarFragment;
+import com.example.focusflow_frontend.presentation.group.GroupFragment;
 import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
 import com.example.focusflow_frontend.presentation.profile.ProfileFragment;
 import com.example.focusflow_frontend.presentation.streak.StreakFragment;
@@ -40,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new PomodoroFragment();
             } else if (item.getItemId() == R.id.nav_streak) {
                 selectedFragment = new StreakFragment();
+            } else if (item.getItemId() == R.id.nav_group) {
+                selectedFragment = new GroupFragment();
             }
 
             if (selectedFragment != null) {

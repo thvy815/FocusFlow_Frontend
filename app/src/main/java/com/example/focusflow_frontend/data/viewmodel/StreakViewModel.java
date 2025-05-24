@@ -1,4 +1,4 @@
-package com.example.focusflow_frontend.presentation.streak;
+package com.example.focusflow_frontend.data.viewmodel;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.focusflow_frontend.data.model.Task; // model task
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ public class StreakViewModel extends ViewModel {
 
     private final MutableLiveData<List<LocalDate>> datesLive = new MutableLiveData<>();
     private final MutableLiveData<Integer> streakCountLive = new MutableLiveData<>();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /** LiveData danh sách ngày hoàn thành task */
     public LiveData<List<LocalDate>> getDatesLive() {
@@ -33,7 +35,8 @@ public class StreakViewModel extends ViewModel {
         List<LocalDate> completedDates = new ArrayList<>();
         for (Task t : tasks) {
             if (t.isCompleted()) {
-                //completedDates.add(t.getDate());
+                LocalDate date = LocalDate.parse(t.getDueDate(), formatter);
+                completedDates.add(date);
             }
         }
         datesLive.postValue(completedDates);

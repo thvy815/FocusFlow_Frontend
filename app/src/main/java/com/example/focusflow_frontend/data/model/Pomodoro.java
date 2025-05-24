@@ -1,11 +1,9 @@
 package com.example.focusflow_frontend.data.model;
 
-import android.os.Build;
-
-
 public class Pomodoro {
 
     public Pomodoro(){}
+
     public Pomodoro(int userId, int taskId, String startAt, String endAt, String dueDate, long totalTime, boolean isDeleted) {
         this.userId = userId;
         this.taskId = taskId;
@@ -25,12 +23,12 @@ public class Pomodoro {
     private long totalTime;
     private boolean isDeleted;
 
-    public Pomodoro(int userId, int taskId, String startAt, String dueDate, boolean isDeleted) {
+    public Pomodoro(int userId, int taskId, String startAt, String dueDate) {
         this.userId = userId;
         this.taskId = taskId;
         this.startAt = startAt;
         this.dueDate = dueDate;
-        this.isDeleted = isDeleted;
+        this.isDeleted = false;
     }
 
     public int getId() {
@@ -43,7 +41,6 @@ public class Pomodoro {
     public int getUserId() {
         return userId;
     }
-
     public void setUserId(int userId) {
         this.userId = userId;
     }
@@ -51,7 +48,6 @@ public class Pomodoro {
     public int getTaskId() {
         return taskId;
     }
-
     public void setTaskId(int taskId) {
         this.taskId = taskId;
     }
@@ -59,7 +55,6 @@ public class Pomodoro {
     public String getStartAt() {
         return startAt;
     }
-
     public void setStartAt(String startAt) {
         this.startAt = startAt;
     }
@@ -67,7 +62,6 @@ public class Pomodoro {
     public String getEndAt() {
         return endAt;
     }
-
     public void setEndAt(String endAt) {
         this.endAt = endAt;
     }
@@ -75,7 +69,6 @@ public class Pomodoro {
     public String getDueDate() {
         return dueDate;
     }
-
     public void setDueDate(String dueDate) {
         this.dueDate = dueDate;
     }
@@ -83,7 +76,6 @@ public class Pomodoro {
     public long getTotalTime() {
         return totalTime;
     }
-
     public void setTotalTime(long totalTime) {
         this.totalTime = totalTime;
     }
@@ -91,7 +83,6 @@ public class Pomodoro {
     public boolean isDeleted() {
         return isDeleted;
     }
-
     public void setDeleted(boolean deleted) {
         isDeleted = deleted;
     }

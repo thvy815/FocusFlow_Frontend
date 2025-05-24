@@ -18,6 +18,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.focusflow_frontend.R;
 
 import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.viewmodel.StreakViewModel;
+import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
+import com.example.focusflow_frontend.utils.TokenManager;
 import com.kizitonwose.calendar.core.CalendarDay;
 import com.kizitonwose.calendar.core.DayPosition;
 import com.kizitonwose.calendar.core.CalendarMonth;
@@ -43,8 +46,9 @@ public class StreakFragment extends Fragment {
     private CalendarView calendarView;
     private ImageButton buttonNextFragment;
     private final Set<LocalDate> streakDates = new HashSet<>();
-
+    private TaskViewModel taskViewModel;
     private StreakViewModel viewModel;
+    private int userId;
     private final LocalDate todayDate = LocalDate.now();
 
     public StreakFragment() { /* Required empty constructor */ }
@@ -54,9 +58,10 @@ public class StreakFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater,
             @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState
-    ) {
+            @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_streak, container, false);
+
+        userId = TokenManager.getUserId(requireContext());
 
         // Bind views
         fireIcon = view.findViewById(R.id.fire_icon);
@@ -65,6 +70,7 @@ public class StreakFragment extends Fragment {
         buttonNextFragment = view.findViewById(R.id.buttonNextFragment);
 
         // Initialize ViewModel
+        taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
         viewModel = new ViewModelProvider(this).get(StreakViewModel.class);
 
         // Observe LiveData
@@ -90,8 +96,7 @@ public class StreakFragment extends Fragment {
                     @Override
                     public void bind(
                             @NonNull MonthHeaderContainer container,
-                            @NonNull CalendarMonth month
-                    ) {
+                            @NonNull CalendarMonth month) {
                         TextView header = container.getView().findViewById(R.id.monthHeaderText);
                         String text = month.getYearMonth()
                                 .format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH));
@@ -113,14 +118,13 @@ public class StreakFragment extends Fragment {
             @Override
             public void bind(
                     @NonNull DayViewContainer container,
-                    @NonNull CalendarDay day
-            ) {
+                    @NonNull CalendarDay day) {
                 container.textView.setText(
                         String.valueOf(day.getDate().getDayOfMonth())
                 );
                 if (day.getPosition() == DayPosition.MonthDate) {
                     if (streakDates.contains(day.getDate())) {
-                        container.textView.setTextColor(Color.parseColor("#FF5722"));
+                        container.textView.setTextColor(Color.parseColor("#B22222"));
                     } else {
                         container.textView.setTextColor(Color.BLACK);
                     }
@@ -132,10 +136,13 @@ public class StreakFragment extends Fragment {
 
         calendarView.scrollToDate(todayDate);
 
-        // Dummy data for testing
-        List<Task> dummyTasks = new ArrayList<>();
-            // Database here
-        syncTasks(dummyTasks);
+        // Lấy danh sách task từ database
+        taskViewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
+            if (tasks != null) {
+                syncTasks(tasks);  // Truyền task vào StreakViewModel xử lý
+            }
+        });
+        taskViewModel.fetchTasks(userId);
 
         // Navigate to MissionFragment
         buttonNextFragment.setOnClickListener(v -> {

@@ -39,9 +39,8 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:src="@drawable/ic_pet_mission"
-                android:backgroundTint="@color/white"
-                android:contentDescription="change fragment mission"
-                />
+                android:background="@drawable/background"
+                android:contentDescription="change fragment mission" />
 
         </LinearLayout>
         <ImageView

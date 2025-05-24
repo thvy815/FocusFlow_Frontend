@@ -1,5 +1,7 @@
 package com.example.focusflow_frontend.presentation.calendar;
 
+import android.app.AlertDialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
+import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
 import com.example.focusflow_frontend.utils.TokenManager;
 import com.kizitonwose.calendar.core.CalendarDay;
 import com.kizitonwose.calendar.view.MonthDayBinder;
@@ -29,11 +33,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class CalendarFragment extends Fragment {
     private CalendarView calendarView;
@@ -41,6 +45,7 @@ public class CalendarFragment extends Fragment {
     private TaskAdapter taskAdapter;
     private List<Task> allTasks = new ArrayList<>();
     private List<Task> filteredTasks = new ArrayList<>();
+    private Set<LocalDate> taskDates = new HashSet<>();
     private TaskViewModel taskViewModel;
     private LocalDate selectedDate = LocalDate.now();
     private int userId;
@@ -60,6 +65,15 @@ public class CalendarFragment extends Fragment {
         // Button Add Task
         btnAddTask.setOnClickListener(v -> {
             AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dateString = selectedDate.format(formatter);
+
+            // Đóng gói date vào Bundle
+            Bundle bundle = new Bundle();
+            bundle.putString("selected_date", dateString);
+            bottomSheet.setArguments(bundle);
+
             bottomSheet.setOnTaskAddedListener(() -> {
                 taskViewModel.fetchTasks(userId);
             });
@@ -97,6 +111,11 @@ public class CalendarFragment extends Fragment {
                     taskViewModel.fetchTasks(userId);
                 });
                 bottomSheet.show(getChildFragmentManager(), "EditTask");
+            }
+        }, new TaskAdapter.OnTaskLongClickListener() {
+            @Override
+            public void onTaskLongClick(Task task) {
+                showOptionsDialog(task);  // Hiển thị dialog khi long click
             }
         });
         recyclerView.setAdapter(taskAdapter);
@@ -145,7 +164,23 @@ public class CalendarFragment extends Fragment {
                     container.dayText.setOnClickListener(v -> {
                         selectedDate = day.getDate();
                         filterTasksByDate(day.getDate());
+                        calendarView.notifyCalendarChanged(); // Refresh để highlight ngày chọn
                     });
+
+                    // Nếu là ngày được chọn
+                    if (day.getDate().equals(selectedDate)) {
+                        container.dayText.setBackgroundResource(R.drawable.bg_circle);
+                        container.dayText.setTextColor(Color.BLACK);
+                    } else if (taskDates.contains(day.getDate())) {
+                        container.dayText.setBackgroundResource(R.drawable.circle_task); // ngày có task
+                        container.dayText.setTextColor(Color.BLACK);
+                    } else {
+                        container.dayText.setBackground(null);
+                        container.dayText.setTextColor(Color.BLACK);
+                    }
+                } else {
+                    container.dayText.setBackground(null);
+                    container.dayText.setTextColor(Color.GRAY);
                 }
             }
         });
@@ -161,7 +196,19 @@ public class CalendarFragment extends Fragment {
             if (tasks != null && !tasks.isEmpty()) {
                 allTasks.clear();
                 allTasks.addAll(tasks);
-                filterTasksByDate(selectedDate); // cập nhật theo ngày hiện tại
+
+                // Cập nhật danh sách ngày có task
+                taskDates.clear();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                for (Task task : tasks) {
+                    if (task.getDueDate() != null) {
+                        LocalDate date = LocalDate.parse(task.getDueDate(), formatter);
+                        taskDates.add(date);
+                    }
+                }
+
+                filterTasksByDate(selectedDate); // cập nhật theo ngày được chọn
+                calendarView.notifyCalendarChanged(); // Refresh CalendarView
             }
         });
 
@@ -200,6 +247,43 @@ public class CalendarFragment extends Fragment {
         filteredTasks.addAll(completedTasks);
 
         taskAdapter.notifyDataSetChanged();
+    }
+
+    private void showOptionsDialog(Task task) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Options for task")
+                .setItems(new String[]{"Edit ", "Delete", "Start Pomodoro"}, (dialog, which) -> {
+                    if (which == 0) {
+                        // Sửa task (giống onTaskClick)
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("task", task);
+
+                        AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
+                        bottomSheet.setArguments(bundle);
+                        bottomSheet.setOnTaskAddedListener(() -> {
+                            taskViewModel.fetchTasks(userId);
+                        });
+                        bottomSheet.show(getChildFragmentManager(), "EditTask");
+                    } else if (which == 1) {
+                        // Xóa task
+                        taskViewModel.deleteTask(task.getId());  // Xóa DB
+                        taskViewModel.getDeleteSuccess().observe(getViewLifecycleOwner(), success -> {
+                            if (success != null && success) {
+                                taskViewModel.fetchTasks(userId);
+                            } else {
+                                Toast.makeText(getContext(), "Xóa task thất bại", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else if (which == 2) {
+                        // Chuyển sang Fragment khác (ví dụ NewFragment)
+                        FragmentTransaction ft = getParentFragmentManager().beginTransaction();
+                        ft.replace(R.id.fragment_container, new PomodoroFragment());
+                        ft.addToBackStack(null);
+                        ft.commit();
+                    }
+
+                })
+                .show();
     }
 
     // Container cho tháng
