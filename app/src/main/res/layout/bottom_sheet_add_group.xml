@@ -51,33 +51,18 @@
             android:fontFamily="@font/mpr1c_medium"/>
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/etGroupName_layout"
+    <!-- Tên nhóm -->
+    <EditText
+        android:id="@+id/etGroupName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="Đặt tên nhóm"
         app:layout_constraintTop_toBottomOf="@id/group_title"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp">
-
-        <ImageView
-            android:id="@+id/select_avt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_camera"
-            android:padding="12dp"
-            android:layout_gravity="center_vertical"/>
-
-    <!-- Tên nhóm -->
-        <EditText
-            android:id="@+id/etGroupName"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:hint="Đặt tên nhóm"
-            android:layout_gravity="center"
-            android:padding="12dp"
-            android:background="@drawable/bg_card"
-            android:fontFamily="@font/mpr1c_medium"/>
-    </LinearLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        android:padding="12dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_card"
+        android:fontFamily="@font/mpr1c_medium"/>
 
     <!-- Nhập email và chip người đã chọn -->
     <LinearLayout
@@ -85,13 +70,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/etGroupName_layout">
+        app:layout_constraintTop_toBottomOf="@id/etGroupName">
 
 <!--         Flow layout hiển thị chip người đã chọn-->
         <com.google.android.flexbox.FlexboxLayout
             android:id="@+id/chipGroup"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             app:flexWrap="wrap"
             android:background="@drawable/bg_card"

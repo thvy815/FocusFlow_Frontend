@@ -34,7 +34,6 @@
             android:layout_gravity="center_vertical"
             android:fontFamily="@font/mpr1c_bold"/>
 
-        <!-- Menu 3 chấm -->
         <ImageView
             android:id="@+id/imgAdd"
             android:layout_width="24dp"
