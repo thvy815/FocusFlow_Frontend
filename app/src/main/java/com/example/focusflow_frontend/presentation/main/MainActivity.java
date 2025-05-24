@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.calendar.CalendarFragment;
+import com.example.focusflow_frontend.presentation.group.GroupFragment;
 import com.example.focusflow_frontend.presentation.profile.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         // Default fragment
-        loadFragment(new ProfileFragment());
+        loadFragment(new GroupFragment());
 
         // Chọn menu dưới
         bottomNavigationView.setOnItemSelectedListener(item -> {

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <!-- Thanh tiêu đề -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- Avatar -->
+        <ImageView
+            android:id="@+id/imgAvatar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_circle"
+            android:contentDescription="Avatar"/>
+
+        <!-- Tiêu đề -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:text="Group"
+            android:textSize="20sp"
+            android:layout_gravity="center_vertical"
+            android:fontFamily="@font/mpr1c_bold"/>
+
+        <!-- Menu 3 chấm -->
+        <ImageView
+            android:id="@+id/imgAdd"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            android:src="@drawable/ic_add"/>
+    </LinearLayout>
+
+    <!-- Thanh tìm kiếm -->
+    <EditText
+        android:id="@+id/edtSearch"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:hint="Tìm kiếm"
+        android:background="@drawable/bg_card"
+        android:paddingStart="10dp"
+        android:drawableStart="@drawable/ic_search"
+        android:drawablePadding="8dp"
+        android:textSize="14sp"
+        android:gravity="center_vertical"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Your group"
+        android:paddingHorizontal="16dp"
+        android:fontFamily="@font/mpr1c_bold"
+        android:textSize="16sp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"/>
+
+    <!-- Danh sách nhóm -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerGroupList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="16dp"
+        tools:listitem="@layout/item_group"/>
+</LinearLayout>
