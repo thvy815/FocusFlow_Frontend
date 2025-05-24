@@ -168,5 +168,4 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
         // Chỉ gọi 1 lần khi bắt đầu
         viewModel.fetchPomodorosByUser(requireContext(), userId);
     }
-
 }
