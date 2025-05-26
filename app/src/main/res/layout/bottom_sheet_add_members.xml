@@ -25,10 +25,11 @@
             android:src="@drawable/ic_back" />
 
         <TextView
+            android:id="@+id/group_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="New Group"
+            android:text="Group name"
             android:textSize="18sp"
             android:textStyle="bold"
             android:gravity="center"
@@ -51,28 +52,16 @@
             android:fontFamily="@font/mpr1c_medium"/>
     </LinearLayout>
 
-    <!-- Group Name -->
-    <EditText
-        android:id="@+id/etGroupName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter group name"
-        app:layout_constraintTop_toBottomOf="@id/group_title"
-        app:layout_constraintStart_toStartOf="parent"
-        android:padding="12dp"
-        android:textSize="14sp"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/bg_card"/>
-
-    <!-- Email input and selected chips -->
+    <!-- Nhập email và chip người đã chọn -->
     <LinearLayout
         android:id="@+id/email_chip_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/etGroupName">
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/group_title">
 
-        <!-- Flow layout for selected user chips -->
+        <!--         Flow layout hiển thị chip người đã chọn-->
         <com.google.android.flexbox.FlexboxLayout
             android:id="@+id/chipGroup"
             android:layout_width="match_parent"
@@ -82,7 +71,7 @@
             android:background="@drawable/bg_card"
             app:justifyContent="flex_start" />
 
-        <!-- Search input -->
+        <!-- Ô tìm kiếm -->
         <EditText
             android:id="@+id/etSearchEmail"
             android:layout_width="match_parent"
@@ -96,7 +85,7 @@
             android:inputType="textEmailAddress"/>
     </LinearLayout>
 
-    <!-- Suggested users list -->
+    <!-- Danh sách gợi ý người dùng -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSuggestions"
         android:layout_width="match_parent"
@@ -107,12 +96,12 @@
         android:fontFamily="@font/mpr1c_medium"
         tools:listitem="@layout/item_user_suggestion"/>
 
-    <!-- Create group button -->
+    <!-- Nút gửi -->
     <Button
-        android:id="@+id/btnCreateGroup"
+        android:id="@+id/btnAdd"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create Group"
+        android:text="Add"
         app:layout_constraintTop_toBottomOf="@id/rvSuggestions"
         android:layout_marginTop="30dp"
         android:textColor="@android:color/white"

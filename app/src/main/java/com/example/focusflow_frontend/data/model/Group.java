@@ -1,6 +1,8 @@
 package com.example.focusflow_frontend.data.model;
 
-public class Group {
+import java.io.Serializable;
+
+public class Group implements Serializable {
     private String id;
     private String group_name;
     private String leader_id;

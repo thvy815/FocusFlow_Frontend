@@ -48,7 +48,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_margin="16dp"
-        android:hint="Tìm kiếm"
+        android:hint="Search"
         android:background="@drawable/bg_card"
         android:paddingStart="10dp"
         android:drawableStart="@drawable/ic_search"

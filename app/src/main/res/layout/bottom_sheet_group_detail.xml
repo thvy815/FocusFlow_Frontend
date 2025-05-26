@@ -4,7 +4,8 @@
     android:padding="16dp"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:id="@+id/group_title"
@@ -17,9 +18,8 @@
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:padding="5dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_back"
             android:contentDescription="Back"/>
 
@@ -36,8 +36,8 @@
 
         <ImageView
             android:id="@+id/menuGroup"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
             android:background="@drawable/ic_more_vert"
             android:contentDescription="Menu"/>
     </LinearLayout>
@@ -49,12 +49,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:hint="Nhập task"
+        android:hint="Enter tasks..."
+        android:textSize="14sp"
         android:drawableStart="@drawable/ic_search"
         android:background="@drawable/bg_card"
         android:padding="12dp"
         android:inputType="textEmailAddress"
-        android:fontFamily="@font/mpr1c_medium"
         app:layout_constraintTop_toBottomOf="@id/group_title"/>
 
     <androidx.recyclerview.widget.RecyclerView

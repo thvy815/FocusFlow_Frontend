@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // BottomSheetDialogFragment dùng để thêm nhóm mới (Add Group) với giao diện dạng bottom sheet
-public class AddGroupBottomSheet extends BottomSheetDialogFragment {
+public class AddMemberBottomSheet extends BottomSheetDialogFragment {
 
     //Hai đoạn code giúp bottom sheet full màn hình (không cần để ý)
     @Override
@@ -97,7 +97,7 @@ public class AddGroupBottomSheet extends BottomSheetDialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.bottom_sheet_add_group, container, false);
+        return inflater.inflate(R.layout.bottom_sheet_add_members, container, false);
     }
 
 
@@ -177,20 +177,15 @@ public class AddGroupBottomSheet extends BottomSheetDialogFragment {
 
     // Xử lý sự kiện click tạo nhóm khi bấm nút "Tạo nhóm"
     public void CreateGroup(@NonNull View view, GroupViewModel viewModel) {
-        view.findViewById(R.id.btnCreateGroup).setOnClickListener(v -> {
+        view.findViewById(R.id.btnAdd).setOnClickListener(v -> {
             List<User> selected = viewModel.getSelectedUsers().getValue(); // Lấy danh sách user đã chọn
-            String groupName = ((EditText) view.findViewById(R.id.etGroupName)).getText().toString().trim(); // Lấy tên nhóm
-
             // Kiểm tra dữ liệu nhập
-            if (groupName.isEmpty()) {
-                Toast.makeText(getContext(), "Please enter a group name.", Toast.LENGTH_SHORT).show();
-            }
-            else if (selected == null || selected.isEmpty()) {
-                Toast.makeText(getContext(), "Please select at least one member to create a group.", Toast.LENGTH_SHORT).show();
+             if (selected == null || selected.isEmpty()) {
+                Toast.makeText(getContext(), "Please choose at least one member to add into group.", Toast.LENGTH_SHORT).show();
             }
             else {
                 //api ở đây nè
-                Toast.makeText(getContext(), "Creating group: " + groupName + " with " + selected.size() + " members", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Add" + selected.size() + " members", Toast.LENGTH_SHORT).show();
                 dismiss();
             }
         });

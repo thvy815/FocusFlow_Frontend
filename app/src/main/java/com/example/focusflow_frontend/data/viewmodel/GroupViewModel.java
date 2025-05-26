@@ -146,6 +146,19 @@ public class GroupViewModel extends ViewModel {
         //lay cac task co ct_id trung voi id duong truyen toi tu fragment
         return taskList;
     }
+// Nào liên kết được ct_id thì dùng nha, em chưa làm được hiuhiu
+//    public LiveData<List<Task>> getTaskList(long groupId) {
+//        loadTask(); // Gọi nếu cần
+//        List<Task> allTasks = taskList.getValue();
+//        List<Task> result = new ArrayList<>();
+//        if (allTasks != null) {
+//            for (Task t : allTasks) {
+//                if (t.getCt_id() == groupId) result.add(t);
+//            }
+//        }
+//        taskList.setValue(result);
+//        return taskList;
+//    }
 
     // Thêm một nhóm mới vào danh sách
     public void addTask(Task task) {
@@ -170,5 +183,25 @@ public class GroupViewModel extends ViewModel {
             }
         }
         filteredTask.setValue(result);
+    }
+    public void clearFilteredTasks(List<Task> tasks) {
+        filteredTask.setValue(tasks); // Reset về tất cả
+    }
+// Focus Search (Menu -> Detail)
+    private final MutableLiveData<Boolean> requestSearchFocus = new MutableLiveData<>();
+    public LiveData<Boolean> getRequestSearchFocus() {
+        return requestSearchFocus;
+    }
+    public void requestFocusOnSearch(boolean f) {
+        requestSearchFocus.setValue(f);
+    }
+
+    //MENU: OUT GROUP
+    private final MutableLiveData<String> groupRemoved = new MutableLiveData<>();
+    public void setGroupRemoved(String groupId) {
+        groupRemoved.setValue(groupId);
+    }
+    public LiveData<String> getGroupRemoved() {
+        return groupRemoved;
     }
 }

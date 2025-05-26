@@ -22,7 +22,7 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     private List<Task> tasks; // Danh sách các task
     private final OnTaskCheckedChangeListener listener; // Lắng nghe thay đổi checkbox
     private final OnTaskClickListener clickListener;
-    private final Map<Long, String> userMap = new HashMap<>(); // Map userId -> username
+    private final Map<String, String> userMap = new HashMap<>(); // Map userId -> username
 
     // Interface cho sự kiện checkbox
     public interface OnTaskCheckedChangeListener {

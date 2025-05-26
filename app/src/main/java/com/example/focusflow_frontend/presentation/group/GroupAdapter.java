@@ -12,6 +12,7 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 // Adapter dùng để hiển thị danh sách các nhóm (Group) trong RecyclerView
@@ -69,6 +70,17 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         return groupList.size();
     }
 
+    public void removeGroupById(String id) {
+        Iterator<Group> iterator = groupList.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getId().equals(id)) {
+                iterator.remove();
+                notifyDataSetChanged();
+                break;
+            }
+        }
+    }
+
     // ViewHolder lưu tham chiếu đến các thành phần UI trong mỗi item
     static class GroupViewHolder extends RecyclerView.ViewHolder {
         TextView groupName, groupLeader;
@@ -80,4 +92,5 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             groupLeader = itemView.findViewById(R.id.txtLeader);
         }
     }
+
 }

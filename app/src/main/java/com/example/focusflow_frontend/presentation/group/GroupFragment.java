@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
+import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class GroupFragment extends Fragment {
     private GroupViewModel viewModel;
     private GroupAdapter adapter;
     private List<Group> allGroups = new ArrayList<>();
+    private User user = new User("Vy","vv@","12345");
 
     @Nullable
     @Override
@@ -40,6 +42,12 @@ public class GroupFragment extends Fragment {
         setupRecyclerView(view);      // Hiển thị danh sách nhóm
         setupSearchBar(view);         // Tìm kiếm nhóm
         setupAddGroupButton(view);    // Thêm nhóm mới
+
+        //Remove theo yeu cau
+        viewModel.getGroupRemoved().observe(getViewLifecycleOwner(), groupId -> {
+            adapter.removeGroupById(groupId);
+        });
+
         return view;
     }
 
@@ -51,7 +59,7 @@ public class GroupFragment extends Fragment {
         // Adapter nhận callback khi click vào một nhóm
         adapter = new GroupAdapter(new ArrayList<>(), group -> {
             // Mở bottom sheet hiển thị chi tiết nhóm
-            GroupDetailBottomSheet detailSheet = GroupDetailBottomSheet.newInstance(group);
+            GroupDetailBottomSheet detailSheet = GroupDetailBottomSheet.newInstance(group, user);
             detailSheet.show(getParentFragmentManager(), detailSheet.getTag());
         });
 
