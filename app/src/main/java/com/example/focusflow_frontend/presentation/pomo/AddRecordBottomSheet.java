@@ -39,7 +39,7 @@ public class AddRecordBottomSheet extends BottomSheetDialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
 
-        userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
+        userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
 
         pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
 

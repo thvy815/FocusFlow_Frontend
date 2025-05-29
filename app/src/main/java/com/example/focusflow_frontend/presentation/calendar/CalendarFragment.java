@@ -275,9 +275,16 @@ public class CalendarFragment extends Fragment {
                             }
                         });
                     } else if (which == 2) {
-                        // Chuyển sang Fragment khác (ví dụ NewFragment)
+                        PomodoroFragment pomodoroFragment = new PomodoroFragment();
+
+                        // Tạo Bundle để truyền dữ liệu
+                        Bundle args = new Bundle();
+                        args.putInt("TASK_ID", task.getId()); // Đưa taskId vào Bundle
+                        pomodoroFragment.setArguments(args); // Gắn Bundle vào Fragment
+
+                        // Chuyển sang Fragment Pomo
                         FragmentTransaction ft = getParentFragmentManager().beginTransaction();
-                        ft.replace(R.id.fragment_container, new PomodoroFragment());
+                        ft.replace(R.id.fragment_container, pomodoroFragment);
                         ft.addToBackStack(null);
                         ft.commit();
                     }

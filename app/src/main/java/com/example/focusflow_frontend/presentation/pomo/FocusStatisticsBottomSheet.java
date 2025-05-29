@@ -77,7 +77,7 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_statistics, container, false);
 
-       userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
+       userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
 
 
 // Set Title Text
