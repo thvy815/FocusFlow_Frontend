@@ -26,6 +26,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.aigestudio.wheelpicker.WheelPicker;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Pomodoro;
+import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
+import com.example.focusflow_frontend.utils.TokenManager;
+
 import java.sql.Time;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -50,9 +53,16 @@ public class PomodoroFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.pomodoro, container, false);
+        View view = inflater.inflate(R.layout.fragment_pomodoro, container, false);
 
         pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
+        userId = TokenManager.getUserId(requireContext());
+
+        // Lấy dữ liệu task id từ arguments
+        Bundle args = getArguments();
+        if (args != null) {
+            taskId = args.getInt("TASK_ID", -1);
+        }
 
         timerText = view.findViewById(R.id.timer_text);
         wheelPicker = view.findViewById(R.id.wheelPicker);
@@ -86,7 +96,6 @@ public class PomodoroFragment extends Fragment {
         };
         imvVolume1.setOnClickListener(openWhiteNoiseListener);
         imvVolume2.setOnClickListener(openWhiteNoiseListener);
-
 
         return view;
     }
@@ -167,7 +176,7 @@ public class PomodoroFragment extends Fragment {
         LocalDate dueDate = LocalDate.now();;
 
         animateTimerToCenter();
-        SavePomodoro(startTime,1,17,dueDate);
+        SavePomodoro(startTime, userId, taskId, dueDate);
 
         getView().findViewById(R.id.start_button).setVisibility(View.GONE);
         getView().findViewById(R.id.afterStart).setVisibility(VISIBLE);
@@ -207,10 +216,6 @@ public class PomodoroFragment extends Fragment {
 
                 pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
                 pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
-
-
-
-
             }
         }.start();
     }
@@ -369,11 +374,6 @@ public class PomodoroFragment extends Fragment {
                 Toast.makeText(getContext(), "Failed to create Pomodoro", Toast.LENGTH_SHORT).show();
             }
         });
-        pomodoroViewModel.createPomodoro(getContext(), userId, taskId, startTime, dueDate, false);
+        pomodoroViewModel.createPomodoro(getContext(), userId, taskId, startTime, dueDate);
     }
-
-
-
-
-
 }

@@ -18,6 +18,7 @@
         android:shadowRadius="3"
         android:text="FocusFlow"
         android:textColor="@color/black"
+        android:fontFamily="@font/mpr1c_black"
         android:textSize="50sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -32,7 +33,8 @@
         android:layout_marginTop="50dp"
         android:text="SIGN IN"
         android:textColor="@color/black"
-        android:textSize="24sp"
+        android:fontFamily="@font/mpr1c_extrabold"
+        android:textSize="26sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -43,10 +45,11 @@
         android:id="@+id/et_email"
         android:layout_width="300dp"
         android:layout_height="48dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="25dp"
         android:background="@drawable/input_bg"
         android:hint="Email"
         android:padding="10dp"
+        android:fontFamily="@font/mpr1c_medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_title" />
@@ -60,6 +63,7 @@
         android:background="@drawable/input_bg"
         android:hint="Password"
         android:padding="10dp"
+        android:fontFamily="@font/mpr1c_medium"
         android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -67,12 +71,13 @@
 
     <!-- Remember -->
     <CheckBox
-        android:id="@+id/cb_remember"
+        android:id="@+id/cb_remember_me"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="35dp"
         android:layout_marginTop="10dp"
-        android:text="Remember"
+        android:text="Remember me"
+        android:fontFamily="@font/mpr1c_medium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_password" />
 
@@ -86,6 +91,7 @@
         android:text="Forgot Password?"
         android:textColor="@color/black"
         android:textSize="14sp"
+        android:fontFamily="@font/mpr1c_medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_password" />
 
@@ -93,26 +99,28 @@
     <Button
         android:id="@+id/btn_sign_in"
         android:layout_width="300dp"
-        android:layout_height="50dp"
+        android:layout_height="55dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/button_bg"
+        android:backgroundTint="@color/black"
         android:text="SIGN IN"
         android:textColor="@android:color/white"
         android:textStyle="bold"
+        android:fontFamily="@font/mpr1c_extrabold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cb_remember" />
+        app:layout_constraintTop_toBottomOf="@+id/cb_remember_me" />
 
     <!-- Sign Up Link -->
     <TextView
         android:id="@+id/tv_sign_up"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
         android:text="Don't have an account? Sign Up"
         android:textColor="@color/black"
         android:textSize="14sp"
         android:textStyle="italic"
+        android:fontFamily="@font/mpr1c_medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_sign_in" />

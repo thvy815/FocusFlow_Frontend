@@ -10,10 +10,10 @@ import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
 import com.example.focusflow_frontend.utils.ViewUtils;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -35,7 +35,7 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
     private LineChart trendChart;
     private HorizontalBarChart detailChart;
     private  int userId;
-    private  PomodoroViewModel viewModel;
+    private PomodoroViewModel viewModel;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -77,7 +77,7 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_statistics, container, false);
 
-       userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
+       userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
 
 
 // Set Title Text

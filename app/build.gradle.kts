@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.focusflow_frontend"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -37,6 +37,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation("com.kizitonwose.calendar:view:2.3.0")
+    //implementation("com.google.firebase:firebase-messaging:23.0.0")
     implementation(libs.room.common.jvm)
 
     testImplementation(libs.junit)
@@ -48,7 +50,6 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.gson)
     implementation (libs.wheelpicker)
-
 
     implementation(libs.mpandroidchart)
 }

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/design_bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+    <androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+    <!--BUGS-->
+    <RelativeLayout
+        android:id="@+id/profile_setting"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="30dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Button: Done -->
+        <TextView
+            android:id="@+id/tvDone"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:gravity="center_vertical"
+            android:text="Done"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/mpr1c_medium"
+            android:padding="8dp"
+            android:onClick="doneClick" />
+
+        <!-- Title: Account -->
+        <TextView
+            android:id="@+id/tvAccounts"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:text="Account"
+            android:textSize="20sp"
+            android:fontFamily="@font/mpr1c_bold"
+            android:textColor="@color/black" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="main"
+        app:layout_constraintTop_toBottomOf="@id/profile_setting"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="80dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        <!-- Main Profile Section -->
+        <LinearLayout
+            android:id="@+id/layout1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="8dp"
+
+            app:layout_constraintTop_toBottomOf="@id/profile_setting">
+
+            <!-- Avatar Row -->
+            <include
+                android:id="@+id/avtLayout"
+                layout="@layout/item_profile_row_avatar"/>
+
+            <!-- Username Row -->
+            <include
+                android:id="@+id/userName"
+                layout="@layout/item_profile_row_text" />
+
+            <!-- Email Row -->
+            <include
+                android:id="@+id/emailRow"
+                layout="@layout/item_profile_row_text" />
+
+        </LinearLayout>
+
+        <!-- Third Party Section -->
+        <TextView
+            android:id="@+id/tvThirdParty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Third Party Account"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/layout1"
+            app:layout_constraintStart_toStartOf="parent"
+            android:fontFamily="@font/mpr1c_bold"/>
+
+        <LinearLayout
+            android:id="@+id/layout2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tvThirdParty">
+
+            <include
+                android:id="@+id/google"
+                layout="@layout/item_profile_row_text" />
+
+            <include
+                android:id="@+id/android"
+                layout="@layout/item_profile_row_text"/>
+        </LinearLayout>
+
+        <!-- Logout and Delete Account -->
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:id="@+id/deleteAccount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete Account"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:onClick="deleteAccountClick"
+            android:padding="12dp"/>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="10dp"/>
+
+        <TextView
+            android:id="@+id/Logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sign out"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:padding="12dp"
+            android:layout_marginBottom="20dp"/>
+    </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

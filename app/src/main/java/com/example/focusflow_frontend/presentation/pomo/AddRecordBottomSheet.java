@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,14 +20,12 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
 import com.example.focusflow_frontend.utils.ViewUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import org.w3c.dom.Text;
-
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -42,7 +39,7 @@ public class AddRecordBottomSheet extends BottomSheetDialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
 
-        userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
+        userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
 
         pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
 

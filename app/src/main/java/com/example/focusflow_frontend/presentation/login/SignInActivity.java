@@ -4,28 +4,36 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.api.UserController;
-import com.example.focusflow_frontend.data.model.SignInRequest;
-import com.example.focusflow_frontend.data.model.SignInResponse;
-import com.example.focusflow_frontend.presentation.main.MainActivity;
-import com.example.focusflow_frontend.utils.ApiClient;
-import com.example.focusflow_frontend.utils.TokenManager;
+import androidx.lifecycle.ViewModelProvider;
 
-import retrofit2.*;
+import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
+import com.example.focusflow_frontend.utils.TokenManager;
+//import com.google.firebase.messaging.FirebaseMessaging;
 
 public class SignInActivity extends AppCompatActivity {
     EditText edtEmail, edtPassword;
+    CheckBox cbRememberMe;
     Button btnSignIn;
-    UserController userController;
+    AuthViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Nếu token còn thời hạn thì cho phép vào app luôn (không cần đăng nhập)
+        if (TokenManager.isRememberMe(this) && TokenManager.getToken(this) != null) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_sign_in);
 
         edtEmail = findViewById(R.id.et_email);
         edtPassword = findViewById(R.id.et_password);
+        cbRememberMe = findViewById(R.id.cb_remember_me);
         btnSignIn = findViewById(R.id.btn_sign_in);
 
         // Chuyển hướng Sign Up
@@ -35,41 +43,48 @@ public class SignInActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Khởi tạo UserController từ ApiClient
-        userController = ApiClient.getUserController(SignInActivity.this);
+        // ViewModel
+        viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         // Sign In
         btnSignIn.setOnClickListener(v -> {
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
+            boolean rememberMe = cbRememberMe.isChecked();
+            viewModel.signIn(email, password, rememberMe);
+        });
 
-            // Gửi yêu cầu đăng nhập
-            SignInRequest signinRequest = new SignInRequest(email, password);
-            userController.signIn(signinRequest).enqueue(new Callback<SignInResponse>() {
-                @Override
-                public void onResponse(Call<SignInResponse> call, Response<SignInResponse> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        // Lấy JWT từ response và lưu vào SharedPreferences
-                        String token = response.body().getToken();
+        // Dữ liệu đăng nhập đúng
+        viewModel.signInResult.observe(this, result -> {
+            TokenManager.saveToken(this, result.getToken());
+            TokenManager.saveUserId(this, result.getUserId());
 
-                        // Lưu token vào SharedPreferences
-                        TokenManager.saveToken(SignInActivity.this, token);
+            // Nếu rememberMe, lưu thêm flag
+            if (cbRememberMe.isChecked()) {
+                TokenManager.saveRememberMe(this, true);
+            } else {
+                TokenManager.saveRememberMe(this, false);
+            }
 
-                        Toast.makeText(SignInActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
+//            // Lấy FCM token (notification)
+//            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+//                if (task.isSuccessful()) {
+//                    String fcmToken = task.getResult();
+//                    int userId = result.getUserId(); // Lấy từ backend trả về
+//
+//                    // Gọi API cập nhật FCM token lên server
+//                    //viewModel.updateFcmToken(userId);
+//                }
+//            });
 
-                        // Chuyển đến màn hình chính
-                        startActivity(new Intent(SignInActivity.this, MainActivity.class));
-                        finish();
-                    } else {
-                        Toast.makeText(SignInActivity.this, "Wrong email or password", Toast.LENGTH_SHORT).show();
-                    }
-                }
+            Toast.makeText(this, "Sign in successful", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        });
 
-                @Override
-                public void onFailure(Call<SignInResponse> call, Throwable t) {
-                    Toast.makeText(SignInActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+        // Dữ liệu đăng nhập sai
+        viewModel.errorMessage.observe(this, error -> {
+            Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
         });
     }
 }

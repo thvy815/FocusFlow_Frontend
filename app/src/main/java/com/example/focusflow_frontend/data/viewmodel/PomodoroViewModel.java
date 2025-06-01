@@ -1,4 +1,4 @@
-package com.example.focusflow_frontend.presentation.pomo;
+package com.example.focusflow_frontend.data.viewmodel;
 
 import android.content.Context;
 import android.util.Log;
@@ -12,13 +12,11 @@ import com.example.focusflow_frontend.data.api.PomodoroDetailController;
 import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.model.PomodoroDetail;
 import com.example.focusflow_frontend.utils.ApiClient;
-import com.example.focusflow_frontend.utils.ViewUtils;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -36,13 +34,13 @@ public class PomodoroViewModel extends ViewModel {
         return lastCreatedPomodoro;
     }
     public void createPomodoro(Context context, int userId, int taskId,
-                             long startAt, LocalDate dueDate, boolean isDeleted) {
+                             long startAt, LocalDate dueDate) {
 
         Time st = new Time(startAt);
         String startAtStr = st.toString();
         String dueDateStr = dueDate.toString();
 
-        Pomodoro pomodoro = new Pomodoro(userId, taskId, startAtStr, dueDateStr, isDeleted);
+        Pomodoro pomodoro = new Pomodoro(userId, taskId, startAtStr, dueDateStr);
 
         PomodoroController controller = ApiClient.getPomodoroController(context);
 
