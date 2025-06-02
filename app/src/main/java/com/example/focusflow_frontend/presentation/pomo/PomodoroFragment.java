@@ -37,6 +37,7 @@ import java.util.Locale;
 
 public class PomodoroFragment extends Fragment {
     private TextView timerText;
+    private CircleTimerView circleTimerView;
     private CountDownTimer countDownTimer;
     long totalTime = 25*60*1000;
     long timeLeft = totalTime;
@@ -57,6 +58,7 @@ public class PomodoroFragment extends Fragment {
 
         pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
         userId = TokenManager.getUserId(requireContext());
+        circleTimerView = view.findViewById(R.id.circleView);
 
         // Lấy dữ liệu task id từ arguments
         Bundle args = getArguments();
@@ -96,6 +98,18 @@ public class PomodoroFragment extends Fragment {
         };
         imvVolume1.setOnClickListener(openWhiteNoiseListener);
         imvVolume2.setOnClickListener(openWhiteNoiseListener);
+
+        PomodoroViewModel viewModel = new ViewModelProvider(requireActivity()).get(PomodoroViewModel.class);
+
+        // Gọi fetch dữ liệu pomodoro mới nhất
+        viewModel.fetchLatestPomodoro(requireContext(), userId);
+        // Observe dữ liệu pomodoro mới nhất
+        viewModel.getLatestPomodoro().observe(getViewLifecycleOwner(), latestPomodoro -> {
+            if (latestPomodoro != null) {
+                TextView latestStartAtView = view.findViewById(R.id.);
+                latestStartAtView.setText("Latest Pomodoro start: " + latestPomodoro.getStartAt());
+            }
+        });
 
         return view;
     }
@@ -175,12 +189,12 @@ public class PomodoroFragment extends Fragment {
         pauseTime = startTime;
         LocalDate dueDate = LocalDate.now();;
 
-        animateTimerToCenter();
         SavePomodoro(startTime, userId, taskId, dueDate);
 
         getView().findViewById(R.id.start_button).setVisibility(View.GONE);
         getView().findViewById(R.id.afterStart).setVisibility(VISIBLE);
         startTimer();
+        circleTimerView.setProgress(0f);
     }
     public void startTimer() {
         if (isPaused) return;
@@ -194,6 +208,8 @@ public class PomodoroFragment extends Fragment {
 
                 // Cập nhật thời gian hiển thị trên TextView
                 timerText.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+                float progress = 1f - (float) timeLeft / totalTime;
+                circleTimerView.setProgress(progress);
             }
 
             @Override
@@ -216,6 +232,7 @@ public class PomodoroFragment extends Fragment {
 
                 pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
                 pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
+                circleTimerView.setProgress(1f);
             }
         }.start();
     }
@@ -316,53 +333,53 @@ public class PomodoroFragment extends Fragment {
         whiteNoisePlayer.stopWhiteNoise();
     }
 
-    private void animateTimerToCenter() {
-        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
-
-        Button startButton = getView().findViewById(R.id.start_button);
-        LinearLayout afterStart = getView().findViewById(R.id.afterStart);
-        TextView timerText = getView().findViewById(R.id.timer_text);
-        ImageView play_icon = getView().findViewById(R.id.play_icon);
-
-        // Lấy kích thước cha và các view
-        int parentWidth = layout.getWidth();
-        int parentHeight = layout.getHeight();
-
-        int textWidth = timerText.getWidth();
-        int textHeight = timerText.getHeight();
-
-        // Tính khoảng cách di chuyển đến tâm
-        float targetX = (parentWidth - textWidth) / 2f - timerText.getX();
-        float targetY = (parentHeight - textHeight) / 2f - timerText.getY();
-
-        // Di chuyển timerText về giữa
-        timerText.animate()
-                .translationXBy(targetX)
-                .translationYBy(targetY)
-                .setDuration(500)
-                .start();
-
-        // Di chuyển afterStart và playIcon theo
-        afterStart.animate()
-                .translationXBy(targetX)
-                .translationYBy(targetY + 20)
-                .setDuration(500)
-                .start();
-
-        play_icon.animate()
-                .translationXBy(targetX)
-                .translationYBy(targetY + 20)
-                .setDuration(500)
-                .start();
-
-        // Thu/phóng kích thước chữ timerText từ currentSizePx đến 80px
-        float currentSizePx = timerText.getTextSize();
-        float targetSizePx = 80f;
-
-        ObjectAnimator scaleAnimator = ObjectAnimator.ofFloat(timerText, "textSize", currentSizePx, targetSizePx);
-        scaleAnimator.setDuration(500);
-        scaleAnimator.start();
-    }
+//    private void animateTimerToCenter() {
+//        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
+//
+//        Button startButton = getView().findViewById(R.id.start_button);
+//        LinearLayout afterStart = getView().findViewById(R.id.afterStart);
+//        TextView timerText = getView().findViewById(R.id.timer_text);
+//        ImageView play_icon = getView().findViewById(R.id.play_icon);
+//
+//        // Lấy kích thước cha và các view
+//        int parentWidth = layout.getWidth();
+//        int parentHeight = layout.getHeight();
+//
+//        int textWidth = timerText.getWidth();
+//        int textHeight = timerText.getHeight();
+//
+//        // Tính khoảng cách di chuyển đến tâm
+//        float targetX = (parentWidth - textWidth) / 2f - timerText.getX();
+//        float targetY = (parentHeight - textHeight) / 2f - timerText.getY();
+//
+//        // Di chuyển timerText về giữa
+//        timerText.animate()
+//                .translationXBy(targetX)
+//                .translationYBy(targetY)
+//                .setDuration(500)
+//                .start();
+//
+//        // Di chuyển afterStart và playIcon theo
+//        afterStart.animate()
+//                .translationXBy(targetX)
+//                .translationYBy(targetY + 20)
+//                .setDuration(500)
+//                .start();
+//
+//        play_icon.animate()
+//                .translationXBy(targetX)
+//                .translationYBy(targetY + 20)
+//                .setDuration(500)
+//                .start();
+//
+//        // Thu/phóng kích thước chữ timerText từ currentSizePx đến 80px
+//        float currentSizePx = timerText.getTextSize();
+//        float targetSizePx = 80f;
+//
+//        ObjectAnimator scaleAnimator = ObjectAnimator.ofFloat(timerText, "textSize", currentSizePx, targetSizePx);
+//        scaleAnimator.setDuration(500);
+//        scaleAnimator.start();
+//    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void SavePomodoro(long startTime, int userId, int taskId, LocalDate dueDate){

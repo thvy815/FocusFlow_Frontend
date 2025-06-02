@@ -2,6 +2,7 @@ package com.example.focusflow_frontend.data.viewmodel;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -9,14 +10,17 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.focusflow_frontend.data.api.PomodoroController;
 import com.example.focusflow_frontend.data.api.PomodoroDetailController;
+import com.example.focusflow_frontend.data.api.TaskController;
 import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.model.PomodoroDetail;
+import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.utils.ApiClient;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -261,4 +265,74 @@ public class PomodoroViewModel extends ViewModel {
         dailyDurationMap.postValue(durationMap);
     }
 
+    private final MutableLiveData<Pomodoro> latestPomodoro = new MutableLiveData<>();
+
+    public LiveData<Pomodoro> getLatestPomodoro() {
+        return latestPomodoro;
+    }
+    public void fetchLatestPomodoro(Context context, int userId) {
+        PomodoroController controller = ApiClient.getPomodoroController(context);
+
+        controller.getPomodorosByUser(userId).enqueue(new Callback<List<Pomodoro>>() {
+            @Override
+            public void onResponse(Call<List<Pomodoro>> call, Response<List<Pomodoro>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Pomodoro> pomodoros = response.body();
+
+                    if (!pomodoros.isEmpty()) {
+                        Pomodoro latest = pomodoros.get(0);
+                        for (Pomodoro p : pomodoros) {
+                            // So sánh startAt dạng String yyyy-MM-dd HH:mm:ss (theo lex order được vì định dạng ISO)
+                            if (p.getStartAt().compareTo(latest.getStartAt()) > 0) {
+                                latest = p;
+                            }
+                        }
+                        latestPomodoro.postValue(latest);
+                    } else {
+                        latestPomodoro.postValue(null);
+                    }
+                } else {
+                    Log.e("PomodoroVM", "Failed to get pomodoros: " + response.code());
+                    latestPomodoro.postValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Pomodoro>> call, Throwable t) {
+                Log.e("PomodoroVM", "API error: " + t.getMessage());
+                latestPomodoro.postValue(null);
+            }
+        });
+    }
+
+    private final MutableLiveData<Map<Integer, String>> taskNameMapLiveData = new MutableLiveData<>();
+
+    public LiveData<Map<Integer, String>> getTaskNameMapLiveData() {
+        return taskNameMapLiveData;
+    }
+
+    public void fetchTaskNames(Context context, List<Pomodoro> pomodoros) {
+        Toast.makeText(context.getApplicationContext(), "Hàm get task by id tại 315 PomoViewModel", Toast.LENGTH_SHORT).show();
+//        Map<Integer, String> map = new HashMap<>();
+//        TaskController controller = ApiClient.getTaskController(context);
+//
+//        for (Pomodoro p : pomodoros) {
+//            int taskId = p.getTaskId();
+//            controller.getTaskById(taskId).enqueue(new Callback<Task>() {
+//                @Override
+//                public void onResponse(Call<Task> call, Response<Task> response) {
+//                    if (response.isSuccessful() && response.body() != null) {
+//                        map.put(taskId, response.body().getTitle());
+//                        taskNameMapLiveData.postValue(new HashMap<>(map)); // copy để trigger observer
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<Task> call, Throwable t) {
+//                    map.put(taskId, "Không rõ");
+//                    taskNameMapLiveData.postValue(new HashMap<>(map));
+//                }
+//            });
+//        }
+    }
 }

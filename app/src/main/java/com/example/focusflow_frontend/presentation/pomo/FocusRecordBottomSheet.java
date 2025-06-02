@@ -66,7 +66,7 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_record, container, false);
-        userId = getArguments() != null ? getArguments().getInt("userId", 1) : 1;
+        userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
 
         if (userId == -1)
         {
@@ -101,20 +101,27 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
             DetailRecordBottomSheet statsSheet = new DetailRecordBottomSheet();
             Bundle args = new Bundle();
             args.putInt("pomodoroId", pomodoroId);
+            args.putInt("userId", userId);
             statsSheet.setArguments(args);
             statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
         });
-
         setCancelable(false);
 
         return view;
     }
 
     private void observeData() {
-        viewModel.getPomodoroList().observe(getViewLifecycleOwner(), details -> {
-            if (details != null) adapter.setRecords(details);
+        viewModel.getPomodoroList().observe(getViewLifecycleOwner(), pomodoros -> {
+            if (pomodoros != null) {
+                adapter.setRecords(pomodoros);
+                viewModel.fetchTaskNames(requireContext(), pomodoros);
+            }
+        });
+       viewModel.getTaskNameMapLiveData().observe(getViewLifecycleOwner(), taskNameMap -> {
+            adapter.setTaskNameMap(taskNameMap);
         });
     }
+
     public void addRecordClick() {
         AddRecordBottomSheet statsSheet = new AddRecordBottomSheet();
         Bundle args = new Bundle();

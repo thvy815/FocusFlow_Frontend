@@ -9,10 +9,12 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
 import com.example.focusflow_frontend.utils.ViewUtils;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
@@ -27,6 +29,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -76,12 +80,16 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_statistics, container, false);
-
        userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
-
-
 // Set Title Text
         ViewUtils.setTitleText(view, R.id.focus_statistics_title, R.id.titleText, "Focus Statistics");
+        //Set record
+        viewModel.fetchLatestPomodoro(requireContext(), userId);
+        viewModel.getLatestPomodoro().observe(getViewLifecycleOwner(), latestPomodoro -> {
+            if (latestPomodoro != null) {
+                LatestPomo(latestPomodoro);
+            }
+        });
 
         LineChart lineChart = view.findViewById(R.id.trendChart);
         paintTrendChart(lineChart);
@@ -168,4 +176,30 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
         // Chỉ gọi 1 lần khi bắt đầu
         viewModel.fetchPomodorosByUser(requireContext(), userId);
     }
+    private FocusRecordAdapter adapter = new FocusRecordAdapter();
+    public void LatestPomo(Pomodoro latest) {
+        if (latest != null) {
+            String startTime = latest.getStartAt();
+            String endTime = latest.getEndAt();
+
+            String taskName = "Không rõ";
+            Map<Integer, String> taskNameMap = adapter.getTaskNameMap(); // nếu có
+            if (taskNameMap != null) {
+                taskName = taskNameMap.getOrDefault(latest.getTaskId(), "Không rõ");
+            }
+
+            TextView txtStartTime = getView().findViewById(R.id.txtStartTime);
+            TextView txtEndTime = getView().findViewById(R.id.txtEndTime);
+            TextView txtDuration = getView().findViewById(R.id.duration);
+            TextView txtTask = getView().findViewById(R.id.taskName);
+
+            txtStartTime.setText(startTime);
+            txtEndTime.setText(endTime);
+            txtDuration.setText(latest.getTotalTime() / 60 / 1000 + "min");
+            txtTask.setText(taskName);
+        } else {
+            System.out.println("Chưa có dữ liệu Pomodoro");
+        }
+    }
+
 }
