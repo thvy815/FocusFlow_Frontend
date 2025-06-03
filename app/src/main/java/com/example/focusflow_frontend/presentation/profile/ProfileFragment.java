@@ -9,10 +9,12 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
 
@@ -26,7 +28,8 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
-
+        setUserName(view);
+        setStreakAndCore(view);
         // Giả sử đây là danh sách badge người dùng đạt được, mới nhất nằm cuối
         List<Integer> userBadges = getUserBadges(); // Trả về danh sách drawable resource ID
 
@@ -174,7 +177,15 @@ public class ProfileFragment extends Fragment {
         );
     }
 
-
-
+    public void setStreakAndCore(View view){
+        TextView streak = view.findViewById(R.id.streakValue);
+        TextView core = view.findViewById(R.id.core_Value);
+        streak.setText("189 profile fragment");
+        core.setText("tuong tu o tren");
+    }
+    public void setUserName(View view){
+        TextView username = view.findViewById(R.id.userName);
+        username.setText("193 profile");
+    }
 }
 
