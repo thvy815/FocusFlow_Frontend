@@ -187,8 +187,5 @@ public class ProfileFragment extends Fragment {
         TextView username = view.findViewById(R.id.userName);
         username.setText("193 profile");
     }
-
-
-
 }
 

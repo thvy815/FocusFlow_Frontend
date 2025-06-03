@@ -101,16 +101,6 @@ public class PomodoroFragment extends Fragment {
 
         PomodoroViewModel viewModel = new ViewModelProvider(requireActivity()).get(PomodoroViewModel.class);
 
-        // Gọi fetch dữ liệu pomodoro mới nhất
-        viewModel.fetchLatestPomodoro(requireContext(), userId);
-        // Observe dữ liệu pomodoro mới nhất
-        viewModel.getLatestPomodoro().observe(getViewLifecycleOwner(), latestPomodoro -> {
-            if (latestPomodoro != null) {
-                TextView latestStartAtView = view.findViewById(R.id.);
-                latestStartAtView.setText("Latest Pomodoro start: " + latestPomodoro.getStartAt());
-            }
-        });
-
         return view;
     }
 
