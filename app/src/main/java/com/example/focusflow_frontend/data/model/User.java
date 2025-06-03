@@ -1,7 +1,9 @@
 package com.example.focusflow_frontend.data.model;
 
-public class User {
-    private Long id;
+import java.io.Serializable;
+
+public class User implements Serializable {
+    private String id;
     private String username;
     private String email;
     private String password;
@@ -13,11 +15,11 @@ public class User {
         this.password = password;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

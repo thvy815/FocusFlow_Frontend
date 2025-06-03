@@ -41,6 +41,11 @@ dependencies {
     //implementation("com.google.firebase:firebase-messaging:23.0.0")
     implementation(libs.room.common.jvm)
 
+    implementation ("com.google.android.flexbox:flexbox:3.0.0")
+    implementation ("com.google.android.material:material:1.11.0")
+    implementation(libs.lifecycle.viewmodel.android)
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

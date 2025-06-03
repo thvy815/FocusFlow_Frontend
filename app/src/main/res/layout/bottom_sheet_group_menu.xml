@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <!-- Thanh tiêu đề -->
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_back"
+        android:contentDescription="Back"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/group_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Group name"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:fontFamily="@font/mpr1c_bold"
+        app:layout_constraintStart_toEndOf="@id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"/>
+
+    <!-- Hàng chức năng: Tìm kiếm, Thông báo, Thêm, Rời nhóm -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/function_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Tìm kiếm -->
+        <LinearLayout
+            android:id="@+id/search_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/noti_layout"
+            app:layout_constraintWidth_percent="0.25">
+
+            <ImageView
+                android:id="@+id/search"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_search"
+                android:padding="5dp"
+                android:background="@drawable/bg_circle"
+                android:contentDescription="Tìm kiếm"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Search"
+                android:textSize="14sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+        </LinearLayout>
+
+        <!-- Thông báo -->
+        <LinearLayout
+            android:id="@+id/noti_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/search_layout"
+            app:layout_constraintEnd_toStartOf="@id/add_layout"
+            app:layout_constraintWidth_percent="0.25">
+
+            <ImageView
+                android:id="@+id/noti"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_noti"
+                android:padding="5dp"
+                android:background="@drawable/bg_circle"
+                android:contentDescription="Thông báo"/>
+
+            <TextView
+                android:id="@+id/txtNoti"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notification"
+                android:textSize="14sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+        </LinearLayout>
+
+        <!-- Thêm -->
+        <LinearLayout
+            android:id="@+id/add_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/noti_layout"
+            app:layout_constraintEnd_toStartOf="@id/out_layout"
+            app:layout_constraintWidth_percent="0.25">
+
+            <ImageView
+                android:id="@+id/addGroup"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_add_group"
+                android:padding="5dp"
+                android:background="@drawable/bg_circle"
+                android:contentDescription="Thêm nhóm"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add"
+                android:textSize="14sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+        </LinearLayout>
+
+        <!-- Rời nhóm -->
+        <LinearLayout
+            android:id="@+id/out_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/add_layout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.25">
+
+            <ImageView
+                android:id="@+id/outGroup"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_out_group"
+                android:padding="5dp"
+                android:background="@drawable/bg_circle"
+                android:contentDescription="Out group"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Out group"
+                android:textSize="14sp"
+                android:fontFamily="@font/mpr1c_medium"/>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Nhãn "Thành viên" -->
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Members"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/mpr1c_bold"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/function_bar"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <!-- Danh sách thành viên -->
+    <androidx.recyclerview.widget.RecyclerView
+        tools:listitem="@layout/item_user_menu"
+        android:id="@+id/recyclerMembers"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingTop="8dp"
+        android:scrollbars="vertical"
+        app:layout_constraintTop_toBottomOf="@id/tv"
+        app:layout_constraintBottom_toTopOf="@id/btnLeaveGroup"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Nút giải tán nhóm -->
+    <Button
+        android:id="@+id/btnLeaveGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Disband group"
+        android:backgroundTint="@color/black"
+        android:textColor="@android:color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
