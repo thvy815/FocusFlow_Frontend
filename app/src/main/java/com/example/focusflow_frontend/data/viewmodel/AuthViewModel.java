@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.focusflow_frontend.data.api.UserController;
@@ -28,12 +29,17 @@ public class AuthViewModel extends AndroidViewModel {
     public MutableLiveData<SignInResponse> signInResult = new MutableLiveData<>();
     public MutableLiveData<User> signUpResult = new MutableLiveData<>();
     public MutableLiveData<String> errorMessage = new MutableLiveData<>();
+    private final MutableLiveData<String> userName = new MutableLiveData<>();
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
         // Khởi tạo UserController thông qua ApiClient
         Context context = getApplication().getApplicationContext();
         userController = ApiClient.getRetrofit(context).create(UserController.class);
+    }
+
+    public LiveData<String> getUserName() {
+        return userName;
     }
 
     public void signIn(String email, String password, boolean rememberMe) {
@@ -70,6 +76,24 @@ public class AuthViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 errorMessage.postValue("Error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void fetchUserName() {
+        userController.getCurrentUser().enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userName.postValue(response.body().getUsername());
+                } else {
+                    userName.postValue("Không lấy được tên");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                userName.postValue("Lỗi kết nối");
             }
         });
     }

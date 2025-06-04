@@ -280,7 +280,7 @@ public class PomodoroFragment extends Fragment {
         builder.setTitle("Abandon This Focus?");
         builder.setMessage("The record can't be saved because the focus duration is less than 5 mins.");
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.setPositiveButton("QUIT", (dialog, which) -> restartFragment());
+        builder.setPositiveButton("QUIT", (dialog, which) -> restartWithoutSave());
         builder.create().show();
     }
     private void showDialogMoreThan5min() {
@@ -311,7 +311,7 @@ public class PomodoroFragment extends Fragment {
         });
 
         builder.setPositiveButton("QUIT", (dialog, which) -> {
-            restartFragment();
+            restartWithoutSave();
         });
         builder.create().show();
     }
@@ -321,6 +321,15 @@ public class PomodoroFragment extends Fragment {
                 .replace(R.id.fragment_container, new PomodoroFragment())
                 .commit();
         whiteNoisePlayer.stopWhiteNoise();
+    }
+    private void restartWithoutSave(){
+        restartFragment();
+        boolean check = false;
+        int pomoId = currPomodoro.getId();
+        userId = currPomodoro.getUserId();
+        taskId = currPomodoro.getTaskId();
+        pomodoroViewModel.deletePomodoroDetail(getContext(), pomoId, check);
+        pomodoroViewModel.deletePomodoro(getContext(),pomoId, check);
     }
 
 //    private void animateTimerToCenter() {

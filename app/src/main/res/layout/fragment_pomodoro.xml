@@ -73,7 +73,7 @@
         android:layout_width="300dp"
         android:layout_height="300dp"
 
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="100dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
 
@@ -128,33 +128,30 @@
         android:id="@+id/afterStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginTop="80dp"
         android:orientation="horizontal"
-
-
-        app:layout_constraintTop_toBottomOf="@id/timer_text"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/circleView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:gravity="center_horizontal"
-        android:visibility="gone"
+
         >
 
         <ImageView
             android:id="@+id/volume_icon"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:padding="15dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:padding="25dp"
             android:layout_marginEnd="15dp"
             android:src="@drawable/ic_music_note"
             android:contentDescription="volume" />
 
         <ImageView
             android:id="@+id/paused_icon"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:padding="15dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:padding="25dp"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:src="@drawable/ic_pause"
@@ -163,13 +160,13 @@
 
         <ImageView
             android:id="@+id/stop_icon"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_marginStart="10dp"
             android:src="@drawable/ic_stop"
             android:contentDescription="stop"
             android:onClick="stopClick"
-            android:padding="15dp"/>
+            android:padding="25dp"/>
     </LinearLayout>
 
     <!-- Start Button -->
@@ -177,7 +174,7 @@
         android:id="@+id/start_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="150dp"
+        android:layout_marginTop="100dp"
         android:text="Start"
         android:textSize="28sp"
         android:textColor="@color/white"
@@ -187,8 +184,7 @@
 
         android:backgroundTint="@color/black"
         android:onClick="startClick"
-
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/circleView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />
@@ -196,16 +192,16 @@
     <!-- Play Button (shown on resume) -->
     <ImageView
         android:id="@+id/play_icon"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_marginBottom="150dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="80dp"
         android:padding="20dp"
+        android:visibility="gone"
         android:src="@drawable/ic_play"
         android:contentDescription="play"
-        android:visibility="gone"
         android:onClick="playClick"
-        app:layout_constraintTop_toBottomOf="@id/timer_text"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/circleView"
+        app:layout_constraintStart_toStartOf="@id/circleView"
+        app:layout_constraintEnd_toEndOf="@id/circleView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

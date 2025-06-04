@@ -15,6 +15,7 @@ import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.model.PomodoroDetail;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.utils.ApiClient;
+import com.example.focusflow_frontend.utils.TokenManager;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -33,6 +34,7 @@ import retrofit2.Response;
 public class PomodoroViewModel extends ViewModel {
     // Hàm lưu pomodoro - userId, taskId, startAt, endAt, dueDate, totalTime, isDeleted
     private final MutableLiveData<Pomodoro> lastCreatedPomodoro = new MutableLiveData<>();
+    private TaskController taskController;
 
     public LiveData<Pomodoro> getLastCreatedPomodoro() {
         return lastCreatedPomodoro;
@@ -147,7 +149,26 @@ public class PomodoroViewModel extends ViewModel {
         });
 
     }
-
+    public void deletePomodoro(Context context, int id, boolean check){
+        PomodoroController controller = ApiClient.getPomodoroController(context);
+        Call<Void> call = controller.deletePomodoro(id);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (check) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Failed to delete. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
     //Hàm get:
     private final MutableLiveData<List<Pomodoro>> pomodoroList = new MutableLiveData<>();
     public LiveData<List<Pomodoro>> getPomodoroList() {
@@ -312,27 +333,51 @@ public class PomodoroViewModel extends ViewModel {
     }
 
     public void fetchTaskNames(Context context, List<Pomodoro> pomodoros) {
-        Toast.makeText(context.getApplicationContext(), "Hàm get task by id tại 315 PomoViewModel", Toast.LENGTH_SHORT).show();
-//        Map<Integer, String> map = new HashMap<>();
-//        TaskController controller = ApiClient.getTaskController(context);
-//
-//        for (Pomodoro p : pomodoros) {
-//            int taskId = p.getTaskId();
-//            controller.getTaskById(taskId).enqueue(new Callback<Task>() {
-//                @Override
-//                public void onResponse(Call<Task> call, Response<Task> response) {
-//                    if (response.isSuccessful() && response.body() != null) {
-//                        map.put(taskId, response.body().getTitle());
-//                        taskNameMapLiveData.postValue(new HashMap<>(map)); // copy để trigger observer
-//                    }
-//                }
-//
-//                @Override
-//                public void onFailure(Call<Task> call, Throwable t) {
-//                    map.put(taskId, "Không rõ");
-//                    taskNameMapLiveData.postValue(new HashMap<>(map));
-//                }
-//            });
-//        }
+        int userId = TokenManager.getUserId(context);
+
+        taskController.getTasksByUser(userId).enqueue(new Callback<List<Task>>() {
+            @Override
+            public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Map<Integer, String> taskNameMap = new HashMap<>();
+                    List<Task> tasks = response.body();
+                    for (Pomodoro p : pomodoros) {
+                        for (Task t : tasks) {
+                            if (t.getId() == p.getTaskId()) {
+                                taskNameMap.put(p.getTaskId(), t.getTitle());
+                                break;
+                            }
+                        }
+                    }
+                    taskNameMapLiveData.setValue(taskNameMap);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Task>> call, Throwable t) {
+                Log.e("PomodoroViewModel", "Lỗi fetch task name: " + t.getMessage());
+            }
+        });
     }
+    public void deletePomodoroDetail(Context context, int id, boolean check){
+        PomodoroDetailController controller = ApiClient.getPomodoroDetailController(context);
+        Call<Void> call = controller.deletePomodoroDetail(id);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (check) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Failed to delete. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 }

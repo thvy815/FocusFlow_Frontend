@@ -17,9 +17,17 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.api.UserController;
+import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.utils.ApiClient;
 
 import java.util.Arrays;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class ProfileFragment extends Fragment {
@@ -27,9 +35,19 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        AuthViewModel userViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
         LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
-        setUserName(view);
+        TextView usernameTextView = view.findViewById(R.id.userName);
+
+        // Lấy username
+        userViewModel.fetchUserName();
+        userViewModel.getUserName().observe(getViewLifecycleOwner(), name -> {
+            usernameTextView.setText(name);
+        });
+
         setStreakAndCore(view);
+
         // Giả sử đây là danh sách badge người dùng đạt được, mới nhất nằm cuối
         List<Integer> userBadges = getUserBadges(); // Trả về danh sách drawable resource ID
 
@@ -182,10 +200,6 @@ public class ProfileFragment extends Fragment {
         TextView core = view.findViewById(R.id.core_Value);
         streak.setText("189 profile fragment");
         core.setText("tuong tu o tren");
-    }
-    public void setUserName(View view){
-        TextView username = view.findViewById(R.id.userName);
-        username.setText("193 profile");
     }
 }
 
