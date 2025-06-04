@@ -118,6 +118,26 @@ public class PomodoroViewModel extends ViewModel {
             }
         });
     }
+    public void deletePomodoro(Context context, int id, boolean check){
+        PomodoroController controller = ApiClient.getPomodoroController(context);
+        Call<Void> call = controller.deletePomodoro(id);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (check) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Failed to delete. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
     // Hàm lưu details
     public void createPomodoroDetail(Context context, int userId, int taskId, int pomodoroId, long startAt, long endAt, long totalTime){
         Time st = new Time(startAt);
@@ -263,6 +283,26 @@ public class PomodoroViewModel extends ViewModel {
             }
         }
         dailyDurationMap.postValue(durationMap);
+    }
+    public void deletePomodoroDetail(Context context, int id, boolean check){
+        PomodoroDetailController controller = ApiClient.getPomodoroDetailController(context);
+        Call<Void> call = controller.deletePomodoroDetail(id);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (check) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Failed to delete. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private final MutableLiveData<Pomodoro> latestPomodoro = new MutableLiveData<>();

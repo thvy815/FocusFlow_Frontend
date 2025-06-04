@@ -179,6 +179,7 @@ public class PomodoroFragment extends Fragment {
         pauseTime = startTime;
         LocalDate dueDate = LocalDate.now();;
 
+        //Lưu pomodoro
         SavePomodoro(startTime, userId, taskId, dueDate);
 
         getView().findViewById(R.id.start_button).setVisibility(View.GONE);
@@ -249,7 +250,6 @@ public class PomodoroFragment extends Fragment {
         whiteNoisePlayer.stopWhiteNoise();
         isPaused = true;
 
-
         getView().findViewById(R.id.play_icon).setVisibility(VISIBLE);
         getView().findViewById(R.id.paused_icon).setVisibility(View.INVISIBLE);
     }
@@ -280,7 +280,9 @@ public class PomodoroFragment extends Fragment {
         builder.setTitle("Abandon This Focus?");
         builder.setMessage("The record can't be saved because the focus duration is less than 5 mins.");
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.setPositiveButton("QUIT", (dialog, which) -> restartFragment());
+        builder.setPositiveButton("QUIT", (dialog, which) -> {
+            restartWithoutSave();
+        });
         builder.create().show();
     }
     private void showDialogMoreThan5min() {
@@ -306,12 +308,11 @@ public class PomodoroFragment extends Fragment {
 
             pomodoroViewModel.createPomodoroDetail(getContext(), userId, taskId, pomoId, pauseTime, endTime, focusDuration);
             pomodoroViewModel.updatePomodoro(getContext(), currPomodoro);
-
             restartFragment();
         });
 
         builder.setPositiveButton("QUIT", (dialog, which) -> {
-            restartFragment();
+            restartWithoutSave();
         });
         builder.create().show();
     }
@@ -323,6 +324,15 @@ public class PomodoroFragment extends Fragment {
         whiteNoisePlayer.stopWhiteNoise();
     }
 
+    private void restartWithoutSave(){
+        restartFragment();
+        boolean check = false;
+        int pomoId = currPomodoro.getId();
+        userId = currPomodoro.getUserId();
+        taskId = currPomodoro.getTaskId();
+        pomodoroViewModel.deletePomodoroDetail(getContext(), pomoId, check);
+        pomodoroViewModel.deletePomodoro(getContext(),pomoId, check);
+    }
 //    private void animateTimerToCenter() {
 //        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
 //
@@ -370,7 +380,6 @@ public class PomodoroFragment extends Fragment {
 //        scaleAnimator.setDuration(500);
 //        scaleAnimator.start();
 //    }
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void SavePomodoro(long startTime, int userId, int taskId, LocalDate dueDate){
         pomodoroViewModel.getLastCreatedPomodoro().observe(getViewLifecycleOwner(), pomodoro -> {
