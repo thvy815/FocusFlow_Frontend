@@ -7,22 +7,23 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Task;
-import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.TaskViewHolder> {
-
     private List<Task> tasks; // Danh sách các task
     private final OnTaskCheckedChangeListener listener; // Lắng nghe thay đổi checkbox
-    private final OnTaskClickListener clickListener;
-    private final Map<String, String> userMap = new HashMap<>(); // Map userId -> username
+    private OnTaskClickListener clickListener;
+    private final AuthViewModel authViewModel;
+    private final GroupViewModel groupViewModel;
+    private final LifecycleOwner lifecycleOwner;
 
     // Interface cho sự kiện checkbox
     public interface OnTaskCheckedChangeListener {
@@ -31,11 +32,22 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     public interface OnTaskClickListener {
         void onTaskClick(Task task);
     }
+    public void setOnTaskClickListener(OnTaskClickListener listener) {
+        this.clickListener = listener;
+    }
 
-    public TaskGroupAdapter(List<Task> tasks, OnTaskCheckedChangeListener listener, OnTaskClickListener clickListener) {
+    public TaskGroupAdapter(List<Task> tasks,
+                            OnTaskCheckedChangeListener listener,
+                            OnTaskClickListener clickListener,
+                            AuthViewModel authViewModel,
+                            GroupViewModel groupViewModel,
+                            LifecycleOwner lifecycleOwner) {
         this.tasks = tasks;
         this.listener = listener;
         this.clickListener = clickListener;
+        this.authViewModel = authViewModel;
+        this.groupViewModel = groupViewModel;
+        this.lifecycleOwner = lifecycleOwner;
     }
 
     // Cập nhật danh sách task mới
@@ -44,13 +56,19 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
         notifyDataSetChanged();
     }
 
-    // Gán danh sách người dùng để lấy tên từ id
-    public void setUsers(List<User> users) {
-        userMap.clear();
-        for (User user : users) {
-            userMap.put(user.getId(), user.getUsername());
+    public void updateTaskInAdapter(Task updatedTask) {
+        for (int i = 0; i < tasks.size(); i++) {
+            if (tasks.get(i).getId().equals(updatedTask.getId())) {
+                tasks.set(i, updatedTask);
+                notifyItemChanged(i);
+                break;
+            }
         }
-        notifyDataSetChanged();
+    }
+
+    public void addTaskToAdapter(Task task) {
+        tasks.add(task); // thêm vào cuối danh sách
+        notifyItemInserted(tasks.size() - 1);
     }
 
     @NonNull
@@ -67,7 +85,6 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
 
         // Gán dữ liệu cho item
         holder.txtTitle.setText(task.getTitle());
-        holder.txtUser.setText(userMap.getOrDefault(task.getUserId(), "Unknown"));
         holder.txtDeadline.setText(task.getDueDate());
 
         // Gán trạng thái checkbox và xử lý sự kiện
@@ -77,8 +94,31 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             task.setCompleted(isChecked);
             if (listener != null) listener.onTaskCheckedChanged(task, isChecked);
         });
+
+        // Sự kiện click item
         holder.itemView.setOnClickListener(v -> {
-            if (clickListener != null) clickListener.onTaskClick(task);
+            if (clickListener != null) {
+                clickListener.onTaskClick(tasks.get(holder.getAdapterPosition()));
+            }
+        });
+
+        // Lấy ctId từ task → lấy userId từ ct → lấy username từ user
+        int ctId = task.getCtGroupId();
+
+        groupViewModel.getCtByIdLiveData(ctId).observe(lifecycleOwner, ctGroupUser -> {
+            if (ctGroupUser != null) {
+                int userId = ctGroupUser.getUserId();
+
+                authViewModel.getUserByIdLiveData(userId).observe(lifecycleOwner, user -> {
+                    if (user != null) {
+                        holder.txtUser.setText(user.getUsername());
+                    } else {
+                        holder.txtUser.setText("Unknown");
+                    }
+                });
+            } else {
+                holder.txtUser.setText("Unknown");
+            }
         });
     }
 

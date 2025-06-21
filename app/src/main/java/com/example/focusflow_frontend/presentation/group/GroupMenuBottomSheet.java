@@ -8,6 +8,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,7 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
+import com.example.focusflow_frontend.utils.TokenManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -46,6 +48,7 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
     private static final String ARG_USER = "user";
     private User user;
     private MemberAdapter adapter;
+    private GroupViewModel viewModel;
 
     public static GroupMenuBottomSheet newInstance(Group group, User user) {
         GroupMenuBottomSheet fragment = new GroupMenuBottomSheet();
@@ -77,9 +80,7 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
     public void onStart() {
         super.onStart();
         BottomSheetDialog dialog = (BottomSheetDialog) getDialog();
-        FrameLayout bottomSheet = dialog.findViewById(
-                com.google.android.material.R.id.design_bottom_sheet
-        );
+        FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet != null) {
             BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
             behavior.setDraggable(false);
@@ -87,7 +88,6 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
             behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
     }
-
 
     @Nullable
     @Override
@@ -99,20 +99,25 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
         if (getArguments() != null) {
             group = (Group) getArguments().getSerializable(ARG_GROUP);
 
-            group_name.setText(group.getGroup_name());
+            group_name.setText(group.getGroupName());
             user = (User) getArguments().getSerializable(ARG_USER);
-
         }
+
+        viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
 
         RecyclerView recyclerView = view.findViewById(R.id.recyclerMembers);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // Truyền group vào Adapter
-        adapter = new MemberAdapter(group, user);
+        adapter = new MemberAdapter(group, user, viewModel);
         recyclerView.setAdapter(adapter);
 
-        loadMembers();
-        GroupViewModel viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
+        viewModel.fetchUsersInGroup(group.getId());
+
+        viewModel.getUsersInGroup().observe(getViewLifecycleOwner(), users -> {
+            Log.d("GroupMenuBottomSheet", "Số lượng user: " + users.size());
+            adapter.setUserList(users);
+        });
 
         // Khi bam vao tim kiem: hien ra trang detail --> tim kiem task
         LinearLayout btnSearch = view.findViewById(R.id.search_layout);
@@ -129,36 +134,19 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
         //Hien roi nhom:
         LinearLayout btnOut = view.findViewById(R.id.out_layout);
         btnOut.setOnClickListener(v->outGroupClick());
+
         //Giai tan nhom
         Button btnGiaiTan = view.findViewById(R.id.btnLeaveGroup);
-   //     if (user.getId().equals(group.getLeader_id())){
+        if (user.getId() == group.getLeaderId()){
             btnGiaiTan.setVisibility(VISIBLE);
             btnGiaiTan.setOnClickListener(v->DisbandGroup());
-      //  }
+        }
+
         //Back:
         ImageView imBack = view.findViewById(R.id.btnBack);
         imBack.setOnClickListener(v -> {dismiss();});
 
         return view;
-    }
-//lay du lieu tu db:
-    private void loadMembers() {
-        List<User> members = new ArrayList<>();
-
-        // Tạo danh sách user mẫu
-        members.add(new User("1", "leader@example.com", "pass123"));
-        members.add(new User("1", "member1@example.com", "pass123"));
-        members.add(new User("1", "member2@example.com", "pass123"));
-        members.add(new User("1", "member3@example.com", "pass123"));
-
-        // Gán leader_id trùng userId của Leader
-        group.setLeader_id("1");
-        adapter.setUserList(members);
-
-//        if (group != null && group.getMembers() != null) {
-//            List<User> members = group.getMembers();
-//            adapter.setData(members);
-//        }
     }
 
     private void searchClick(GroupViewModel viewModel){
@@ -183,14 +171,27 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
     }
     private void addMemberClick(){
         AddMemberBottomSheet addSheet = new AddMemberBottomSheet();
-        addSheet.show(getParentFragmentManager(), addSheet.getTag());
+
+        Bundle args = new Bundle();
+        args.putSerializable("group", group);
+        addSheet.setArguments(args);
+
+        addSheet.setOnMembersAddedListener(() -> {
+            Log.d("GroupMenuBottomSheet", "Callback được gọi!");
+            // Reload danh sách thành viên
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                Log.d("GroupMenuBottomSheet", "Thực hiện fetchUsersInGroup");
+                viewModel.fetchUsersInGroup(group.getId());
+            }, 500);
+        });
+
+        addSheet.show(getParentFragmentManager(), "AddMemberBottomSheet");
     }
     public interface OnLeaveGroupListener {
         void onLeaveGroup();
     }
 
     private OnLeaveGroupListener leaveGroupListener;
-
     public void setOnLeaveGroupListener(OnLeaveGroupListener listener) {
         this.leaveGroupListener = listener;
     }
@@ -207,7 +208,31 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
                 .setTitle("Leave Group")
                 .setMessage("Are you sure you want to leave this group?")
                 .setPositiveButton("Leave", (dialog, which) -> {
-                    Toast.makeText(requireContext(), "You have left the group", Toast.LENGTH_SHORT).show();
+                    viewModel.removeUserFromGroup(group.getId(), user.getId(),
+                            () ->
+                            {
+                                Toast.makeText(requireContext(), "You have left the group", Toast.LENGTH_SHORT).show();
+                                handleLeaveGroup();
+                                dismiss(); // Đóng BottomSheet sau khi setup Handler
+                            },
+                            () -> Toast.makeText(requireContext(), "Failed to leave group", Toast.LENGTH_SHORT).show()
+                    );
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private Runnable onGroupDisbanded;
+    public void setOnGroupDisbanded(Runnable runnable) {
+        this.onGroupDisbanded = runnable;
+    }
+    private void DisbandGroup(){
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Disband Group")
+                .setMessage("Are you sure you want to disband this group?")
+                .setPositiveButton("Disband", (dialog, which) -> {
+                    viewModel.deleteGroup(group.getId()); // Gọi API DELETE
+                    Toast.makeText(requireContext(), "Group disbanded", Toast.LENGTH_SHORT).show();
                     handleLeaveGroup();
                     dismiss(); // Đóng BottomSheet sau khi setup Handler
                 })
@@ -215,18 +240,6 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
                 .show();
     }
 
-    private void DisbandGroup(){
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Disband Group")
-                .setMessage("Are you sure you want to disband this group?")
-                .setPositiveButton("Disband", (dialog, which) -> {
-                    Toast.makeText(requireContext(), "You have disbanded the group", Toast.LENGTH_SHORT).show();
-                    handleLeaveGroup();
-                    dismiss(); // Đóng BottomSheet sau khi setup Handler
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                .show();
-    }
     private void removeMemberClick(Context context){
         Toast.makeText(context, "Hàm xóa member dòng 207", Toast.LENGTH_SHORT).show();
     }

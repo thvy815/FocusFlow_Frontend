@@ -32,12 +32,6 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
         void onTaskLongClick(Task task);
     }
 
-    public TaskAdapter(List<Task> tasks, OnTaskCheckedListener listener, OnTaskClickListener clickListener) {
-        this.taskList = tasks;
-        this.onTaskCheckedListener = listener;
-        this.onTaskClickListener = clickListener;
-    }
-
     public TaskAdapter(List<Task> tasks, OnTaskCheckedListener listener, OnTaskClickListener clickListener, OnTaskLongClickListener longClickListener) {
         this.taskList = tasks;
         this.onTaskCheckedListener = listener;
@@ -45,8 +39,17 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
         this.onTaskLongClickListener = longClickListener;
     }
 
-    public class TaskViewHolder extends RecyclerView.ViewHolder {
+    public void updateTaskInAdapter(Task updatedTask) {
+        for (int i = 0; i < taskList.size(); i++) {
+            if (taskList.get(i).getId().equals(updatedTask.getId())) {
+                taskList.set(i, updatedTask);
+                notifyItemChanged(i);
+                break;
+            }
+        }
+    }
 
+    public class TaskViewHolder extends RecyclerView.ViewHolder {
         private final TextView taskTitle;
         private final TextView tagName;
         private final TextView priorityName;

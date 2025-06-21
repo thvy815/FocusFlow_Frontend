@@ -1,39 +1,44 @@
 package com.example.focusflow_frontend.data.model;
 
+import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
 public class Group implements Serializable {
-    private String id;
-    private String group_name;
-    private String leader_id;
+    private int id;
 
-    public String getId() {
+    @SerializedName("groupName")  // ánh xạ đúng với JSON
+    private String groupName;
+
+    @SerializedName("leaderId")
+    private int leaderId;
+
+    public Group(int id, String groupName, int leaderId) {
+        this.id = id;
+        this.groupName = groupName;
+        this.leaderId = leaderId;
+    }
+
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public int getLeaderId() {
+        return leaderId;
+    }
+
+    public void setId(int id) {
         this.id = id;
     }
 
-    public String getGroup_name() {
-        return group_name;
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
-    public void setGroup_name(String group_name) {
-        this.group_name = group_name;
-    }
-
-    public String getLeader_id() {
-        return leader_id;
-    }
-
-    public void setLeader_id(String leader_id) {
-        this.leader_id = leader_id;
-    }
-
-    public Group(String id, String group_name, String leader_id) {
-        this.id = id;
-        this.group_name = group_name;
-        this.leader_id = leader_id;
+    public void setLeaderId(int leaderId) {
+        this.leaderId = leaderId;
     }
 }

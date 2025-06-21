@@ -13,7 +13,6 @@ import com.example.focusflow_frontend.data.api.TaskController;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.utils.ApiClient;
 
-import java.io.IOException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -22,6 +21,7 @@ import retrofit2.Response;
 
 public class TaskViewModel extends AndroidViewModel {
     private MutableLiveData<List<Task>> taskList = new MutableLiveData<>();
+    private MutableLiveData<List<Task>> groupTaskList = new MutableLiveData<>();
     public MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private MutableLiveData<Boolean> taskCreatedSuccess = new MutableLiveData<>();
     private MutableLiveData<Boolean> updateSuccess = new MutableLiveData<>();
@@ -35,9 +35,8 @@ public class TaskViewModel extends AndroidViewModel {
         taskController = ApiClient.getRetrofit(context).create(TaskController.class);
     }
 
-    public LiveData<List<Task>> getTaskList() {
-        return taskList;
-    }
+    public LiveData<List<Task>> getTaskList() { return taskList; }
+    public LiveData<List<Task>> getGroupTaskList() { return groupTaskList; }
     public LiveData<String> getErrorMessage() {
         return errorMessage;
     }
@@ -65,6 +64,25 @@ public class TaskViewModel extends AndroidViewModel {
             }
         });
     }
+
+    public void fetchTasksByGroup(int groupId) {
+        taskController.getTasksByGroup(groupId).enqueue(new Callback<List<Task>>() {
+            @Override
+            public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    groupTaskList.setValue(response.body());
+                } else {
+                    errorMessage.postValue("Không lấy được danh sách task nhóm.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Task>> call, Throwable t) {
+                errorMessage.postValue("Lỗi khi gọi API nhóm: " + t.getMessage());
+            }
+        });
+    }
+
 
     public void createTask(Task task) {
         taskController.createTask(task).enqueue(new Callback<Task>() {

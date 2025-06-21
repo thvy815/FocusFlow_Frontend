@@ -2,7 +2,6 @@ package com.example.focusflow_frontend.data.viewmodel;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -17,6 +16,7 @@ import com.example.focusflow_frontend.utils.ApiClient;
 //import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import okhttp3.ResponseBody;
@@ -29,17 +29,18 @@ public class AuthViewModel extends AndroidViewModel {
     public MutableLiveData<SignInResponse> signInResult = new MutableLiveData<>();
     public MutableLiveData<User> signUpResult = new MutableLiveData<>();
     public MutableLiveData<String> errorMessage = new MutableLiveData<>();
-    private final MutableLiveData<String> userName = new MutableLiveData<>();
+    private final MutableLiveData<User> currentUser = new MutableLiveData<>();
+    private final Map<Integer, MutableLiveData<User>> userLiveDataMap = new HashMap<>();
+    private final MutableLiveData<List<User>> allUsers = new MutableLiveData<>();
+
+    public LiveData<List<User>> getAllUsers() { return allUsers; }
+    public LiveData<User> getCurrentUserLiveData() { return currentUser; }
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
         // Khởi tạo UserController thông qua ApiClient
         Context context = getApplication().getApplicationContext();
         userController = ApiClient.getRetrofit(context).create(UserController.class);
-    }
-
-    public LiveData<String> getUserName() {
-        return userName;
     }
 
     public void signIn(String email, String password, boolean rememberMe) {
@@ -80,22 +81,83 @@ public class AuthViewModel extends AndroidViewModel {
         });
     }
 
-    public void fetchUserName() {
+    public void getCurrentUser() {
         userController.getCurrentUser().enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    userName.postValue(response.body().getUsername());
+                    currentUser.postValue(response.body());
                 } else {
-                    userName.postValue("Không lấy được tên");
+                    errorMessage.postValue("Không tìm thấy người dùng");
                 }
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                userName.postValue("Lỗi kết nối");
+                errorMessage.postValue("Lỗi khi lấy người dùng: " + t.getMessage());
             }
         });
+    }
+
+    public void fetchUserById(int userId) {
+        userController.getUserById(userId).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (!userLiveDataMap.containsKey(userId)) {
+                        userLiveDataMap.put(userId, new MutableLiveData<>());
+                    }
+                    userLiveDataMap.get(userId).postValue(response.body());
+                } else {
+                    errorMessage.postValue("Không tìm thấy user với id: " + userId);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                errorMessage.postValue("Lỗi khi lấy user: " + t.getMessage());
+            }
+        });
+    }
+
+    public void fetchAllUsers() {
+        userController.getAllUsers().enqueue(new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    allUsers.postValue(response.body());
+                } else {
+                    errorMessage.postValue("Không thể tải danh sách người dùng");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                errorMessage.postValue("Lỗi khi tải người dùng: " + t.getMessage());
+            }
+        });
+    }
+
+    public LiveData<User> getUserByIdLiveData(int userId) {
+        MutableLiveData<User> userLiveData = new MutableLiveData<>();
+
+        userController.getUserById(userId).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful()) {
+                    userLiveData.setValue(response.body());
+                } else {
+                    userLiveData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                userLiveData.setValue(null);
+            }
+        });
+
+        return userLiveData;
     }
 
 //    public void updateFcmToken(int userId) {

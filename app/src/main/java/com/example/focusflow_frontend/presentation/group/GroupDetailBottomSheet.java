@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +26,10 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
+import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
+import com.example.focusflow_frontend.presentation.calendar.AddTaskBottomSheet;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -40,8 +44,11 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
     private Group group;
     private User user;
     private GroupViewModel viewModel;
+    private TaskViewModel taskViewModel;
+    private AuthViewModel userViewModel;
     private TaskGroupAdapter adapter;
     private List<Task> allTasks = new ArrayList<>();
+
 //lấy tham số của group ở đây
     public static GroupDetailBottomSheet newInstance(Group group, User user) {
         GroupDetailBottomSheet fragment = new GroupDetailBottomSheet();
@@ -95,15 +102,23 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             group = (Group) getArguments().getSerializable(ARG_GROUP);
             user = (User) getArguments().getSerializable(ARG_USER);
             // Set group name
-            groupNameTextView.setText(group.getGroup_name());
+            groupNameTextView.setText(group.getGroupName());
 
         }
         // Setup ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
+        taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
+        userViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
         setupRecycleView(view);
-        // Observe danh sách task
-        viewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
-            allTasks = tasks;
+
+        // // Gọi API để lấy task theo groupId
+        taskViewModel.fetchTasksByGroup(group.getId());
+
+        // Observe danh sách task ban đầu
+        taskViewModel.getGroupTaskList().observe(getViewLifecycleOwner(), tasks -> {
+            if (allTasks.isEmpty()) {
+                allTasks = new ArrayList<>(tasks); // Lưu bản gốc
+            }
             adapter.setTaskList(tasks);
         });
 
@@ -130,7 +145,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         imBack.setOnClickListener(v -> {dismiss();});
         //Giai tan
 
-
         return view;
     }
 
@@ -139,22 +153,40 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         super.onDestroyView();
         viewModel.clearFilteredTasks(allTasks); // Bạn tạo thêm hàm này trong ViewModel
     }
+
     private void setupRecycleView(View view){
         // Setup RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.taskList);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
         adapter = new TaskGroupAdapter(
                 new ArrayList<>(),
-                (task, isChecked) -> task.setCompleted(isChecked),
-                task -> {
-                    Toast.makeText(getContext(), "Nhớ thêm Task vào đây nha để chuyển layout Detail Task", Toast.LENGTH_SHORT).show();
-                }
+                (task, isChecked) -> task.setCompleted(isChecked), // listener checkbox
+                task -> showEditTaskBottomSheet(task),
+                userViewModel,
+                viewModel,
+                getViewLifecycleOwner()
         );
-        recyclerView.setAdapter(adapter);
 
-        // Gán người dùng mẫu (sau này có thể đổi thành từ API)
-        adapter.setUsers(generateSampleUsers());
+        recyclerView.setAdapter(adapter);
     }
+
+    private void showEditTaskBottomSheet(Task task) {
+        AddTaskBottomSheet sheet = new AddTaskBottomSheet();
+
+        Bundle args = new Bundle();
+        args.putSerializable("task", task);
+        args.putSerializable("group", group);
+        sheet.setArguments(args);
+
+        // Khi task được update xong
+        sheet.setOnTaskUpdatedListener(updatedTask -> {
+            adapter.updateTaskInAdapter(updatedTask);
+        });
+
+        sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
+    }
+
     private void setupSearchBar(View view) {
         EditText searchInput = view.findViewById(R.id.etSearchTask);
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -165,13 +197,7 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             }
         });
     }
-    private List<User> generateSampleUsers() {
-        List<User> users = new ArrayList<>();
-        users.add(new User("101", "Alice", "103"));
-        users.add(new User("102", "Bob", "1"));
-        users.add(new User("103", "Charlie", "1"));
-        return users;
-    }
+
     //Mo menu:
     private void openMenu(GroupViewModel viewModel){
         Bundle args = new Bundle();
@@ -186,8 +212,21 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         });
         viewModel.setGroupRemoved(group.getId());
     }
+
     //Thuc hien addTask
     private void addTask(){
-        Toast.makeText(getContext(), "Thuc hien ham add task o dong 181 BottomSheet", Toast.LENGTH_SHORT).show();
+        AddTaskBottomSheet sheet = new AddTaskBottomSheet();
+
+        // Truyền thêm groupId và userId nếu cần cho tạo task
+        Bundle args = new Bundle();
+        args.putSerializable("group", group);
+        sheet.setArguments(args);
+
+        sheet.setOnTaskAddedListener(newTask -> {
+            adapter.addTaskToAdapter(newTask); // thêm task vào danh sách hiện tại
+            allTasks.add(newTask);             // cập nhật danh sách gốc
+        });
+
+        sheet.show(getParentFragmentManager(), "AddTaskBottomSheet");
     }
 }

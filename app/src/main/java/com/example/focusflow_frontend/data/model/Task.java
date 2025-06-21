@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Task implements Serializable {
     private Integer id;
     private int userId;
-    private int ctId;
+    private Integer ctGroupId;
     private String title;
     private String description;
     private String dueDate;
@@ -35,7 +35,7 @@ public class Task implements Serializable {
     public Task(Integer id, int userId, int ctId, String title, String description, String dueDate) {
         this.id = id;
         this.userId = userId;
-        this.ctId = ctId;
+        this.ctGroupId = ctId;
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
@@ -76,7 +76,7 @@ public class Task implements Serializable {
     public boolean isCompleted() { return isCompleted; }
     public void setCompleted(boolean isCompleted) { this.isCompleted = isCompleted; }
 
-    public int getCtId() { return ctId; }
+    public Integer getCtGroupId() { return ctGroupId; }
 
-    public void setCtId(int ctId) { this.ctId = ctId; }
+    public void setCtGroupId(Integer ctId) { this.ctGroupId = ctId; }
 }

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +25,12 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
     private final Group group;
     private final User user;
     private final List<User> userList = new ArrayList<>();
+    private final GroupViewModel viewModel;
 
-    public MemberAdapter(Group group, User user) {
+    public MemberAdapter(Group group, User user, GroupViewModel viewModel) {
         this.group = group;
         this.user = user;
+        this.viewModel = viewModel;
     }
 
     public void setUserList(List<User> list) {
@@ -49,18 +52,27 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
         User member = userList.get(position);
         holder.tvName.setText(member.getUsername());
 
-
         // Chỉ hiển thị nút "Xóa" nếu người dùng hiện tại là leader và không phải chính mình
-        if (group.getLeader_id().equals(user.getId()) && !member.getId().equals(user.getId())) {
+        if (group.getLeaderId() == user.getId() && member.getId() != user.getId()) {
             holder.removeIC.setVisibility(View.VISIBLE);
+
             holder.removeIC.setOnClickListener(v -> {
                 new androidx.appcompat.app.AlertDialog.Builder(holder.itemView.getContext())
                         .setTitle("Remove member")
                         .setMessage("Are you sure you want to remove " + member.getUsername() + " from the group?")
                         .setPositiveButton("Remove", (dialog, which) -> {
-                            userList.remove(position);
-                            notifyItemRemoved(position);
-                            notifyItemRangeChanged(position, userList.size());
+                            // Gọi ViewModel để xóa
+                            viewModel.removeUserFromGroup(group.getId(), member.getId(),
+                                    () -> {
+                                        userList.remove(position);
+                                        notifyItemRemoved(position);
+                                        notifyItemRangeChanged(position, userList.size());
+                                        Toast.makeText(holder.itemView.getContext(),
+                                                "Removed successfully", Toast.LENGTH_SHORT).show();
+                                    },
+                                    () -> Toast.makeText(holder.itemView.getContext(),
+                                            "Remove failed", Toast.LENGTH_SHORT).show())
+                            ;
                         })
                         .setNegativeButton("Cancel", null)
                         .show();

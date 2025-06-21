@@ -149,26 +149,7 @@ public class PomodoroViewModel extends ViewModel {
         });
 
     }
-    public void deletePomodoro(Context context, int id, boolean check){
-        PomodoroController controller = ApiClient.getPomodoroController(context);
-        Call<Void> call = controller.deletePomodoro(id);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (check) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(context, "Failed to delete. Code: " + response.code(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(context, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+
     //Hàm get:
     private final MutableLiveData<List<Pomodoro>> pomodoroList = new MutableLiveData<>();
     public LiveData<List<Pomodoro>> getPomodoroList() {
@@ -359,25 +340,52 @@ public class PomodoroViewModel extends ViewModel {
             }
         });
     }
-    public void deletePomodoroDetail(Context context, int id, boolean check){
+
+    public void deletePomodoroDetail(Context context, int id, boolean check, Runnable onSuccess) {
         PomodoroDetailController controller = ApiClient.getPomodoroDetailController(context);
-        Call<Void> call = controller.deletePomodoroDetail(id);
+        Call<Void> call = controller. deletePomodoroDetailsByPomodoroId(id);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (check) {
                     if (response.isSuccessful()) {
-                        Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Deleted detail successfully", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(context, "Failed to delete. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Failed to delete detail. Code: " + response.code(), Toast.LENGTH_SHORT).show();
                     }
+                }
+                if (response.isSuccessful() && onSuccess != null) {
+                    onSuccess.run();
                 }
             }
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(context, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Error deleting detail: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    public void deletePomodoro(Context context, int id, boolean check, Runnable onSuccess) {
+        PomodoroController controller = ApiClient.getPomodoroController(context);
+        Call<Void> call = controller.deletePomodoro(id);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (check) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(context, "Deleted pomodoro successfully", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(context, "Failed to delete pomodoro. Code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                if (response.isSuccessful() && onSuccess != null) {
+                    onSuccess.run();
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(context, "Error deleting pomodoro: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 }

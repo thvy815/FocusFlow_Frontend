@@ -20,6 +20,6 @@ public interface PomodoroDetailController {
     // Tạo mới một PomodoroDetail
     @POST("/api/pomodoroDetails")
     Call<PomodoroDetail> createPomodoroDetail(@Body PomodoroDetail pomodoroDetail);
-    @DELETE("/api/pomodoroDetails")
-    Call<Void> deletePomodoroDetail(@Path("id") int id);
+    @DELETE("/api/pomodoroDetails/pomodoro/{pomodoroId}")
+    Call<Void> deletePomodoroDetailsByPomodoroId(@Path("pomodoroId") int pomodoroId);
 }

@@ -1,54 +1,176 @@
 package com.example.focusflow_frontend.data.viewmodel;
 
+import android.app.Application;
+import android.content.Context;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
+import com.example.focusflow_frontend.data.api.GroupController;
+import com.example.focusflow_frontend.data.model.CtGroupUser;
 import com.example.focusflow_frontend.data.model.Group;
+import com.example.focusflow_frontend.data.model.GroupWithUsersRequest;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.utils.ApiClient;
+import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GroupViewModel extends ViewModel {
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-    // LiveData chứa danh sách tất cả nhóm
+public class GroupViewModel extends AndroidViewModel {
     private final MutableLiveData<List<Group>> groupList = new MutableLiveData<>();
 
     // LiveData chứa danh sách nhóm sau khi lọc (search)
     private final MutableLiveData<List<Group>> filteredGroups = new MutableLiveData<>();
+    private GroupController groupController;
+    private final MutableLiveData<Boolean> groupCreated = new MutableLiveData<>();
+
+    public GroupViewModel(@NonNull Application application) {
+        super(application);
+        // Khởi tạo TaskController thông qua ApiClient
+        Context context = getApplication().getApplicationContext();
+        groupController = ApiClient.getRetrofit(context).create(GroupController.class);
+    }
+
+    // Lấy danh sách nhóm
+    public LiveData<List<Group>> getGroupList() {
+        return groupList;
+    }
 
     // Lấy danh sách nhóm đã lọc (để hiển thị khi tìm kiếm)
     public LiveData<List<Group>> getFilteredGroups() {
         return filteredGroups;
     }
 
-    // Lấy danh sách tất cả nhóm
-    public LiveData<List<Group>> getAllGroups() {
-        return groupList;
+    public LiveData<Boolean> getGroupCreated() {
+        return groupCreated;
     }
 
-    // Tạo dữ liệu nhóm mẫu ban đầu
-    private void loadGroups() {
-        List<Group> list = new ArrayList<>();
-        list.add(new Group("A", "A", "A"));
-        list.add(new Group("B", "B", "B"));
-        groupList.setValue(list);
+    public void loadGroupsOfUser(int userId) {
+        groupController.getGroupsOfUser(userId).enqueue(new Callback<List<Group>>() {
+            @Override
+            public void onResponse(Call<List<Group>> call, Response<List<Group>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    groupList.setValue(response.body());
+                    filteredGroups.setValue(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Group>> call, Throwable t) {
+                Log.e("Group", "Error: " + t.getMessage());
+            }
+        });
     }
 
-    // Lấy danh sách nhóm và đồng thời tải dữ liệu mẫu
-    public LiveData<List<Group>> getGroupList() {
-        loadGroups();
-        return groupList;
-    }
-
-    // Thêm một nhóm mới vào danh sách
     public void addGroup(Group group) {
-        List<Group> current = groupList.getValue();
-        if (current == null) current = new ArrayList<>();
-        current.add(group);
-        groupList.setValue(current);
+        groupController.createGroup(group).enqueue(new Callback<Group>() {
+            @Override
+            public void onResponse(Call<Group> call, Response<Group> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Group> current = groupList.getValue();
+                    if (current == null) current = new ArrayList<>();
+                    current.add(response.body());
+                    groupList.setValue(current);
+                    filteredGroups.setValue(current);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Group> call, Throwable t) {
+                Log.e("Group", "Error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void deleteGroup(int id) {
+        groupController.deleteGroup(id).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    List<Group> current = groupList.getValue();
+                    if (current != null) {
+                        List<Group> updated = new ArrayList<>();
+                        for (Group g : current) {
+                            if (g.getId() != id) updated.add(g);
+                        }
+                        groupList.setValue(updated);
+                        filteredGroups.setValue(updated);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("Group", "Error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void removeUserFromGroup(int groupId, int userId, Runnable onSuccess, Runnable onFailure) {
+        groupController.removeUserFromGroup(groupId, userId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // Sau khi xóa thành công, gọi lại fetch để cập nhật UI
+                    fetchUsersInGroup(groupId);
+                    if (onSuccess != null) onSuccess.run();
+                    Log.d("GroupViewModel", "User removed from group");
+                } else {
+                    if (onFailure != null) onFailure.run();
+                    Log.e("GroupViewModel", "Failed to remove user: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (onFailure != null) onFailure.run();
+                Log.e("GroupViewModel", "Error removing user", t);
+            }
+        });
+    }
+
+
+    private MutableLiveData<Group> createdGroup = new MutableLiveData<>();
+    public LiveData<Group> getCreatedGroup() { return createdGroup; }
+    public void createGroupWithUsers(String groupName, List<Integer> userIds, Integer leaderId) {
+        GroupWithUsersRequest request = new GroupWithUsersRequest(groupName, leaderId, userIds);
+
+        groupController.createGroupWithUsers(request).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String json = response.body().string();
+                        Gson gson = new Gson();
+                        Group group = gson.fromJson(json, Group.class);
+
+                        createdGroup.postValue(group);
+                        groupCreated.postValue(true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        groupCreated.postValue(false);
+                    }
+                } else {
+                    groupCreated.postValue(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                groupCreated.postValue(false);
+            }
+        });
     }
 
     // Tìm kiếm nhóm theo từ khóa (tên nhóm)
@@ -62,7 +184,7 @@ public class GroupViewModel extends ViewModel {
         // Lọc nhóm có tên chứa từ khóa (không phân biệt hoa thường)
         List<Group> result = new ArrayList<>();
         for (Group group : groups) {
-            if (group.getGroup_name().toLowerCase().contains(keyword.toLowerCase())) {
+            if (group.getGroupName().toLowerCase().contains(keyword.toLowerCase())) {
                 result.add(group);
             }
         }
@@ -85,6 +207,14 @@ public class GroupViewModel extends ViewModel {
     // Tìm kiếm người dùng theo email
     public void searchUsers(String keyword, List<User> allUsers) {
         List<User> result = new ArrayList<>();
+
+        // Nếu ô tìm kiếm rỗng -> không hiển thị gì hết
+        if (keyword == null || keyword.trim().isEmpty()) {
+            userSuggestions.setValue(result); // danh sách rỗng
+            return;
+        }
+
+        // Nếu có từ khóa, lọc như bình thường
         for (User user : allUsers) {
             if (user.getEmail().toLowerCase().contains(keyword.toLowerCase())) {
                 result.add(user);
@@ -114,58 +244,11 @@ public class GroupViewModel extends ViewModel {
         return userSuggestions;
     }
 
-// ---------------- GroupDetail Section ----------------
-
-    // LiveData chứa danh sách tất cả nhóm
-    private final MutableLiveData<List<Task>> taskList = new MutableLiveData<>();
+    // ---------------- GroupDetail Section ----------------
     private final MutableLiveData<List<Task>> filteredTask = new MutableLiveData<>();
-
-    // Lấy danh sách tất cả task
-    public LiveData<List<Task>> getAllTask() {
-        return taskList;
-    }
 
     public LiveData<List<Task>> filterTask() {
         return filteredTask;
-    }
-
-
-    // Tạo dữ liệu nhóm mẫu ban đầu
-    private void loadTask() {
-        List<Task> tasks = new ArrayList<>();
-        tasks.add(new Task(1, 101, 0, "Viết báo cáo tuần", "Hoàn thành báo cáo công việc tuần này", "2025-05-25"));
-        tasks.add(new Task(2, 101, 0, "Chuẩn bị thuyết trình", "Chuẩn bị nội dung họp nhóm", "2025-05-28"));
-        tasks.add(new Task(3, 102, 1, "Fix bug", "Sửa lỗi màn login", "2025-05-27"));
-        tasks.add(new Task(4, 103, 1, "Code chat", "Tính năng chat nhóm", "2025-06-01"));
-        taskList.setValue(tasks);
-    }
-
-    // Lấy danh sách nhóm và đồng thời tải dữ liệu mẫu
-    public LiveData<List<Task>> getTaskList() {
-        loadTask();
-        //lay cac task co ct_id trung voi id duong truyen toi tu fragment
-        return taskList;
-    }
-// Nào liên kết được ct_id thì dùng nha, em chưa làm được hiuhiu
-//    public LiveData<List<Task>> getTaskList(long groupId) {
-//        loadTask(); // Gọi nếu cần
-//        List<Task> allTasks = taskList.getValue();
-//        List<Task> result = new ArrayList<>();
-//        if (allTasks != null) {
-//            for (Task t : allTasks) {
-//                if (t.getCt_id() == groupId) result.add(t);
-//            }
-//        }
-//        taskList.setValue(result);
-//        return taskList;
-//    }
-
-    // Thêm một nhóm mới vào danh sách
-    public void addTask(Task task) {
-        List<Task> current = taskList.getValue();
-        if (current == null) current = new ArrayList<>();
-        current.add(task);
-        taskList.setValue(current);
     }
 
     // Tìm kiếm nhóm theo từ khóa (tên nhóm)
@@ -184,24 +267,113 @@ public class GroupViewModel extends ViewModel {
         }
         filteredTask.setValue(result);
     }
+
     public void clearFilteredTasks(List<Task> tasks) {
         filteredTask.setValue(tasks); // Reset về tất cả
     }
-// Focus Search (Menu -> Detail)
+
+    // Focus Search (Menu -> Detail)
     private final MutableLiveData<Boolean> requestSearchFocus = new MutableLiveData<>();
+
     public LiveData<Boolean> getRequestSearchFocus() {
         return requestSearchFocus;
     }
+
     public void requestFocusOnSearch(boolean f) {
         requestSearchFocus.setValue(f);
     }
 
     //MENU: OUT GROUP
-    private final MutableLiveData<String> groupRemoved = new MutableLiveData<>();
-    public void setGroupRemoved(String groupId) {
+    private final MutableLiveData<Integer> groupRemoved = new MutableLiveData<>();
+
+    public void setGroupRemoved(int groupId) {
         groupRemoved.setValue(groupId);
     }
-    public LiveData<String> getGroupRemoved() {
+
+    public LiveData<Integer> getGroupRemoved() {
         return groupRemoved;
+    }
+
+    // CT Group - User
+    public LiveData<CtGroupUser> getCtByIdLiveData(int ctId) {
+        MutableLiveData<CtGroupUser> liveData = new MutableLiveData<>();
+        groupController.getCtById(ctId).enqueue(new Callback<CtGroupUser>() {
+            @Override
+            public void onResponse(Call<CtGroupUser> call, Response<CtGroupUser> response) {
+                if (response.isSuccessful()) {
+                    liveData.setValue(response.body());
+                } else {
+                    liveData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CtGroupUser> call, Throwable t) {
+                Log.e("CtCheck", "API failed for ctId: " + ctId, t);
+                liveData.setValue(null);
+            }
+        });
+        return liveData;
+    }
+
+    private final MutableLiveData<List<User>> usersInGroup = new MutableLiveData<>();
+    public LiveData<List<User>> getUsersInGroup() { return usersInGroup; }
+    public void fetchUsersInGroup(int groupId) {
+        groupController.getUsersInGroup(groupId).enqueue(new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    usersInGroup.setValue(response.body());
+                } else {
+                    usersInGroup.setValue(new ArrayList<>()); // Trả về rỗng nếu lỗi
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                usersInGroup.setValue(new ArrayList<>()); // Trả về rỗng nếu gọi thất bại
+                Log.e("GroupViewModel", "Lỗi khi lấy users trong group: " + t.getMessage());
+            }
+        });
+    }
+
+    private final MutableLiveData<Integer> ctIdLiveData = new MutableLiveData<>();
+    public LiveData<Integer> getCtIdLiveData() { return ctIdLiveData; }
+    public void fetchCtIdByUserAndGroup(int userId, int groupId) {
+        groupController.getCtIdByUserAndGroup(userId, groupId).enqueue(new Callback<Integer>() {
+            @Override
+            public void onResponse(Call<Integer> call, Response<Integer> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ctIdLiveData.setValue(response.body());
+                } else {
+                    ctIdLiveData.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Integer> call, Throwable t) {
+                ctIdLiveData.setValue(null);
+            }
+        });
+    }
+
+    // LiveData để theo dõi kết quả thêm thành viên
+    private final MutableLiveData<Boolean> addMembersResult = new MutableLiveData<>();
+    public LiveData<Boolean> getAddMembersResult() { return addMembersResult; }
+
+    // Hàm gọi API thêm thành viên vào nhóm
+    public void addMembersToGroup(int groupId, List<Integer> userIds) {
+        groupController.addMembersToGroup(groupId, userIds).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                addMembersResult.setValue(response.isSuccessful());
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("GroupViewModel", "Add members failed: " + t.getMessage());
+                addMembersResult.setValue(false);
+            }
+        });
     }
 }

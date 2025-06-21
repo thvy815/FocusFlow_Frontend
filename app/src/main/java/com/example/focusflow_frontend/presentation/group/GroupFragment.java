@@ -1,6 +1,8 @@
 package com.example.focusflow_frontend.presentation.group;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -20,6 +22,7 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,21 +30,31 @@ import java.util.List;
 public class GroupFragment extends Fragment {
 
     private GroupViewModel viewModel;
+    private AuthViewModel authViewModel;
     private GroupAdapter adapter;
-    private List<Group> allGroups = new ArrayList<>();
-    private User user = new User("Vy","vv@","12345");
+    private List<Group> allGroups = new ArrayList<>(); // Dữ liệu gốc dùng cho search
+    private List<Group> displayedGroups = new ArrayList<>(); // Dữ liệu đang hiển thị trong adapter
+    private User currentUser;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.group, container, false);
+        View view = inflater.inflate(R.layout.fragment_group, container, false);
 
         // Khởi tạo ViewModel
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         viewModel = new ViewModelProvider(this).get(GroupViewModel.class);
 
-        setupRecyclerView(view);      // Hiển thị danh sách nhóm
-        setupSearchBar(view);         // Tìm kiếm nhóm
-        setupAddGroupButton(view);    // Thêm nhóm mới
+        authViewModel.getCurrentUser();
+        authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                currentUser = user;
+
+                setupRecyclerView(view);      // Hiển thị danh sách nhóm
+                setupSearchBar(view);         // Tìm kiếm nhóm
+                setupAddGroupButton(view);    // Thêm nhóm mới
+            }
+        });
 
         //Remove theo yeu cau
         viewModel.getGroupRemoved().observe(getViewLifecycleOwner(), groupId -> {
@@ -57,19 +70,24 @@ public class GroupFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         // Adapter nhận callback khi click vào một nhóm
-        adapter = new GroupAdapter(new ArrayList<>(), group -> {
+        adapter = new GroupAdapter(getViewLifecycleOwner(), authViewModel, new ArrayList<>(), group -> {
             // Mở bottom sheet hiển thị chi tiết nhóm
-            GroupDetailBottomSheet detailSheet = GroupDetailBottomSheet.newInstance(group, user);
+            GroupDetailBottomSheet detailSheet = GroupDetailBottomSheet.newInstance(group, currentUser);
             detailSheet.show(getParentFragmentManager(), detailSheet.getTag());
         });
 
         recyclerView.setAdapter(adapter);
 
-        // Hien thi toan bo danh sach
+        // Hien thi toan bo danh sach nhóm cua user
+        viewModel.loadGroupsOfUser(currentUser.getId());
         viewModel.getGroupList().observe(getViewLifecycleOwner(), groups -> {
-            allGroups = groups; // Lưu lại danh sách đầy đủ để lọc sau này
+            if (allGroups.isEmpty()) {
+                allGroups = new ArrayList<>(groups); // Lưu bản gốc
+            }
             adapter.setGroupList(groups);
         });
+        adapter.notifyDataSetChanged();
+
         //Danh sach da loc
         viewModel.getFilteredGroups().observe(getViewLifecycleOwner(), adapter::setGroupList);
     }
@@ -92,6 +110,11 @@ public class GroupFragment extends Fragment {
         ImageView addButton = view.findViewById(R.id.imgAdd);
         addButton.setOnClickListener(v -> {
             AddGroupBottomSheet addSheet = new AddGroupBottomSheet();
+            addSheet.setOnGroupCreatedListener(newGroup -> {
+                // Thêm group mới vào danh sách hiện tại
+                allGroups.add(newGroup);                          // Cập nhật danh sách đầy đủ
+                adapter.addGroup(newGroup);                       // Cập nhật hiển thị adapter
+            });
             addSheet.show(getParentFragmentManager(), addSheet.getTag());
         });
     }

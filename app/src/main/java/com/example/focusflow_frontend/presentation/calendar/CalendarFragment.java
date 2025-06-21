@@ -3,6 +3,7 @@ package com.example.focusflow_frontend.presentation.calendar;
 import android.app.AlertDialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +14,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.model.CtGroupUser;
 import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
 import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
 import com.example.focusflow_frontend.utils.TokenManager;
@@ -47,6 +52,7 @@ public class CalendarFragment extends Fragment {
     private List<Task> filteredTasks = new ArrayList<>();
     private Set<LocalDate> taskDates = new HashSet<>();
     private TaskViewModel taskViewModel;
+    private GroupViewModel groupViewModel;
     private LocalDate selectedDate = LocalDate.now();
     private int userId;
 
@@ -74,7 +80,7 @@ public class CalendarFragment extends Fragment {
             bundle.putString("selected_date", dateString);
             bottomSheet.setArguments(bundle);
 
-            bottomSheet.setOnTaskAddedListener(() -> {
+            bottomSheet.setOnTaskAddedListener(task -> {
                 taskViewModel.fetchTasks(userId);
             });
             bottomSheet.show(getChildFragmentManager(), bottomSheet.getTag());
@@ -107,8 +113,8 @@ public class CalendarFragment extends Fragment {
 
                 AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
                 bottomSheet.setArguments(bundle);
-                bottomSheet.setOnTaskAddedListener(() -> {
-                    taskViewModel.fetchTasks(userId);
+                bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
+                    taskAdapter.updateTaskInAdapter(updatedTask);
                 });
                 bottomSheet.show(getChildFragmentManager(), "EditTask");
             }
@@ -186,29 +192,17 @@ public class CalendarFragment extends Fragment {
         });
 
         // ViewModel
-        taskViewModel = new ViewModelProvider(
-                requireActivity(),
-                ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())
-        ).get(TaskViewModel.class);
+        taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+        groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
 
-        // Lắng nghe dữ liệu từ ViewModel
         taskViewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
             if (tasks != null && !tasks.isEmpty()) {
                 allTasks.clear();
-                allTasks.addAll(tasks);
-
-                // Cập nhật danh sách ngày có task
-                taskDates.clear();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 for (Task task : tasks) {
-                    if (task.getDueDate() != null) {
-                        LocalDate date = LocalDate.parse(task.getDueDate(), formatter);
-                        taskDates.add(date);
-                    }
+                    updateTaskAndRefresh(task);
                 }
-
-                filterTasksByDate(selectedDate); // cập nhật theo ngày được chọn
-                calendarView.notifyCalendarChanged(); // Refresh CalendarView
+            } else {
+                Log.d("TaskFilter", "No tasks available.");
             }
         });
 
@@ -223,6 +217,21 @@ public class CalendarFragment extends Fragment {
         }
 
         return view;
+    }
+
+    private void updateTaskAndRefresh(Task task) {
+        if (!allTasks.contains(task)) {
+            allTasks.add(task);
+        }
+
+        if (task.getDueDate() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate date = LocalDate.parse(task.getDueDate(), formatter);
+            taskDates.add(date);
+        }
+
+        filterTasksByDate(selectedDate);
+        calendarView.notifyCalendarChanged();
     }
 
     private void filterTasksByDate(LocalDate selectedDate) {
@@ -260,8 +269,8 @@ public class CalendarFragment extends Fragment {
 
                         AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
                         bottomSheet.setArguments(bundle);
-                        bottomSheet.setOnTaskAddedListener(() -> {
-                            taskViewModel.fetchTasks(userId);
+                        bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
+                            taskAdapter.updateTaskInAdapter(updatedTask);
                         });
                         bottomSheet.show(getChildFragmentManager(), "EditTask");
                     } else if (which == 1) {

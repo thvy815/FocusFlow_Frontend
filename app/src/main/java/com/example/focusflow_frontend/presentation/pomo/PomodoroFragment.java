@@ -322,14 +322,18 @@ public class PomodoroFragment extends Fragment {
                 .commit();
         whiteNoisePlayer.stopWhiteNoise();
     }
-    private void restartWithoutSave(){
-        restartFragment();
+
+    private void restartWithoutSave() {
         boolean check = false;
         int pomoId = currPomodoro.getId();
-        userId = currPomodoro.getUserId();
-        taskId = currPomodoro.getTaskId();
-        pomodoroViewModel.deletePomodoroDetail(getContext(), pomoId, check);
-        pomodoroViewModel.deletePomodoro(getContext(),pomoId, check);
+
+        // Xóa detail trước, xóa pomodoro sau, cuối cùng restart fragment
+        pomodoroViewModel.deletePomodoroDetail(getContext(), pomoId, check, () -> {
+            pomodoroViewModel.deletePomodoro(getContext(), pomoId, check, () -> {
+                // Sau khi xóa xong pomodoro mới restart fragment và stop white noise
+                restartFragment();
+            });
+        });
     }
 
 //    private void animateTimerToCenter() {

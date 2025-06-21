@@ -17,17 +17,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.api.UserController;
-import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
-import com.example.focusflow_frontend.utils.ApiClient;
 
 import java.util.Arrays;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 
 public class ProfileFragment extends Fragment {
@@ -35,15 +28,18 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        AuthViewModel userViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        AuthViewModel authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
         TextView usernameTextView = view.findViewById(R.id.userName);
 
         // Lấy username
-        userViewModel.fetchUserName();
-        userViewModel.getUserName().observe(getViewLifecycleOwner(), name -> {
-            usernameTextView.setText(name);
+        authViewModel.getCurrentUser();
+        authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                // Lấy username
+                usernameTextView.setText(user.getUsername());
+            }
         });
 
         setStreakAndCore(view);
