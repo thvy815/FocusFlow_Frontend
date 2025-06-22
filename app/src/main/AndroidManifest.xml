@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <application
         android:networkSecurityConfig="@xml/network_security_config"
@@ -17,25 +18,19 @@
         android:theme="@style/Theme.FocusFlow_Frontend"
         tools:targetApi="31" >
 
+        <receiver android:name=".presentation.calendar.TaskAlarmReceiver" android:exported="false"/>
+
         <activity
             android:name=".presentation.login.SignInActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity android:name=".presentation.login.SignUpActivity" />
         <activity android:name=".presentation.main.MainActivity"/>
-
-        <service android:name="com.google.firebase.messaging.FirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
 
     </application>
 

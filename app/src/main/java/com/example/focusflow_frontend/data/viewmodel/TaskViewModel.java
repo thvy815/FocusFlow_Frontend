@@ -83,15 +83,19 @@ public class TaskViewModel extends AndroidViewModel {
         });
     }
 
-
+    private MutableLiveData<Task> createdTask = new MutableLiveData<>();
+    public LiveData<Task> getCreatedTask() { return createdTask; }
     public void createTask(Task task) {
         taskController.createTask(task).enqueue(new Callback<Task>() {
             @Override
             public void onResponse(Call<Task> call, Response<Task> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Task created = response.body(); // task từ backend, đã có ID
+                    createdTask.postValue(created); // truyền task về cho View
                     fetchTasks(task.getUserId()); // load lại danh sách sau khi thêm
                     taskCreatedSuccess.postValue(true);  // báo thành công
                 } else {
+                    createdTask.postValue(null);
                     taskCreatedSuccess.postValue(false); // báo thất bại
                     errorMessage.postValue("Failed to add task");
                 }
@@ -99,6 +103,7 @@ public class TaskViewModel extends AndroidViewModel {
 
             @Override
             public void onFailure(Call<Task> call, Throwable t) {
+                createdTask.postValue(null);
                 taskCreatedSuccess.postValue(false); // báo thất bại
                 errorMessage.postValue("Error: " + t.getMessage());
             }

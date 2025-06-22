@@ -1,8 +1,16 @@
 package com.example.focusflow_frontend.presentation.calendar;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,11 +42,15 @@ import com.kizitonwose.calendar.view.MonthHeaderFooterBinder;
 import com.kizitonwose.calendar.view.ViewContainer;
 import com.kizitonwose.calendar.core.DayPosition;
 
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -82,7 +94,9 @@ public class CalendarFragment extends Fragment {
 
             bottomSheet.setOnTaskAddedListener(task -> {
                 taskViewModel.fetchTasks(userId);
+                scheduleNotification(task);
             });
+
             bottomSheet.show(getChildFragmentManager(), bottomSheet.getTag());
         });
 
@@ -114,7 +128,13 @@ public class CalendarFragment extends Fragment {
                 AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
                 bottomSheet.setArguments(bundle);
                 bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
-                    taskAdapter.updateTaskInAdapter(updatedTask);
+                    if (updatedTask != null) {
+                        taskAdapter.updateTaskInAdapter(updatedTask);
+                        cancelNotification(updatedTask.getId()); // 1. Hủy báo thức cũ
+                        scheduleNotification(updatedTask); // 2. Tạo lại báo thức mới
+                    } else {
+                        taskViewModel.fetchTasks(userId); // Sau khi xóa → load lại danh sách
+                    }
                 });
                 bottomSheet.show(getChildFragmentManager(), "EditTask");
             }
@@ -271,11 +291,16 @@ public class CalendarFragment extends Fragment {
                         bottomSheet.setArguments(bundle);
                         bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
                             taskAdapter.updateTaskInAdapter(updatedTask);
+                            cancelNotification(updatedTask.getId()); // 1. Hủy báo thức cũ
+                            scheduleNotification(updatedTask); // 2. Tạo lại báo thức mới
                         });
                         bottomSheet.show(getChildFragmentManager(), "EditTask");
                     } else if (which == 1) {
-                        // Xóa task
-                        taskViewModel.deleteTask(task.getId());  // Xóa DB
+                        // Huỷ thông báo nếu có
+                        cancelNotification(task.getId());
+
+                        // Xóa task khỏi DB
+                        taskViewModel.deleteTask(task.getId());
                         taskViewModel.getDeleteSuccess().observe(getViewLifecycleOwner(), success -> {
                             if (success != null && success) {
                                 taskViewModel.fetchTasks(userId);
@@ -297,9 +322,105 @@ public class CalendarFragment extends Fragment {
                         ft.addToBackStack(null);
                         ft.commit();
                     }
-
                 })
                 .show();
+    }
+
+    private long getReminderOffset(String reminderStyle) {
+        switch (reminderStyle) {
+            case "5 minutes before":
+                return 5 * 60 * 1000;
+            case "10 minutes before":
+                return 10 * 60 * 1000;
+            case "15 minutes before":
+                return 15 * 60 * 1000;
+            case "30 minutes before":
+                return 30 * 60 * 1000;
+            case "1 hour before":
+                return 60 * 60 * 1000;
+            case "1 day before":
+                return 24 * 60 * 60 * 1000;
+            case "On time":
+            default:
+                return 0;
+        }
+    }
+
+    private void scheduleNotification(Task task) {
+        String dueDate = task.getDueDate();
+        String dueTime = task.getTime();
+        String reminder = task.getReminderStyle();
+
+        if (dueDate == null || dueDate.isEmpty()) return;
+
+        // Nếu chỉ có ngày mà thiếu giờ → mặc định 08:00
+        if (dueTime == null || dueTime.isEmpty()) {
+            dueTime = "08:00";
+        }
+
+        // Không đặt thông báo nếu không có nhắc nhở
+        if (reminder == null || reminder.equalsIgnoreCase("None")) return;
+
+        try {
+            Log.d("AlarmSet", "🟢 Đang xử lý đặt báo thức");
+            // Giả sử bạn lưu time là "HH:mm" và date là "dd/MM/yyyy"
+            String dateTimeStr = dueDate + " " + dueTime;
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            Date date = sdf.parse(dateTimeStr);
+
+            // 👇 Trừ thời gian reminder
+            long triggerAtMillis = date.getTime() - getReminderOffset(reminder);
+
+            Log.d("ScheduleCheck", "Trigger at: " + new Date(triggerAtMillis));
+            Log.d("ScheduleCheck", "Now: " + new Date(System.currentTimeMillis()));
+
+            if (triggerAtMillis <= System.currentTimeMillis()) {
+                Toast.makeText(requireContext(), "⏰ Reminder skipped (time is in the past)", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // ⏰ Đặt báo thức
+            AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                startActivity(intent);
+                return;
+            }
+
+            Intent intent = new Intent(getContext(), TaskAlarmReceiver.class);
+            intent.putExtra("task_title", task.getTitle());
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                    getContext(),
+                    task.getId(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            if (alarmManager != null) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                Log.d("AlarmSet", "Đã đặt thông báo lúc " + triggerAtMillis);
+            }
+
+            Log.d("AlarmSet", "✅ Đã đặt xong báo thức");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext(), "❌ Lỗi khi đặt thông báo", Toast.LENGTH_SHORT).show();
+            Log.e("NotificationError", "❌ Lỗi khi đặt thông báo: " + e.toString());
+        }
+    }
+
+    private void cancelNotification(int taskId) {
+        Intent intent = new Intent(getContext(), TaskAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                getContext(),
+                taskId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
     }
 
     // Container cho tháng

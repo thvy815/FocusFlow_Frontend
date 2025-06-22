@@ -100,7 +100,7 @@ public class DateBottomSheet extends BottomSheetDialogFragment {
 
         // Reminder
         sheetView.findViewById(R.id.btnSelectReminder).setOnClickListener(view ->
-                showOptionDialog("Select Reminder", new String[]{"None", "5 minutes before", "15 minutes before", "1 hour before"}, nameReminder)
+                showOptionDialog("Select Reminder", new String[]{"No Reminder", "On time", "5 minutes before", "10 minutes before", "15 minutes before", "30 minutes before", "1 hour before"}, nameReminder)
         );
 
         // Repeat

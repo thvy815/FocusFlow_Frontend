@@ -263,13 +263,13 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                         newTask.setRepeatStyle(selectedRepeat);
                         newTask.setCtGroupId(newctId);
 
-                        taskViewModel.getTaskCreatedSuccess().observe(getViewLifecycleOwner(), success -> {
-                            if (success != null && success) {
+                        taskViewModel.getCreatedTask().observe(getViewLifecycleOwner(), createdTask -> {
+                            if (createdTask != null) {
                                 Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
-                                if (listener != null) listener.onTaskAdded(newTask); // Thông báo task đã được thêm thành công
+                                if (listener != null) listener.onTaskAdded(createdTask); // đã có task_id
                                 dismiss();
                             } else {
-                                Toast.makeText(getContext(), "Add task failed, please try again", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), "Add task failed", Toast.LENGTH_SHORT).show();
                             }
                         });
 
@@ -312,13 +312,13 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                     newTask.setRepeatStyle(selectedRepeat);
                     newTask.setCtGroupId(null);
 
-                    taskViewModel.getTaskCreatedSuccess().observe(getViewLifecycleOwner(), success -> {
-                        if (success != null && success) {
+                    taskViewModel.getCreatedTask().observe(getViewLifecycleOwner(), createdTask -> {
+                        if (createdTask != null) {
                             Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
-                            if (listener != null) listener.onTaskAdded(newTask);
+                            if (listener != null) listener.onTaskAdded(createdTask); // đã có task_id
                             dismiss();
                         } else {
-                            Toast.makeText(getContext(), "Add task failed, please try again", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Add task failed", Toast.LENGTH_SHORT).show();
                         }
                     });
 
