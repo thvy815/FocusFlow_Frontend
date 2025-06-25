@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
 
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +73,12 @@ public class ProfileFragment extends Fragment {
         btnSettings.setOnClickListener(v -> settingClick());
         ImageView avtClick = view.findViewById(R.id.avatarImage);
         avtClick.setOnClickListener(v->editAvtClick());
+
+        Button btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
+        btnUpgradePro.setOnClickListener(v -> {
+            ZaloPayBottomSheet bottomSheet = new ZaloPayBottomSheet();
+            bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
+        });
 
         return view;
     }
@@ -197,5 +205,6 @@ public class ProfileFragment extends Fragment {
         streak.setText("189 profile fragment");
         core.setText("tuong tu o tren");
     }
+
 }
 

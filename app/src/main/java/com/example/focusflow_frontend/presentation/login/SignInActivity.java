@@ -1,6 +1,7 @@
 package com.example.focusflow_frontend.presentation.login;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -58,6 +59,10 @@ public class SignInActivity extends AppCompatActivity {
         viewModel.signInResult.observe(this, result -> {
             TokenManager.saveToken(this, result.getToken());
             TokenManager.saveUserId(this, result.getUserId());
+
+            // Lưu thêm vào SharedPreferences nếu chưa có
+            SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+            prefs.edit().putString("token", result.getToken()).apply();
 
             // Nếu rememberMe, lưu thêm flag
             if (cbRememberMe.isChecked()) {

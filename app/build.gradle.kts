@@ -44,6 +44,11 @@ dependencies {
     implementation ("com.google.android.flexbox:flexbox:3.0.0")
     implementation ("com.google.android.material:material:1.11.0")
     implementation(libs.lifecycle.viewmodel.android)
+    implementation(fileTree(mapOf(
+        "dir" to "D:\\zalopay_sdk",
+        "include" to listOf("*.aar", "*.jar"),
+        "exclude" to listOf("")
+    )))
 
 
     testImplementation(libs.junit)

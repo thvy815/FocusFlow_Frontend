@@ -1,10 +1,7 @@
 package com.example.focusflow_frontend.presentation.profile;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Layout;
 import android.view.LayoutInflater;
