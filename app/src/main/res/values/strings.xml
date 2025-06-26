@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FocusFlow_Frontend</string>
+    <string name="app_name">FocusFlow</string>
     <string name="streak">Streak</string>
     <string name="fire_icon">fire icon</string>
     <string name="a_0">0</string>

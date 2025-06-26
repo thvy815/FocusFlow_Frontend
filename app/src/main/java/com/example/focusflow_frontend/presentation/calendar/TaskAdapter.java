@@ -5,7 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.graphics.PorterDuff;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -50,10 +52,9 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
     }
 
     public class TaskViewHolder extends RecyclerView.ViewHolder {
-        private final TextView taskTitle;
-        private final TextView tagName;
-        private final TextView priorityName;
+        private final TextView taskTitle, tagName, priorityName;
         private final CheckBox checkboxCompleted;
+        private final ImageView imageFlag;
 
         // Lưu giữ các thành phần giao diện của từng item
         public TaskViewHolder(View itemView, OnTaskCheckedListener listener) {
@@ -62,6 +63,7 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
             tagName = itemView.findViewById(R.id.tagName);
             priorityName = itemView.findViewById(R.id.priorityName);
             checkboxCompleted = itemView.findViewById(R.id.checkboxCompleted);
+            imageFlag = itemView.findViewById(R.id.imageFlag);
 
             // Xử lý click vào item để chỉnh sửa task
             itemView.setOnClickListener(v -> {
@@ -113,9 +115,14 @@ public  class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolde
             }
             if (priorityText != null) {
                 priorityName.setText(priorityText);
+                priorityName.setTextColor(priorityColor);
                 priorityName.setVisibility(View.VISIBLE);
+                // Đổi màu icon trong imageFlag
+                imageFlag.setColorFilter(priorityColor, PorterDuff.Mode.SRC_IN);
+                imageFlag.setVisibility(View.VISIBLE);
             } else {
                 priorityName.setVisibility(View.GONE);
+                imageFlag.setVisibility(View.GONE);
             }
 
             // Checkbox Completed

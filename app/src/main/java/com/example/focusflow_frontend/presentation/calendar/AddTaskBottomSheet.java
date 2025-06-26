@@ -39,7 +39,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
     private TextView nameTag, namePriority, nameDate, nameMember;
     private Button btnAddTask, btnCancel, btnDeleteTask;
     private ConstraintLayout btnSelectTag, btnSelectPriority, btnSelectDate, btnSelectMember;
-    private String selectedTime = "", selectedReminder = "", selectedRepeat = "";
+    private String selectedTime = "None", selectedReminder = "None", selectedRepeat = "None";
     private int userId, memberIdSelected, newctId;
     private Group group;
     private TaskViewModel taskViewModel;

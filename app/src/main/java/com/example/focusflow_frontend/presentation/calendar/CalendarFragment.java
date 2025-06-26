@@ -8,8 +8,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,18 +20,17 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.model.CtGroupUser;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
+import com.example.focusflow_frontend.data.viewmodel.StreakViewModel;
 import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
 import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
+import com.example.focusflow_frontend.utils.TaskAlarmReceiver;
 import com.example.focusflow_frontend.utils.TokenManager;
 import com.kizitonwose.calendar.core.CalendarDay;
 import com.kizitonwose.calendar.view.MonthDayBinder;
@@ -48,8 +45,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +74,7 @@ public class CalendarFragment extends Fragment {
         calendarView = view.findViewById(R.id.calendarView);
         recyclerView = view.findViewById(R.id.recyclerViewTasks);
         ImageButton btnAddTask = view.findViewById(R.id.btn_add_task);
+        TextView tvStreakCount = view.findViewById(R.id.tvStreakCount);
 
         // Button Add Task
         btnAddTask.setOnClickListener(v -> {
@@ -125,14 +121,18 @@ public class CalendarFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("task", task);  // Task phải implements Serializable
 
+                Task previousTask = task;
                 AddTaskBottomSheet bottomSheet = new AddTaskBottomSheet();
                 bottomSheet.setArguments(bundle);
                 bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
                     if (updatedTask != null) {
                         taskAdapter.updateTaskInAdapter(updatedTask);
-                        cancelNotification(updatedTask.getId()); // 1. Hủy báo thức cũ
+                        cancelNotification(updatedTask); // 1. Hủy báo thức cũ
                         scheduleNotification(updatedTask); // 2. Tạo lại báo thức mới
+                        updateTaskAndRefresh(updatedTask); // Cập nhật taskDates và hiển thị calendar
                     } else {
+                        removeTaskAndRefresh(previousTask);
+                        cancelNotification(previousTask); // Hủy báo thức cũ
                         taskViewModel.fetchTasks(userId); // Sau khi xóa → load lại danh sách
                     }
                 });
@@ -214,6 +214,7 @@ public class CalendarFragment extends Fragment {
         // ViewModel
         taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
         groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
+        StreakViewModel streakViewModel = new ViewModelProvider(this).get(StreakViewModel.class);
 
         taskViewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
             if (tasks != null && !tasks.isEmpty()) {
@@ -221,6 +222,7 @@ public class CalendarFragment extends Fragment {
                 for (Task task : tasks) {
                     updateTaskAndRefresh(task);
                 }
+                streakViewModel.checkTasks(tasks); // Đếm streak từ task
             } else {
                 Log.d("TaskFilter", "No tasks available.");
             }
@@ -231,6 +233,12 @@ public class CalendarFragment extends Fragment {
             Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
         });
 
+        streakViewModel.getStreakCountLive().observe(getViewLifecycleOwner(), count -> {
+            if (count != null) {
+                tvStreakCount.setText(String.valueOf(count));
+            }
+        });
+
         // Gọi API lấy dữ liệu tất cả các task
         if (userId != -1) {
             taskViewModel.fetchTasks(userId);
@@ -239,36 +247,127 @@ public class CalendarFragment extends Fragment {
         return view;
     }
 
-    private void updateTaskAndRefresh(Task task) {
-        if (!allTasks.contains(task)) {
-            allTasks.add(task);
+    private void removeTaskAndRefresh(Task task) {
+        allTasks.remove(task);                    // Xoá task khỏi danh sách
+        removeOldRepeatDates(task);               // Xoá các ngày (có repeat)
+        filterTasksByDate(selectedDate);          // Cập nhật lại danh sách hiển thị
+        calendarView.notifyCalendarChanged();     // Làm mới CalendarView
+    }
+
+    private LocalDate getNextRepeatDate(LocalDate date, String repeat) {
+        if (repeat == null || repeat.equalsIgnoreCase("None")) {
+            return date.plusYears(100); // để kết thúc vòng lặp
         }
+
+        switch (repeat) {
+            case "Daily":
+                return date.plusDays(1);
+            case "Weekly":
+                return date.plusWeeks(1);
+            case "Monthly":
+                return date.plusMonths(1);
+            default:
+                return date.plusYears(100); // để thoát vòng lặp nếu lỗi
+        }
+    }
+
+    private void updateTaskAndRefresh(Task task) {
+        // Thay thế task cũ nếu có trong danh sách
+        allTasks.removeIf(t -> t.getId() == task.getId() || t.equals(task));
+        allTasks.add(task);
 
         if (task.getDueDate() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate date = LocalDate.parse(task.getDueDate(), formatter);
-            taskDates.add(date);
+            LocalDate baseDate = LocalDate.parse(task.getDueDate(), formatter);
+
+            // Xóa các ngày cũ của task ra khỏi taskDates (dọn sạch để thêm lại)
+            removeOldRepeatDates(task);
+
+            // Them lại ngày gốc và các ngày lặp mới
+            taskDates.add(baseDate);
+
+            String repeat = task.getRepeatStyle();
+            if (repeat != null && !repeat.equalsIgnoreCase("None")) {
+                YearMonth endMonth = YearMonth.from(LocalDate.now().plusMonths(1)); // giống setup
+                LocalDate endDate = endMonth.atEndOfMonth(); // lấy ngày cuối cùng tháng đó
+
+                LocalDate current = baseDate;
+                while (true) {
+                    current = getNextRepeatDate(current, repeat);
+                    if (current.isAfter(endDate)) break;
+                    taskDates.add(current);
+                }
+            }
         }
 
         filterTasksByDate(selectedDate);
         calendarView.notifyCalendarChanged();
     }
 
+    private void removeOldRepeatDates(Task task) {
+        if (task.getDueDate() == null) return;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate baseDate = LocalDate.parse(task.getDueDate(), formatter);
+        String repeat = task.getRepeatStyle();
+
+        // Xóa ngày gốc
+        taskDates.remove(baseDate);
+
+        if (repeat == null || repeat.equalsIgnoreCase("None")) return;
+
+        YearMonth endMonth = YearMonth.from(LocalDate.now().plusMonths(1));
+        LocalDate endDate = endMonth.atEndOfMonth();
+
+        LocalDate current = baseDate;
+        while (true) {
+            current = getNextRepeatDate(current, repeat);
+            if (current.isAfter(endDate)) break;
+            taskDates.remove(current);
+        }
+    }
+
     private void filterTasksByDate(LocalDate selectedDate) {
-        String selectedDateStr = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         filteredTasks.clear();
 
         List<Task> uncompletedTasks = new ArrayList<>();
         List<Task> completedTasks = new ArrayList<>();
 
         for (Task task : allTasks) {
-            if (task.getDueDate() != null && task.getDueDate().equals(selectedDateStr)) {
+            if (task.getDueDate() == null) continue;
+
+            LocalDate due = LocalDate.parse(task.getDueDate(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            String repeat = task.getRepeatStyle();
+            boolean isMatch = false;
+
+            if (repeat == null || repeat.equalsIgnoreCase("None")) {
+                isMatch = due.equals(selectedDate);
+            } else {
+                if (!selectedDate.isBefore(due)) { // chỉ xét khi selectedDate >= due
+                    switch (repeat) {
+                        case "Daily":
+                            isMatch = true;
+                            break;
+                        case "Weekly":
+                            isMatch = selectedDate.getDayOfWeek() == due.getDayOfWeek();
+                            break;
+                        case "Monthly":
+                            isMatch = selectedDate.getDayOfMonth() == due.getDayOfMonth();
+                            break;
+                        default:
+                            Log.w("DEBUG", "Không hỗ trợ repeat kiểu:  " + repeat);
+                    }
+                }
+            }
+
+            if (isMatch) {
                 if (task.isCompleted()) {
                     completedTasks.add(task);
                 } else {
                     uncompletedTasks.add(task);
                 }
             }
+
         }
 
         // Gộp lại: chưa hoàn thành → đã hoàn thành
@@ -291,13 +390,13 @@ public class CalendarFragment extends Fragment {
                         bottomSheet.setArguments(bundle);
                         bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
                             taskAdapter.updateTaskInAdapter(updatedTask);
-                            cancelNotification(updatedTask.getId()); // 1. Hủy báo thức cũ
+                            cancelNotification(updatedTask); // 1. Hủy báo thức cũ
                             scheduleNotification(updatedTask); // 2. Tạo lại báo thức mới
                         });
                         bottomSheet.show(getChildFragmentManager(), "EditTask");
                     } else if (which == 1) {
                         // Huỷ thông báo nếu có
-                        cancelNotification(task.getId());
+                        cancelNotification(task);
 
                         // Xóa task khỏi DB
                         taskViewModel.deleteTask(task.getId());
@@ -350,34 +449,19 @@ public class CalendarFragment extends Fragment {
         String dueDate = task.getDueDate();
         String dueTime = task.getTime();
         String reminder = task.getReminderStyle();
+        String repeat = task.getRepeatStyle();
 
         if (dueDate == null || dueDate.isEmpty()) return;
 
         // Nếu chỉ có ngày mà thiếu giờ → mặc định 08:00
-        if (dueTime == null || dueTime.isEmpty()) {
-            dueTime = "08:00";
-        }
+        if (dueTime == null || dueTime.isEmpty()) dueTime = "08:00";
 
         // Không đặt thông báo nếu không có nhắc nhở
         if (reminder == null || reminder.equalsIgnoreCase("None")) return;
 
         try {
-            Log.d("AlarmSet", "🟢 Đang xử lý đặt báo thức");
-            // Giả sử bạn lưu time là "HH:mm" và date là "dd/MM/yyyy"
-            String dateTimeStr = dueDate + " " + dueTime;
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-            Date date = sdf.parse(dateTimeStr);
-
-            // 👇 Trừ thời gian reminder
-            long triggerAtMillis = date.getTime() - getReminderOffset(reminder);
-
-            Log.d("ScheduleCheck", "Trigger at: " + new Date(triggerAtMillis));
-            Log.d("ScheduleCheck", "Now: " + new Date(System.currentTimeMillis()));
-
-            if (triggerAtMillis <= System.currentTimeMillis()) {
-                Toast.makeText(requireContext(), "⏰ Reminder skipped (time is in the past)", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            long offset = getReminderOffset(reminder);
 
             // ⏰ Đặt báo thức
             AlarmManager alarmManager = (AlarmManager) requireContext().getSystemService(Context.ALARM_SERVICE);
@@ -387,22 +471,41 @@ public class CalendarFragment extends Fragment {
                 return;
             }
 
-            Intent intent = new Intent(getContext(), TaskAlarmReceiver.class);
-            intent.putExtra("task_title", task.getTitle());
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate baseDate = LocalDate.parse(dueDate, dateFormatter);
+            YearMonth endMonth = YearMonth.from(LocalDate.now().plusMonths(1)); // giống setup
+            LocalDate endDate = endMonth.atEndOfMonth(); // lấy ngày cuối cùng tháng đó
 
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                    getContext(),
-                    task.getId(),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
+            int repeatCount = 0;
+            LocalDate current = baseDate;
 
-            if (alarmManager != null) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
-                Log.d("AlarmSet", "Đã đặt thông báo lúc " + triggerAtMillis);
+            // Nếu có repeat → đặt thông báo cho các ngày tương lai
+            while (!current.isAfter(endDate)) {
+                String currentDateTime = current.format(dateFormatter) + " " + dueTime;
+                long triggerAtMillis = sdf.parse(currentDateTime).getTime() - offset;
+
+                if (triggerAtMillis > System.currentTimeMillis()) {
+                    // Mỗi repeat có requestCode riêng (vd: taskId * 1000 + repeatCount)
+                    int requestCode = (repeat == null || repeat.equalsIgnoreCase("None"))
+                            ? task.getId()
+                            : task.getId() * 1000 + repeatCount;
+
+                    setAlarm(requestCode, task.getTitle(), triggerAtMillis, alarmManager);
+                    Log.d("AlarmSet", "✅ Alarm Code: " + requestCode);
+                    repeatCount++;
+                }
+
+                // Nếu không có repeat → chỉ đặt 1 thông báo
+                if (repeat == null || repeat.equalsIgnoreCase("None")) break;
+
+                // tăng ngày lặp
+                switch (repeat) {
+                    case "Daily": current = current.plusDays(1); break;
+                    case "Weekly": current = current.plusWeeks(1); break;
+                    case "Monthly": current = current.plusMonths(1); break;
+                    default: current = endDate.plusDays(1); break; // thoát vòng lặp
+                }
             }
-
-            Log.d("AlarmSet", "✅ Đã đặt xong báo thức");
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(requireContext(), "❌ Lỗi khi đặt thông báo", Toast.LENGTH_SHORT).show();
@@ -410,17 +513,57 @@ public class CalendarFragment extends Fragment {
         }
     }
 
-    private void cancelNotification(int taskId) {
+    private void setAlarm(int requestCode, String title, long triggerAtMillis, AlarmManager alarmManager) {
         Intent intent = new Intent(getContext(), TaskAlarmReceiver.class);
+        intent.putExtra("task_title", title);
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 getContext(),
-                taskId,
+                requestCode,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+        if (alarmManager != null) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            Log.d("AlarmSet", "🔔 Đã đặt báo thức lúc: " + new Date(triggerAtMillis));
+        }
+    }
+
+    private void cancelNotification(Task task) {
         AlarmManager alarmManager = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        // Hủy báo thức đơn nếu không lặp
+        if (task.getRepeatStyle() == null || task.getRepeatStyle().equalsIgnoreCase("None")) {
+            cancelSingleAlarm(task.getId(), task.getTitle(), alarmManager);
+            return;
+        }
+
+        String repeat = task.getRepeatStyle();
+        Log.d("AlarmCancel", "🔁 Cancel task: " + task.getTitle() + " (ID: " + task.getId() + "), repeat: " + repeat);
+
+        // Hủy báo thức lặp (nhiều instance)
+        int requestCodeBase = task.getId() * 1000;
+        int maxRepeat = 60; // hoặc tính chính xác số lần lặp nếu cần
+        for (int i = 0; i < maxRepeat; i++) {
+            cancelSingleAlarm(requestCodeBase + i, task.getTitle(), alarmManager);
+        }
+    }
+
+    private void cancelSingleAlarm(int requestCode, String title, AlarmManager alarmManager) {
+        Intent intent = new Intent(getContext(), TaskAlarmReceiver.class);
+        intent.putExtra("task_title", title);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                getContext(),
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
         alarmManager.cancel(pendingIntent);
+        Log.d("AlarmCancel", "🛑 Hủy alarm với requestCode = " + requestCode);
     }
 
     // Container cho tháng
