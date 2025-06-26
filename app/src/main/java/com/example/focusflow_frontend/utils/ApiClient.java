@@ -49,6 +49,9 @@ public class ApiClient {
         }
         return retrofit;
     }
+    public static void resetRetrofit() {
+        retrofit = null;
+    }
 
     public static PomodoroController getPomodoroController(Context context) {
         return getRetrofit(context).create(PomodoroController.class);

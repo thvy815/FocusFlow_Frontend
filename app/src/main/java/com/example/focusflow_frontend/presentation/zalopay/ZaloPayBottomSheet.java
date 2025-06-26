@@ -17,26 +17,23 @@ import androidx.annotation.Nullable;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.api.AppInfo;
-import com.example.focusflow_frontend.data.api.CreateOrder;
-import com.example.focusflow_frontend.data.model.ProUpgradeRequest;
-import com.example.focusflow_frontend.utils.ApiClient;
-import com.example.focusflow_frontend.utils.TokenManager;
-import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import org.json.JSONObject;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import vn.zalopay.sdk.*;
-import vn.zalopay.sdk.listeners.PayOrderListener;
 
 public class ZaloPayBottomSheet extends BottomSheetDialogFragment {
     private RadioGroup planGroup;
     private Button btnPay;
+    public interface OnPlanSelectedListener {
+        void onPlanSelected(String planName, String amount);
+    }
+    private OnPlanSelectedListener listener;
+
+    public void setOnPlanSelectedListener(OnPlanSelectedListener listener) {
+        this.listener = listener;
+    }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -97,77 +94,15 @@ public class ZaloPayBottomSheet extends BottomSheetDialogFragment {
             } else if (selectedId == R.id.plan12) {
                 amount = "279000"; plan = "12 tháng";
             } else {
-                Toast.makeText(getContext(), "Vui lòng chọn gói nâng cấp!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Vui lòng chọn gói!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            try {
-                CreateOrder orderApi = new CreateOrder();
-                JSONObject data = orderApi.createOrder(amount);
-                Log.d("ZaloPay Response", data.toString());
-
-                String code = data.getString("returncode");
-                if (code.equals("1")) {
-                    String zpToken = data.getString("zptranstoken");
-
-                    ZaloPaySDK.getInstance().payOrder(getActivity(), zpToken, "demozpdk://app", new PayOrderListener() {
-                        @Override
-                        public void onPaymentSucceeded(String transactionId, String transToken, String appTransID) {
-                            if (!isAdded() || getContext() == null) return;
-
-                            Context context = getContext(); // Không dùng requireContext()
-
-                            new AlertDialog.Builder(context)
-                                    .setTitle("Nâng cấp thành công")
-                                    .setMessage("Bạn đã nâng cấp thành công gói " + plan)
-                                    .setCancelable(false)
-                                    .setPositiveButton("OK", (dialog, which) -> dismiss()) // 💡 dismiss sau khi OK
-                                    .show();
-
-                            long expireTime = System.currentTimeMillis() + ProUtils.getDurationInMillis(plan);
-                            ProUtils.saveProStatus(context, plan, expireTime);
-
-                            SharedPreferences prefs = context.getSharedPreferences("user", Context.MODE_PRIVATE);
-                            String jwtToken = TokenManager.getToken(context);
-
-                            if (jwtToken != null) {
-                                TokenManager.saveToken(context, jwtToken);
-                            }
-
-                            ProUpgradeRequest request = new ProUpgradeRequest(plan, expireTime);
-                            ApiClient.getProController(context).upgradePro(request).enqueue(new Callback<Void>() {
-                                @Override
-                                public void onResponse(Call<Void> call, Response<Void> response) {
-                                    if (response.isSuccessful()) {
-                                        Log.d("ProUpgrade", "Lưu Pro thành công");
-                                    } else {
-                                        Log.e("ProUpgrade", "Lỗi API: " + response.code());
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(Call<Void> call, Throwable t) {
-                                    Log.e("ProUpgrade", "API lỗi", t);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onPaymentCanceled(String zpTransToken, String appTransID) {
-                            Toast.makeText(getContext(), "Bạn đã hủy thanh toán", Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onPaymentError(ZaloPayError zaloPayError, String zpTransToken, String appTransID) {
-                            Toast.makeText(getContext(), "Lỗi thanh toán: " + zaloPayError.toString(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else {
-                    Toast.makeText(getContext(), "Tạo đơn hàng thất bại!", Toast.LENGTH_SHORT).show();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(getContext(), "Lỗi tạo đơn hàng!", Toast.LENGTH_SHORT).show();
+            if (listener != null) {
+                listener.onPlanSelected(plan, amount);
             }
+
+            dismiss();
         });
 
         return view;
