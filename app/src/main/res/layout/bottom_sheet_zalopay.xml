@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nâng cấp tài khoản"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="12dp"/>
+
+        <RadioGroup
+            android:id="@+id/planGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <RadioButton
+                android:id="@+id/plan1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1 tháng - 29.000đ"/>
+            <RadioButton
+                android:id="@+id/plan3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3 tháng - 79.000đ"/>
+            <RadioButton
+                android:id="@+id/plan6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="6 tháng - 149.000đ"/>
+            <RadioButton
+                android:id="@+id/plan12"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1 năm - 279.000đ"/>
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btnPay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thanh toán qua ZaloPay"
+            android:layout_marginTop="20dp"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

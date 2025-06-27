@@ -1,10 +1,7 @@
 package com.example.focusflow_frontend.presentation.profile;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Layout;
 import android.view.LayoutInflater;
@@ -21,6 +18,7 @@ import androidx.annotation.Nullable;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.login.SignInActivity;
 import com.example.focusflow_frontend.utils.TokenManager;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -69,9 +67,6 @@ public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.profile_setting, container, false);
-
-        // Nhận dữ liệu từ Bundle
-
         // Hiển thị avatar
         View avt = view.findViewById(R.id.avtLayout);
         ImageView avatarImage = avt.findViewById(R.id.avatarImage);
@@ -97,6 +92,7 @@ public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
         view.findViewById(R.id.Logout).setOnClickListener(v -> {
             // Xóa dữ liệu đăng nhập
             TokenManager.clearToken(requireContext());
+            ProUtils.clearProStatus(getContext());
             TokenManager.clearUserId(requireContext());
             TokenManager.saveRememberMe(requireContext(), false);
 

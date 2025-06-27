@@ -45,6 +45,13 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation ("io.noties.markwon:core:4.6.2")
     implementation(libs.lifecycle.viewmodel.android)
+    implementation(fileTree("D:/zalopay_sdk") {
+        include("*.aar", "*.jar")
+    })
+
+    implementation(fileTree("D:/Apps") {
+        include("*.aar", "*.jar")
+    })
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

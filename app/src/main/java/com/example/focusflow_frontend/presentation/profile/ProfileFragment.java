@@ -1,11 +1,14 @@
 package com.example.focusflow_frontend.presentation.profile;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,6 +21,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
+import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -72,6 +78,31 @@ public class ProfileFragment extends Fragment {
         ImageView avtClick = view.findViewById(R.id.avatarImage);
         avtClick.setOnClickListener(v->editAvtClick());
 
+        Button btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
+        boolean isPro = ProUtils.isProValid(getContext());
+        if (isPro) {
+            btnUpgradePro.setVisibility(View.GONE); // Ẩn nếu đã Pro
+        } else {
+            btnUpgradePro.setVisibility(View.VISIBLE);
+            btnUpgradePro.setOnClickListener(v -> {
+                ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
+
+                // Thiết lập callback khi người dùng chọn gói Pro
+                sheet.setOnPlanSelectedListener((plan, amount) -> {
+                    Log.d("ZaloPay", "Người dùng chọn gói: " + plan + ", amount: " + amount);
+
+                    // Gọi hàm xử lý thanh toán từ MainActivity
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).createAndPayOrder(plan, amount);
+                    }
+                });
+
+                // Hiển thị BottomSheet
+                sheet.show(getParentFragmentManager(), "ZaloPayBottomSheet");
+            });
+        }
+
+        Log.d("pro" , "onCreateView: isPro"+ isPro);
         return view;
     }
     public void editAvtClick() {
@@ -197,5 +228,6 @@ public class ProfileFragment extends Fragment {
         streak.setText("189 profile fragment");
         core.setText("tuong tu o tren");
     }
+
 }
 

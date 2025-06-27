@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.example.focusflow_frontend.data.api.PomodoroController;
 import com.example.focusflow_frontend.data.api.PomodoroDetailController;
+import com.example.focusflow_frontend.data.api.ProController;
 
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +53,9 @@ public class ApiClient {
         }
         return retrofit;
     }
+    public static void resetRetrofit() {
+        retrofit = null;
+    }
 
     public static PomodoroController getPomodoroController(Context context) {
         return getRetrofit(context).create(PomodoroController.class);
@@ -59,5 +63,8 @@ public class ApiClient {
 
     public static PomodoroDetailController getPomodoroDetailController(Context context) {
         return getRetrofit(context).create(PomodoroDetailController.class);
+    }
+    public static ProController getProController(Context context) {
+        return getRetrofit(context).create(ProController.class);
     }
 }

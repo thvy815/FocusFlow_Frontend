@@ -15,21 +15,36 @@ import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.api.CreateOrder;
+import com.example.focusflow_frontend.data.model.ProUpgradeRequest;
 import com.example.focusflow_frontend.presentation.calendar.CalendarFragment;
 import com.example.focusflow_frontend.presentation.chatbox.ChatActivity;
 import com.example.focusflow_frontend.presentation.group.GroupFragment;
 import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
 import com.example.focusflow_frontend.presentation.profile.ProfileFragment;
 import com.example.focusflow_frontend.presentation.streak.StreakFragment;
+import com.example.focusflow_frontend.utils.ApiClient;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import org.json.JSONObject;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import vn.zalopay.sdk.ZaloPayError;
+import vn.zalopay.sdk.ZaloPaySDK;
+import vn.zalopay.sdk.listeners.PayOrderListener;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
@@ -81,6 +96,79 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        if (intent.getData() != null && "demozpdk".equals(intent.getData().getScheme())) {
+            ZaloPaySDK.getInstance().onResult(intent);  // <-- Bắt buộc
+            Log.d("ZaloPay", "✅ onNewIntent gọi onResult thành công");
+        }
+    }
+    public void createAndPayOrder(String plan, String amount) {
+        new Thread(() -> {
+            try {
+                CreateOrder orderApi = new CreateOrder();
+                JSONObject data = orderApi.createOrder(amount);
+
+                String code = data.getString("returncode");
+                if (code.equals("1")) {
+                    String zpToken = data.getString("zptranstoken");
+
+                    runOnUiThread(() -> ZaloPaySDK.getInstance().payOrder(
+                            MainActivity.this, zpToken, "demozpdk://app", new PayOrderListener() {
+                                @Override
+                                public void onPaymentSucceeded(String transactionId, String transToken, String appTransID) {
+                                    runOnUiThread(() -> {
+                                        new AlertDialog.Builder(MainActivity.this)
+                                                .setTitle("Nâng cấp thành công")
+                                                .setMessage("Bạn đã nâng cấp thành công gói " + plan)
+                                                .setPositiveButton("OK", null)
+                                                .show();
+
+                                        long expireTime = System.currentTimeMillis() + ProUtils.getDurationInMillis(plan);
+                                        ProUtils.saveProStatus(MainActivity.this, plan, expireTime);
+
+                                        ProUpgradeRequest request = new ProUpgradeRequest(plan, expireTime);
+                                        ApiClient.getProController(MainActivity.this).upgradePro(request)
+                                                .enqueue(new Callback<Void>() {
+                                                    @Override
+                                                    public void onResponse(Call<Void> call, Response<Void> response) {
+                                                        Log.d("ProUpgrade", "Lưu Pro thành công");
+                                                    }
+
+                                                    @Override
+                                                    public void onFailure(Call<Void> call, Throwable t) {
+                                                        Log.e("ProUpgrade", "API lỗi", t);
+                                                    }
+                                                });
+                                    });
+                                }
+
+                                @Override
+                                public void onPaymentCanceled(String zpTransToken, String appTransID) {
+                                    runOnUiThread(() ->
+                                            Toast.makeText(MainActivity.this, "Bạn đã hủy thanh toán", Toast.LENGTH_SHORT).show());
+                                }
+
+                                @Override
+                                public void onPaymentError(ZaloPayError zaloPayError, String zpTransToken, String appTransID) {
+                                    runOnUiThread(() ->
+                                            Toast.makeText(MainActivity.this, "Lỗi thanh toán: " + zaloPayError.toString(), Toast.LENGTH_SHORT).show());
+                                }
+                            }));
+                } else {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Tạo đơn hàng thất bại!", Toast.LENGTH_SHORT).show());
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Lỗi tạo đơn hàng!", Toast.LENGTH_SHORT).show());
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
 
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()

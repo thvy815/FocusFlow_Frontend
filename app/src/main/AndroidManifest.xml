@@ -29,8 +29,22 @@
             </intent-filter>
         </activity>
 
+        <!-- MainActivity xử lý callback từ ZaloPay -->
+        <activity
+            android:name=".presentation.main.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="demozpdk" android:host="app" />
+            </intent-filter>
+        </activity>
+
+        <!-- Đăng ký SignUpActivity -->
         <activity android:name=".presentation.login.SignUpActivity" />
-        <activity android:name=".presentation.main.MainActivity"/>
+
         <activity
             android:name=".presentation.chatbox.ChatActivity"
             android:theme="@style/ChatboxDialogTheme" />
