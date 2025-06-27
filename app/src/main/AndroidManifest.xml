@@ -31,6 +31,9 @@
 
         <activity android:name=".presentation.login.SignUpActivity" />
         <activity android:name=".presentation.main.MainActivity"/>
+        <activity
+            android:name=".presentation.chatbox.ChatActivity"
+            android:theme="@style/ChatboxDialogTheme" />
 
     </application>
 

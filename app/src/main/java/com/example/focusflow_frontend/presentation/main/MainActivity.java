@@ -1,5 +1,6 @@
 package com.example.focusflow_frontend.presentation.main;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -7,7 +8,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +24,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.presentation.calendar.CalendarFragment;
+import com.example.focusflow_frontend.presentation.chatbox.ChatActivity;
 import com.example.focusflow_frontend.presentation.group.GroupFragment;
 import com.example.focusflow_frontend.presentation.pomo.PomodoroFragment;
 import com.example.focusflow_frontend.presentation.profile.ProfileFragment;
@@ -24,8 +32,10 @@ import com.example.focusflow_frontend.presentation.streak.StreakFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
-
-    BottomNavigationView bottomNavigationView;
+    private BottomNavigationView bottomNavigationView;
+    private FrameLayout assistiveButton;
+    private final Handler fadeHandler = new Handler(Looper.getMainLooper());
+    private Runnable fadeRunnable;
     private static final int REQUEST_POST_NOTIFICATIONS = 1;
 
     @Override
@@ -35,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
+        assistiveButton = findViewById(R.id.assistive_button);
+
+        // Assistive Touch
+        enableDragAndSnap(assistiveButton);
 
         // Notification
         createNotificationChannel();
@@ -126,5 +140,63 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Bạn cần cấp quyền thông báo để nhận nhắc nhở.", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void enableDragAndSnap(View view) {
+        final float[] dX = new float[1];
+        final float[] dY = new float[1];
+        final int[] lastAction = new int[1];
+
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    dX[0] = v.getX() - event.getRawX();
+                    dY[0] = v.getY() - event.getRawY();
+                    lastAction[0] = MotionEvent.ACTION_DOWN;
+                    cancelFadeOut(view); // Hủy mờ khi chạm
+                    return true;
+
+                case MotionEvent.ACTION_MOVE:
+                    v.setX(event.getRawX() + dX[0]);
+                    v.setY(event.getRawY() + dY[0]);
+                    lastAction[0] = MotionEvent.ACTION_MOVE;
+                    return true;
+
+                case MotionEvent.ACTION_UP:
+                    if (lastAction[0] == MotionEvent.ACTION_DOWN) {
+                        Intent intent = new Intent(this, ChatActivity.class);
+                        startActivity(intent);
+                    } else {
+                        snapToEdge(v);        // Tự động neo vào cạnh
+                        scheduleFadeOut(v);   // Tự mờ sau khi buông tay
+                    }
+                    return true;
+
+                default:
+                    return false;
+            }
+        });
+    }
+
+    private void snapToEdge(View view) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float screenWidth = metrics.widthPixels;
+        float middle = screenWidth / 2f;
+        float currentX = view.getX();
+
+        float targetX = currentX <= middle ? 0 : screenWidth - view.getWidth();
+
+        view.animate().x(targetX).setDuration(300).start();
+    }
+
+    private void scheduleFadeOut(View view) {
+        fadeRunnable = () -> view.animate().alpha(0.3f).setDuration(500).start();
+        fadeHandler.postDelayed(fadeRunnable, 3000); // Mờ sau 3 giây
+    }
+
+    private void cancelFadeOut(View view) {
+        fadeHandler.removeCallbacks(fadeRunnable);
+        view.animate().alpha(1f).setDuration(200).start();
     }
 }

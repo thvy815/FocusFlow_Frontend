@@ -36,8 +36,4 @@ public interface UserController {
     // API đăng nhập và nhận JWT
     @POST("/auth/signin")
     Call<SignInResponse> signIn(@Body SignInRequest loginRequest);
-
-    // API update FCM Token
-//    @POST("api/user/update-fcm-token")
-//    Call<ResponseBody> updateFcmToken(@Body Map<String, String> request);
 }

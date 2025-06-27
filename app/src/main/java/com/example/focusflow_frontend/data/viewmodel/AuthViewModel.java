@@ -33,8 +33,13 @@ public class AuthViewModel extends AndroidViewModel {
     private final Map<Integer, MutableLiveData<User>> userLiveDataMap = new HashMap<>();
     private final MutableLiveData<List<User>> allUsers = new MutableLiveData<>();
 
-    public LiveData<List<User>> getAllUsers() { return allUsers; }
-    public LiveData<User> getCurrentUserLiveData() { return currentUser; }
+    public LiveData<List<User>> getAllUsers() {
+        return allUsers;
+    }
+
+    public LiveData<User> getCurrentUserLiveData() {
+        return currentUser;
+    }
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
@@ -159,34 +164,4 @@ public class AuthViewModel extends AndroidViewModel {
 
         return userLiveData;
     }
-
-//    public void updateFcmToken(int userId) {
-//        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
-//            if (task.isSuccessful()) {
-//                String fcmToken = task.getResult();
-//
-//                Map<String, String> request = new HashMap<>();
-//                request.put("userId", String.valueOf(userId));
-//                request.put("fcmToken", fcmToken);
-//
-//                userController.updateFcmToken(request).enqueue(new Callback<ResponseBody>() {
-//                    @Override
-//                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-//                        if (response.isSuccessful()) {
-//                            Log.d("AuthViewModel", "FCM token updated successfully");
-//                        } else {
-//                            Log.e("AuthViewModel", "Failed to update FCM token");
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-//                        Log.e("AuthViewModel", "Error updating FCM token: " + t.getMessage());
-//                    }
-//                });
-//            } else {
-//                Log.e("AuthViewModel", "Failed to get FCM token: " + task.getException());
-//            }
-//        });
-//    }
 }
