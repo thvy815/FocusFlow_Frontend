@@ -3,6 +3,7 @@ package com.example.focusflow_frontend.presentation.pomo;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,27 +20,38 @@ import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
 import com.example.focusflow_frontend.utils.ViewUtils;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 
     private LineChart trendChart;
-    private HorizontalBarChart detailChart;
+    private PieChart  pieChart;
     private  int userId;
     private PomodoroViewModel viewModel;
 
@@ -92,10 +104,15 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                 LatestPomo(latestPomodoro);
             }
         });
+        updatePomodoroCounts();
+        trendChart = view.findViewById(R.id.trendChart);
+        paintTrendChart(trendChart);
 
-        LineChart lineChart = view.findViewById(R.id.trendChart);
-        paintTrendChart(lineChart);
-
+        pieChart = view.findViewById(R.id.DetailsChart);
+        pieChart.post(() -> {
+            viewModel.getAllPomodoro(requireContext(), userId);
+            showTodayPieChart(pieChart);
+        });
 //Chuyen trang Add Record
         ImageView btnAdd = view.findViewById(R.id.btnAdd);
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -119,15 +136,52 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 
         return view;
     }
+    private void updatePomodoroCounts() {
+        viewModel.fetchPomodorosByUser(requireContext(), userId); // đảm bảo có dữ liệu
 
-    public void addRecordClick() {
-        AddRecordBottomSheet statsSheet = new AddRecordBottomSheet();
-        Bundle args = new Bundle();
-        args.putInt("userId", userId);
-        statsSheet.setArguments(args);
-        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
+        viewModel.getPomodoroList().observe(getViewLifecycleOwner(), pomodoros -> {
+            if (pomodoros == null) return;
+
+            int totalPomo = pomodoros.size(); // Tổng số Pomodoro
+
+            // Tính số Pomodoro của hôm nay
+            int todayPomo = 0;
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            for (Pomodoro p : pomodoros) {
+                if (p.getStartAt() != null && p.getStartAt().startsWith(today)) {
+                    todayPomo++;
+                }
+            }
+
+            // Gán text vào 2 TextView
+            TextView todayTextView = requireView().findViewById(R.id.todayValue);
+            TextView totalTextView = requireView().findViewById(R.id.totalValue);
+
+            todayTextView.setText(String.valueOf(todayPomo));
+            totalTextView.setText(String.valueOf(totalPomo));
+        });
     }
 
+
+    public void addRecordClick() {
+        AddRecordBottomSheet addRecordBottomSheet = new AddRecordBottomSheet();
+        Bundle args = new Bundle();
+        args.putInt("userId", userId);
+        addRecordBottomSheet.setArguments(args);
+        addRecordBottomSheet.show(getParentFragmentManager(), "add_record");
+        addRecordBottomSheet.setOnDismissListener(() -> {
+            // Gọi lại toàn bộ hàm setup lại giao diện (vẽ chart, load dữ liệu,...)
+            if (getView() != null) {
+                View root = getView();
+                updatePomodoroCounts();                    // Cập nhật số lượng
+                paintTrendChart((LineChart) root.findViewById(R.id.trendChart)); // Vẽ trend chart
+                showTodayPieChart((PieChart) root.findViewById(R.id.DetailsChart)); // Pie chart
+                viewModel.fetchLatestPomodoro(requireContext(), userId);           // Cập nhật latest
+            }
+        });
+
+
+    }
     public void focusRecordClick(){
         FocusRecordBottomSheet statsSheet = new FocusRecordBottomSheet();
         Bundle args = new Bundle();
@@ -135,66 +189,144 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
         statsSheet.setArguments(args);
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
-
     public void paintTrendChart(LineChart lineChart) {
         viewModel.getDailyDurationMap().observe(getViewLifecycleOwner(), durationMap -> {
-            if (durationMap == null || durationMap.isEmpty()) return;
+            if (durationMap == null) return;
 
-            List<Entry> entries = new ArrayList<>();
+            Map<String, Integer> fullWeekMap = new LinkedHashMap<>();
+
+            // Tính ngày Chủ Nhật đầu tuần hiện tại
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             List<String> labels = new ArrayList<>();
-            int index = 0;
+            // Tạo 7 ngày (Chủ nhật đến Thứ bảy)
+            for (int i = 0; i < 7; i++) {
+                String dateStr = sdf.format(calendar.getTime());
+                fullWeekMap.put(dateStr, 0);  // mặc định 0 phút
+                labels.add(dateStr.substring(5));  // chỉ lấy MM-dd để hiển thị
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+            }
 
+            // Gộp dữ liệu từ durationMap vào fullWeekMap
             for (Map.Entry<String, Integer> entry : durationMap.entrySet()) {
-                entries.add(new Entry(index, entry.getValue()));
-                labels.add(entry.getKey().substring(5)); // lấy "MM-dd" cho gọn
-                index++;
+                if (fullWeekMap.containsKey(entry.getKey())) {
+                    fullWeekMap.put(entry.getKey(), entry.getValue()); // phút
+                }
+            }
+            // Tạo entry để vẽ chart
+            List<Entry> entries = new ArrayList<>();
+            int index = 0;
+            for (Integer value : fullWeekMap.values()) {
+                entries.add(new Entry(index++, value));
             }
 
             LineDataSet dataSet = new LineDataSet(entries, "Pomodoro Minutes/Day");
             dataSet.setColor(Color.BLUE);
+            dataSet.setCircleColor(Color.BLUE);
             dataSet.setValueTextColor(Color.BLACK);
             dataSet.setLineWidth(2f);
             dataSet.setCircleRadius(4f);
             dataSet.setDrawFilled(true);
             dataSet.setFillColor(Color.CYAN);
-            dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // làm mượt đường cong
+            dataSet.setDrawValues(false);
+            dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
 
             LineData lineData = new LineData(dataSet);
             lineChart.setData(lineData);
 
-            // Cấu hình trục X
             XAxis xAxis = lineChart.getXAxis();
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setGranularity(1f);
             xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
-            xAxis.setLabelRotationAngle(-45f);
+            xAxis.setLabelRotationAngle(-25f);
+            xAxis.setLabelCount(labels.size(), true);
 
+            lineChart.getAxisLeft().setAxisMinimum(0f);
+            lineChart.getAxisLeft().setGranularity(10f);
             lineChart.getAxisRight().setEnabled(false);
-            lineChart.getDescription().setText("Thống kê Pomodoro trong tuần");
+
+            lineChart.getLegend().setEnabled(true);
+            lineChart.getDescription().setEnabled(false);
             lineChart.animateX(1000);
-            lineChart.invalidate(); // Vẽ lại
+            lineChart.invalidate();
         });
 
-        // Chỉ gọi 1 lần khi bắt đầu
+        // Gọi để load dữ liệu pomodoro → trigger calculateWeeklyDurations
         viewModel.fetchPomodorosByUser(requireContext(), userId);
     }
-    private FocusRecordAdapter adapter = new FocusRecordAdapter();
+    private void showTodayPieChart(PieChart pieChart) {
+        viewModel.fetchPomodorosByUser(requireContext(), userId); // 1. Trigger trước
+
+        viewModel.getPomodoroList().observe(getViewLifecycleOwner(), pomodoros -> {
+            if (pomodoros == null) return;
+
+            // 2. Gọi fetchTaskNames khi chắc chắn có pomodoros
+            viewModel.fetchTaskNames(requireContext(), pomodoros);
+
+            // 3. Quan sát TaskMap
+            viewModel.getTaskNameMapLiveData().observe(getViewLifecycleOwner(), taskNameMap -> {
+                if (taskNameMap == null) return;
+
+                // 4. Lọc hôm nay
+                String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                List<Pomodoro> todayList = new ArrayList<>();
+                for (Pomodoro p : pomodoros) {
+                    if (p.getStartAt() != null && p.getStartAt().startsWith(today)) {
+                        todayList.add(p);
+                    }
+                }
+
+                // 5. Gom thời lượng theo tên task
+                Map<String, Integer> taskDurationMap = new HashMap<>();
+                for (Pomodoro p : todayList) {
+                    String taskName = taskNameMap.getOrDefault(p.getTaskId(), "Another");
+                    int minutes = (int) (p.getTotalTime() / 1000 / 60);
+                    taskDurationMap.put(taskName, taskDurationMap.getOrDefault(taskName, 0) + minutes);
+                }
+
+                // 6. Tạo entries
+                List<PieEntry> entries = new ArrayList<>();
+                for (Map.Entry<String, Integer> entry : taskDurationMap.entrySet()) {
+                    if (entry.getValue() > 0) {
+                        entries.add(new PieEntry(entry.getValue(), entry.getKey()));
+                    }
+                }
+
+                if (entries.isEmpty()) {
+                    pieChart.clear();
+                    pieChart.setNoDataText("No focus sessions today.");
+                    return;
+                }
+
+                // 7. Vẽ chart
+                PieDataSet dataSet = new PieDataSet(entries, "Today's Pomodoro Tasks");
+                dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
+                dataSet.setValueTextSize(14f);
+                dataSet.setValueTextColor(Color.WHITE);
+
+                PieData pieData = new PieData(dataSet);
+                pieChart.setData(pieData);
+                pieChart.setUsePercentValues(true);
+                pieChart.setDrawHoleEnabled(false);
+                pieChart.getDescription().setEnabled(false);
+                pieChart.getLegend().setEnabled(true);
+                pieChart.animateY(1000);
+                pieChart.invalidate();
+            });
+        });
+    }
     public void LatestPomo(Pomodoro latest) {
         if (latest != null) {
             String startTime = latest.getStartAt();
             String endTime = latest.getEndAt();
-
-            String taskName = "";
-            Map<Integer, String> taskNameMap = adapter.getTaskNameMap(); // nếu có
-            if (taskNameMap != null) {
-                taskName = taskNameMap.getOrDefault(latest.getTaskId(), "");
-            }
 
             TextView txtStartTime = getView().findViewById(R.id.txtStartTime);
             TextView txtEndTime = getView().findViewById(R.id.txtEndTime);
             TextView txtDuration = getView().findViewById(R.id.duration);
             TextView txtTask = getView().findViewById(R.id.taskName);
 
+            // Hiển thị thời gian
             try {
                 if (startTime != null && endTime != null) {
                     LocalDateTime start = LocalDateTime.parse(startTime);
@@ -216,15 +348,26 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                 }
             } catch (Exception e) {
                 txtStartTime.setText("Không rõ");
-                e.printStackTrace(); // debug nếu lỗi format
+                e.printStackTrace();
             }
-            txtEndTime.setText("");
 
+            txtEndTime.setText("");
             txtDuration.setText(latest.getTotalTime() / 60 / 1000 + "min");
-            txtTask.setText(taskName);
+
+            // Hiển thị tên task từ ViewModel
+            viewModel.getTaskNameMapLiveData().observe(getViewLifecycleOwner(), taskNameMap -> {
+                if (taskNameMap != null) {
+                    String taskName = taskNameMap.get(latest.getTaskId());
+                    txtTask.setText(taskName != null ? taskName : "Another");
+                } else {
+                    txtTask.setText("Another");
+                }
+            });
+
         } else {
             System.out.println("Chưa có dữ liệu Pomodoro");
         }
     }
+
 
 }

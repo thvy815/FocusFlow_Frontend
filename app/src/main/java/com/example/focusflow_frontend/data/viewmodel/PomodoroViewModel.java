@@ -79,7 +79,7 @@ public class PomodoroViewModel extends ViewModel {
     }
 
     int checkSucc = 0;
-    public int createPomodorofull(Context context, int userId, int taskId, long startAt, long endAt, LocalDate dueDate, long totalTime, boolean isDeleted) {
+    public int createPomodorofull(Context context, int userId, Integer taskId, long startAt, long endAt, LocalDate dueDate, long totalTime, boolean isDeleted) {
         String startAtStr = formatTime(startAt);
         String endAtStr = formatTime(endAt);
         String dueDateStr = dueDate.toString();
@@ -253,7 +253,7 @@ public class PomodoroViewModel extends ViewModel {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
         Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY); // Chủ nhật đầu tuần
 
         for (int i = 0; i < 7; i++) {
             dates[i] = sdf.format(cal.getTime());
@@ -261,7 +261,6 @@ public class PomodoroViewModel extends ViewModel {
         }
         return dates;
     }
-
     private void calculateWeeklyDurations(List<Pomodoro> pomodoros) {
         String[] weekDates = getCurrentWeekDates();
         Map<String, Integer> durationMap = new LinkedHashMap<>();
@@ -269,18 +268,17 @@ public class PomodoroViewModel extends ViewModel {
         for (String date : weekDates) {
             durationMap.put(date, 0);
         }
-
         for (Pomodoro p : pomodoros) {
             String startAt = p.getStartAt();
             if (startAt == null || !startAt.contains("T")) continue;
 
             String datePart = startAt.split("T")[0];
             if (durationMap.containsKey(datePart)) {
-                int current = durationMap.get(datePart);
-                durationMap.put(datePart, current + (int) p.getTotalTime());
+                int current = durationMap.get(datePart); // giữ nguyên (đơn vị: phút)
+                int minutes = (int) (p.getTotalTime() / 1000 / 60); // ms → phút
+                durationMap.put(datePart, current + minutes);
             }
         }
-
         dailyDurationMap.postValue(durationMap);
     }
 
@@ -336,6 +334,11 @@ public class PomodoroViewModel extends ViewModel {
     }
 
     public void fetchTaskNames(Context context, List<Pomodoro> pomodoros) {
+        if (pomodoros == null || pomodoros.isEmpty()) {
+            taskNameMapLiveData.setValue(new HashMap<>()); // hoặc giữ nguyên trạng thái cũ
+            return;
+        }
+
         int userId = TokenManager.getUserId(context);
         taskController = ApiClient.getTaskController(context);
 
@@ -359,7 +362,8 @@ public class PomodoroViewModel extends ViewModel {
 
             @Override
             public void onFailure(Call<List<Task>> call, Throwable t) {
-                Log.e("PomodoroVM", "Fetch task name failed: " + t.getMessage());
+                // Optional: log lỗi nếu cần
+                Log.e("PomodoroViewModel", "Failed to fetch tasks", t);
             }
         });
     }

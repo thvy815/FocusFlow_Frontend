@@ -13,11 +13,11 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="30dp"
             android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="30dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -28,7 +28,7 @@
                 android:id="@+id/add_record_title"
                 layout="@layout/item_title_pomodoro" />
 
-            <!-- Task -->
+            <!-- Task Selection -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -48,27 +48,54 @@
                 <Spinner
                     android:id="@+id/spinnerTask"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
                     android:layout_weight="1"
+                    android:layout_height="48dp"
                     android:background="@drawable/bg_input"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp" />
             </LinearLayout>
 
-            <!-- Start Time -->
+            <!-- Start Date & Time -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="16dp"
+                android:weightSum="2">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="48dp"
+                    android:text="Start Date"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/mpr1c_medium"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/tvStartDate"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="48dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:padding="12dp"
+                    android:gravity="center_vertical"
+                    android:text="YYYY-MM-DD"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:text="Start"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
+                    android:text="Start Time"
+                    android:textSize="16sp"
                     android:fontFamily="@font/mpr1c_medium" />
 
                 <TextView
@@ -83,20 +110,47 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
-            <!-- End Time -->
+            <!-- End Date & Time -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="16dp">
+                android:layout_marginTop="16dp"
+                android:weightSum="2">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="48dp"
+                    android:text="End Date"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/mpr1c_medium"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/tvEndDate"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="48dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:padding="12dp"
+                    android:gravity="center_vertical"
+                    android:text="YYYY-MM-DD"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:text="End"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
+                    android:text="End Time"
+                    android:textSize="16sp"
                     android:fontFamily="@font/mpr1c_medium" />
 
                 <TextView
@@ -109,36 +163,6 @@
                     android:gravity="center_vertical"
                     android:text="00:00:00"
                     android:textSize="16sp" />
-            </LinearLayout>
-
-            <!-- Date -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="16dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="Date"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/mpr1c_medium" />
-
-                <TextView
-                    android:id="@+id/tvDate"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="48dp"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:padding="12dp"
-                    android:gravity="center_vertical"
-                    android:text="Select Date"
-                    android:textSize="16sp"
-                    android:clickable="true"
-                    android:focusable="true" />
             </LinearLayout>
 
             <!-- Focus Note -->
@@ -178,18 +202,14 @@
                 android:id="@+id/start_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="100dp"
+                android:layout_marginTop="40dp"
                 android:layout_gravity="center"
                 android:text="Save Record"
-                android:textSize="24sp"
+                android:textSize="20sp"
                 android:textColor="@color/white"
-                android:textAlignment="center"
                 android:fontFamily="@font/mpr1c_medium"
                 android:textStyle="bold"
-
-                android:backgroundTint="@color/black"
-                android:onClick="saveClick"
-                />
+                android:backgroundTint="@color/black" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
