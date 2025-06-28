@@ -108,4 +108,6 @@ public class DetailRecordBottomSheet extends BottomSheetDialogFragment {
             if (details != null) adapter.setRecords(details);
         });
     }
+
+
 }

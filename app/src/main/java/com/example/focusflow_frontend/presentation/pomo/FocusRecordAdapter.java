@@ -101,8 +101,8 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
         public void bind(Pomodoro detail, Map<Integer, String> taskNameMap, OnItemClickListener listener) {
             // Đặt dữ liệu text
             String taskName = taskNameMap != null ?
-                    taskNameMap.getOrDefault(detail.getTaskId(), "Không rõ") :
-                    "Không rõ";
+                    taskNameMap.getOrDefault(detail.getTaskId(), "") :
+                    "";
 
             txtTask.setText(taskName);
 

@@ -184,10 +184,10 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
             String startTime = latest.getStartAt();
             String endTime = latest.getEndAt();
 
-            String taskName = "Không rõ";
+            String taskName = "";
             Map<Integer, String> taskNameMap = adapter.getTaskNameMap(); // nếu có
             if (taskNameMap != null) {
-                taskName = taskNameMap.getOrDefault(latest.getTaskId(), "Không rõ");
+                taskName = taskNameMap.getOrDefault(latest.getTaskId(), "");
             }
 
             TextView txtStartTime = getView().findViewById(R.id.txtStartTime);
@@ -200,7 +200,7 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                     LocalDateTime start = LocalDateTime.parse(startTime);
                     LocalDateTime end = LocalDateTime.parse(endTime);
 
-                    DateTimeFormatter full = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                    DateTimeFormatter full = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
                     DateTimeFormatter timeOnly = DateTimeFormatter.ofPattern("HH:mm");
 
                     String displayTime;

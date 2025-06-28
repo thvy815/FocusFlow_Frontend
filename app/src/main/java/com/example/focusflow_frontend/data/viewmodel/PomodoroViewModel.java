@@ -78,7 +78,8 @@ public class PomodoroViewModel extends ViewModel {
         });
     }
 
-    public void createPomodorofull(Context context, int userId, int taskId, long startAt, long endAt, LocalDate dueDate, long totalTime, boolean isDeleted) {
+    int checkSucc = 0;
+    public int createPomodorofull(Context context, int userId, int taskId, long startAt, long endAt, LocalDate dueDate, long totalTime, boolean isDeleted) {
         String startAtStr = formatTime(startAt);
         String endAtStr = formatTime(endAt);
         String dueDateStr = dueDate.toString();
@@ -86,21 +87,26 @@ public class PomodoroViewModel extends ViewModel {
         Pomodoro pomodoro = new Pomodoro(userId, taskId, startAtStr, endAtStr, dueDateStr, totalTime, isDeleted);
         PomodoroController controller = ApiClient.getPomodoroController(context);
 
+        Log.d("PomodoroVM", "Before enqueue");
         controller.createPomodoro(pomodoro).enqueue(new Callback<>() {
             @Override
             public void onResponse(Call<Pomodoro> call, Response<Pomodoro> response) {
                 if (response.isSuccessful()) {
                     Log.d("PomodoroVM", "Pomodoro saved successfully.");
+                    checkSucc = 1;
                 } else {
                     Log.e("PomodoroVM", "Failed to save 91: " + response.code());
+                    checkSucc = 0;
                 }
             }
-
             @Override
             public void onFailure(Call<Pomodoro> call, Throwable t) {
                 Log.e("PomodoroVM", "Error: " + t.getMessage());
+                checkSucc = 0;
             }
         });
+        Log.d("PomodoroVM", "After enqueue");
+        return checkSucc;
     }
 
     public void updatePomodoro(Context context, Pomodoro pomodoro) {
@@ -357,6 +363,34 @@ public class PomodoroViewModel extends ViewModel {
             }
         });
     }
+    private final MutableLiveData<List<Task>> taskListLiveData = new MutableLiveData<>();
+
+    public LiveData<List<Task>> getTaskListLiveData() {
+        return taskListLiveData;
+    }
+
+    public void fetchTasks(Context context) {
+        int userId = TokenManager.getUserId(context);
+        if (taskController == null) {
+            taskController = ApiClient.getTaskController(context);
+        }
+        taskController.getTasksByUser(userId).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    taskListLiveData.postValue(response.body());
+                } else {
+                    Log.e("PomodoroVM", "Failed to fetch tasks: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Task>> call, Throwable t) {
+                Log.e("PomodoroVM", "Error fetching tasks: " + t.getMessage());
+            }
+        });
+    }
+
 
     public void deletePomodoroDetail(Context context, int id, boolean check, Runnable onSuccess) {
         PomodoroDetailController controller = ApiClient.getPomodoroDetailController(context);
