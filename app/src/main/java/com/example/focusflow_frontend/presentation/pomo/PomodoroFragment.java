@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -108,10 +109,7 @@ public class PomodoroFragment extends Fragment {
     public void focusStatisticClick() {
         FocusStatisticsBottomSheet statsSheet = new FocusStatisticsBottomSheet();
         Bundle args = new Bundle();
-        if (currPomodoro != null)
-            args.putInt("userId", userId);
-        else
-            args.putInt("userId", -1);
+        args.putInt("userId", userId); // ✅ Luôn truyền userId đúng
         statsSheet.setArguments(args);
         statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
     }
@@ -267,7 +265,7 @@ public class PomodoroFragment extends Fragment {
     public void stopClick() {
         endTime = System.currentTimeMillis();
         long minTime = endTime - startTime;
-        if (minTime < 5*60*1000) {
+        if (minTime < 0.5*60*1000) {
             showDialogLessThan5min();
         } else {
             showDialogMoreThan5min();
@@ -280,7 +278,9 @@ public class PomodoroFragment extends Fragment {
         builder.setTitle("Abandon This Focus?");
         builder.setMessage("The record can't be saved because the focus duration is less than 5 mins.");
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.setPositiveButton("QUIT", (dialog, which) -> restartWithoutSave());
+        builder.setPositiveButton("QUIT", (dialog, which) -> {
+            Log.d("QUIT 5", "showDialogLessThan5min: ");
+            restartWithoutSave();});
         builder.create().show();
     }
     private void showDialogMoreThan5min() {
@@ -324,65 +324,21 @@ public class PomodoroFragment extends Fragment {
     }
 
     private void restartWithoutSave() {
+        if (currPomodoro == null) {
+            Toast.makeText(getContext(), "No Pomodoro to quit", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         boolean check = false;
         int pomoId = currPomodoro.getId();
-
-        // Xóa detail trước, xóa pomodoro sau, cuối cùng restart fragment
+        Log.d("Check ham 335", "restartWithoutSave:");
         pomodoroViewModel.deletePomodoroDetail(getContext(), pomoId, check, () -> {
             pomodoroViewModel.deletePomodoro(getContext(), pomoId, check, () -> {
-                // Sau khi xóa xong pomodoro mới restart fragment và stop white noise
                 restartFragment();
             });
         });
     }
 
-//    private void animateTimerToCenter() {
-//        ConstraintLayout layout = getView().findViewById(R.id.pomo_layout);
-//
-//        Button startButton = getView().findViewById(R.id.start_button);
-//        LinearLayout afterStart = getView().findViewById(R.id.afterStart);
-//        TextView timerText = getView().findViewById(R.id.timer_text);
-//        ImageView play_icon = getView().findViewById(R.id.play_icon);
-//
-//        // Lấy kích thước cha và các view
-//        int parentWidth = layout.getWidth();
-//        int parentHeight = layout.getHeight();
-//
-//        int textWidth = timerText.getWidth();
-//        int textHeight = timerText.getHeight();
-//
-//        // Tính khoảng cách di chuyển đến tâm
-//        float targetX = (parentWidth - textWidth) / 2f - timerText.getX();
-//        float targetY = (parentHeight - textHeight) / 2f - timerText.getY();
-//
-//        // Di chuyển timerText về giữa
-//        timerText.animate()
-//                .translationXBy(targetX)
-//                .translationYBy(targetY)
-//                .setDuration(500)
-//                .start();
-//
-//        // Di chuyển afterStart và playIcon theo
-//        afterStart.animate()
-//                .translationXBy(targetX)
-//                .translationYBy(targetY + 20)
-//                .setDuration(500)
-//                .start();
-//
-//        play_icon.animate()
-//                .translationXBy(targetX)
-//                .translationYBy(targetY + 20)
-//                .setDuration(500)
-//                .start();
-//
-//        // Thu/phóng kích thước chữ timerText từ currentSizePx đến 80px
-//        float currentSizePx = timerText.getTextSize();
-//        float targetSizePx = 80f;
-//
-//        ObjectAnimator scaleAnimator = ObjectAnimator.ofFloat(timerText, "textSize", currentSizePx, targetSizePx);
-//        scaleAnimator.setDuration(500);
-//        scaleAnimator.start();
-//    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void SavePomodoro(long startTime, int userId, int taskId, LocalDate dueDate){

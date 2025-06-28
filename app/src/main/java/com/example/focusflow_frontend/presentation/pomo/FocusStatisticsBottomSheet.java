@@ -28,6 +28,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -193,8 +195,31 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
             TextView txtDuration = getView().findViewById(R.id.duration);
             TextView txtTask = getView().findViewById(R.id.taskName);
 
-            txtStartTime.setText(startTime);
-            txtEndTime.setText(endTime);
+            try {
+                if (startTime != null && endTime != null) {
+                    LocalDateTime start = LocalDateTime.parse(startTime);
+                    LocalDateTime end = LocalDateTime.parse(endTime);
+
+                    DateTimeFormatter full = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                    DateTimeFormatter timeOnly = DateTimeFormatter.ofPattern("HH:mm");
+
+                    String displayTime;
+                    if (start.toLocalDate().equals(end.toLocalDate())) {
+                        displayTime = start.format(full) + " - " + end.format(timeOnly);
+                    } else {
+                        displayTime = start.format(full) + " - " + end.format(full);
+                    }
+
+                    txtStartTime.setText(displayTime);
+                } else {
+                    txtStartTime.setText("Không rõ");
+                }
+            } catch (Exception e) {
+                txtStartTime.setText("Không rõ");
+                e.printStackTrace(); // debug nếu lỗi format
+            }
+            txtEndTime.setText("");
+
             txtDuration.setText(latest.getTotalTime() / 60 / 1000 + "min");
             txtTask.setText(taskName);
         } else {
