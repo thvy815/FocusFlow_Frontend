@@ -2,6 +2,7 @@ package com.example.focusflow_frontend.data.viewmodel;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -9,11 +10,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.focusflow_frontend.data.api.UserController;
+import com.example.focusflow_frontend.data.model.GoogleLoginRequest;
 import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.utils.ApiClient;
-//import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,8 +49,8 @@ public class AuthViewModel extends AndroidViewModel {
         userController = ApiClient.getRetrofit(context).create(UserController.class);
     }
 
-    public void signIn(String email, String password, boolean rememberMe) {
-        SignInRequest request = new SignInRequest(email, password, rememberMe);
+    public void signIn(String usernameOrEmail, String password, boolean rememberMe) {
+        SignInRequest request = new SignInRequest(usernameOrEmail, password, rememberMe);
         userController.signIn(request).enqueue(new Callback<SignInResponse>() {
             @Override
             public void onResponse(Call<SignInResponse> call, Response<SignInResponse> response) {
@@ -67,8 +68,8 @@ public class AuthViewModel extends AndroidViewModel {
         });
     }
 
-    public void signUp(String username, String email, String password) {
-        User user = new User(username, email, password);
+    public void signUp(String fullName, String username, String email, String password) {
+        User user = new User(fullName, username, email, password);
         userController.createUser(user).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
@@ -163,5 +164,50 @@ public class AuthViewModel extends AndroidViewModel {
         });
 
         return userLiveData;
+    }
+
+    public void signInWithGoogle(String idToken) {
+        userController.signInWithGoogle(new GoogleLoginRequest(idToken)).enqueue(new Callback<SignInResponse>() {
+            @Override
+            public void onResponse(Call<SignInResponse> call, Response<SignInResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    signInResult.postValue(response.body());
+                } else {
+                    errorMessage.postValue("Google sign-in failed: " + response.code());
+                    Log.e("GoogleSignIn", "Lỗi response: " + response.code() + " - " + response.message());
+                    try {
+                        if (response.errorBody() != null) {
+                            Log.e("GoogleSignIn", "Lỗi chi tiết: " + response.errorBody().string());
+                        }
+                    } catch (Exception e) {
+                        Log.e("GoogleSignIn", "Không đọc được lỗi", e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SignInResponse> call, Throwable t) {
+                errorMessage.postValue("Google login error: " + t.getMessage());
+            }
+        });
+    }
+
+    public MutableLiveData<Boolean> deleteResult = new MutableLiveData<>();
+    public void deleteCurrentUser() {
+        userController.deleteCurrentUser().enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    deleteResult.postValue(true);
+                } else {
+                    errorMessage.postValue("Không thể xóa tài khoản: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                errorMessage.postValue("Lỗi mạng khi xóa tài khoản: " + t.getMessage());
+            }
+        });
     }
 }

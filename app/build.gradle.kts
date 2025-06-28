@@ -44,7 +44,9 @@ dependencies {
     implementation ("com.google.android.material:material:1.11.0")
     implementation ("com.squareup.retrofit2:converter-scalars:2.9.0")
     implementation ("io.noties.markwon:core:4.6.2")
+    implementation ("com.google.android.gms:play-services-auth:21.0.0")
     implementation(libs.lifecycle.viewmodel.android)
+
     implementation(fileTree("D:/zalopay_sdk") {
         include("*.aar", "*.jar")
     })
@@ -61,7 +63,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
-    implementation (libs.wheelpicker)
 
+    implementation (libs.wheelpicker)
     implementation(libs.mpandroidchart)
 }

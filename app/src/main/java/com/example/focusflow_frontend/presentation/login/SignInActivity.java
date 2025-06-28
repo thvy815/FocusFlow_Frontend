@@ -15,6 +15,12 @@ import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.TokenManager;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,10 +31,19 @@ public class SignInActivity extends AppCompatActivity {
     CheckBox cbRememberMe;
     Button btnSignIn;
     AuthViewModel viewModel;
+    private GoogleSignInClient googleSignInClient;
+    private static final int RC_SIGN_IN = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("410988307717-aitcia4ljjebo74lhehmj7t9ol6tuhmo.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // Nếu token còn thời hạn thì cho phép vào app luôn (không cần đăng nhập)
         if (TokenManager.isRememberMe(this) && TokenManager.getToken(this) != null) {
@@ -43,6 +58,15 @@ public class SignInActivity extends AppCompatActivity {
         edtPassword = findViewById(R.id.et_password);
         cbRememberMe = findViewById(R.id.cb_remember_me);
         btnSignIn = findViewById(R.id.btn_sign_in);
+        LinearLayout googleLogin = findViewById(R.id.btnGoogleLogin);
+
+        // Sign in Google
+        googleLogin.setOnClickListener(view -> {
+            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                Intent signInIntent = googleSignInClient.getSignInIntent();
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            });
+        });
 
         // Chuyển hướng Sign Up
         TextView tvToSignUp = findViewById(R.id.tv_sign_up);
@@ -56,10 +80,10 @@ public class SignInActivity extends AppCompatActivity {
 
         // Sign In
         btnSignIn.setOnClickListener(v -> {
-            String email = edtEmail.getText().toString().trim();
+            String usernameOrEmail = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
             boolean rememberMe = cbRememberMe.isChecked();
-            viewModel.signIn(email, password, rememberMe);
+            viewModel.signIn(usernameOrEmail, password, rememberMe);
         });
 
         // Dữ liệu đăng nhập đúng
@@ -114,5 +138,23 @@ public class SignInActivity extends AppCompatActivity {
         viewModel.errorMessage.observe(this, error -> {
             Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                String idToken = account.getIdToken();
+                viewModel.signInWithGoogle(idToken);
+            } catch (ApiException e) {
+                Toast.makeText(this, "Google Sign-In thất bại", Toast.LENGTH_SHORT).show();
+                Log.e("GoogleSignIn", "Lỗi: " + e.getStatusCode(), e);
+            }
+        }
     }
 }

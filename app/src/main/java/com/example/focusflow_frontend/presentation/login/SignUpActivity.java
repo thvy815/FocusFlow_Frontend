@@ -15,7 +15,7 @@ import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.presentation.main.MainActivity;
 
 public class SignUpActivity extends AppCompatActivity {
-    EditText edtUsername, edtEmail, edtPassword;
+    EditText edtUsername, edtEmail, edtPassword, edtFullName;
     Button btnSignUp;
     AuthViewModel viewModel;
 
@@ -24,6 +24,7 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
+        edtFullName = findViewById(R.id.et_fullName);
         edtUsername = findViewById(R.id.et_username);
         edtEmail = findViewById(R.id.et_email);
         edtPassword = findViewById(R.id.et_password);
@@ -40,6 +41,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         // Sign Up
         btnSignUp.setOnClickListener(v -> {
+            String fullName = edtFullName.getText().toString().trim();
             String username = edtUsername.getText().toString().trim();
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
@@ -54,7 +56,7 @@ public class SignUpActivity extends AppCompatActivity {
                 return;
             }
 
-            viewModel.signUp(username, email, password);
+            viewModel.signUp(fullName, username, email, password);
         });
 
         // Dữ liệu đăng ký đúng

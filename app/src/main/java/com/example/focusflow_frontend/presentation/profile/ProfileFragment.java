@@ -1,7 +1,6 @@
 package com.example.focusflow_frontend.presentation.profile;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -48,7 +47,7 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        setStreakAndCore(view);
+        setStreakAndScore(view);
 
         // Giả sử đây là danh sách badge người dùng đạt được, mới nhất nằm cuối
         List<Integer> userBadges = getUserBadges(); // Trả về danh sách drawable resource ID
@@ -222,11 +221,11 @@ public class ProfileFragment extends Fragment {
         );
     }
 
-    public void setStreakAndCore(View view){
+    public void setStreakAndScore(View view){
         TextView streak = view.findViewById(R.id.streakValue);
-        TextView core = view.findViewById(R.id.core_Value);
+        TextView score = view.findViewById(R.id.scoreValue);
         streak.setText("189 profile fragment");
-        core.setText("tuong tu o tren");
+        score.setText("tuong tu o tren");
     }
 
 }

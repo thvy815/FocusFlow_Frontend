@@ -1,13 +1,11 @@
 package com.example.focusflow_frontend.data.api;
 
+import com.example.focusflow_frontend.data.model.GoogleLoginRequest;
 import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
 
 import java.util.List;
-import java.util.Map;
-
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -36,4 +34,7 @@ public interface UserController {
     // API đăng nhập và nhận JWT
     @POST("/auth/signin")
     Call<SignInResponse> signIn(@Body SignInRequest loginRequest);
+
+    @POST("/auth/google-signin")
+    Call<SignInResponse> signInWithGoogle(@Body GoogleLoginRequest request);
 }
