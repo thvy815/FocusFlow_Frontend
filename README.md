@@ -4,11 +4,12 @@
   </a>
 </p>
 
-# **TO-DO APP FOCUSFLOW - Đồ án Nhập môn ứng dụng di động SE114**
+<h1 align="center">TO-DO APP FOCUSFLOW</h1>
+<h3 align="center">Đồ án Nhập môn ứng dụng di động SE114</h3>
 
 ## Members:
 
-| STT | MSSV      | Họ và Tên            | Chức Vụ     | Email                    |
+| STT | MSSV      | Họ và Tên            | Chức vụ     | Email                    |
 |-----|-----------|----------------------|-------------|--------------------------|
 | 1   | 23521834  | Nguyễn Thúy Vy       | Nhóm trưởng | 23521834@gm.uit.edu.vn   |
 | 2   | 23520340  | Tôn Kim Dung         | Thành viên  | 23520340@gm.uit.edu.vn   |
