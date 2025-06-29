@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Pomodoro;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -70,7 +72,7 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
     @Override
     public void onBindViewHolder(@NonNull FocusRecordViewHolder holder, int position) {
         Pomodoro detail = recordList.get(position);
-        holder.bind(detail);
+        holder.bind(detail, taskNameMap, listener);  // ✅ truyền map vào
         holder.itemView.setTag(detail);
     }
 
@@ -78,6 +80,7 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
     public int getItemCount() {
         return recordList != null ? recordList.size() : 0;
     }
+
 
     public static class FocusRecordViewHolder extends RecyclerView.ViewHolder {
         private final TextView txtStartTime, txtEndTime, txtDuration, txtTask;
@@ -95,20 +98,42 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
                 }
             });
         }
+        public void bind(Pomodoro detail, Map<Integer, String> taskNameMap, OnItemClickListener listener) {
+            // Đặt dữ liệu text
+            String taskName = taskNameMap != null ?
+                    taskNameMap.getOrDefault(detail.getTaskId(), "") :
+                    "";
 
-        public void bind(Pomodoro detail) {
-            String taskName = "Đang tải...";
-            if (getBindingAdapter() instanceof FocusRecordAdapter) {
-                FocusRecordAdapter adapter = (FocusRecordAdapter) getBindingAdapter();
-                if (adapter.taskNameMap != null) {
-                    taskName = adapter.taskNameMap.getOrDefault(detail.getTaskId(), "Không rõ");
-                }
-            }
             txtTask.setText(taskName);
 
-            txtStartTime.setText(detail.getStartAt());
-            txtEndTime.setText(detail.getEndAt());
-            txtDuration.setText(detail.getTotalTime()/60/1000 + "min");
+            try {
+                LocalDateTime start = LocalDateTime.parse(detail.getStartAt());
+                LocalDateTime end = LocalDateTime.parse(detail.getEndAt());
+
+                DateTimeFormatter fullFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+                String displayTime;
+                if (start.toLocalDate().equals(end.toLocalDate())) {
+                    displayTime = start.format(fullFormatter) + " - " + end.format(timeFormatter);
+                } else {
+                    displayTime = start.format(fullFormatter) + " - " + end.format(fullFormatter);
+                }
+
+                txtStartTime.setText(displayTime);
+            } catch (Exception e) {
+                txtStartTime.setText("Không rõ");
+            }
+
+            long duration = detail.getTotalTime() / 60 / 1000;
+            txtDuration.setText(duration + "min");
+
+            txtEndTime.setText(""); // không cần hiển thị riêng end time nữa
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(detail);
+            });
         }
+
     }
 }

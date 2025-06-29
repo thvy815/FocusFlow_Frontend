@@ -3,53 +3,56 @@ package com.example.focusflow_frontend.presentation.pomo;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.icu.util.Calendar;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.DatePicker;
-import android.widget.FrameLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.util.Log;
+import android.view.*;
+import android.widget.*;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
 import com.example.focusflow_frontend.utils.ViewUtils;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.bottomsheet.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
+import java.time.*;
+import java.util.*;
 
 public class AddRecordBottomSheet extends BottomSheetDialogFragment {
 
-    private  int userId;
-    private PomodoroViewModel pomodoroViewModel;
+    private int userId;
+    private PomodoroViewModel viewModel;
+    private List<Task> taskList = new ArrayList<>();
+    private Runnable onDismissListener;
+
+    public void setOnDismissListener(Runnable listener) {
+        this.onDismissListener = listener;
+    }
+
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (onDismissListener != null) onDismissListener.run();
+    }
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
-
         userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
+        viewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
 
-        pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
-
-        dialog.setOnShowListener(dialogInterface -> {
-            BottomSheetDialog d = (BottomSheetDialog) dialogInterface;
-            FrameLayout bottomSheet = d.findViewById(R.id.design_bottom_sheet);
+        dialog.setOnShowListener(dInterface -> {
+            FrameLayout bottomSheet = dialog.findViewById(R.id.design_bottom_sheet);
             if (bottomSheet != null) {
-                ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
-                layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
-                bottomSheet.setLayoutParams(layoutParams);
+                bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                bottomSheet.setLayoutParams(bottomSheet.getLayoutParams());
 
                 BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
                 behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -59,100 +62,127 @@ public class AddRecordBottomSheet extends BottomSheetDialogFragment {
 
         return dialog;
     }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_record, container, false);
-
-// Set Title Text
         ViewUtils.setTitleText(view, R.id.add_record_title, R.id.titleText, "Add Record");
 
         Spinner spinnerTask = view.findViewById(R.id.spinnerTask);
         TextView tvStartTime = view.findViewById(R.id.tvStartTime);
         TextView tvEndTime = view.findViewById(R.id.tvEndTime);
-        TextView btnSaveRecord = view.findViewById(R.id.btnSave);
+        TextView tvStartDate = view.findViewById(R.id.tvStartDate);
+        TextView tvEndDate = view.findViewById(R.id.tvEndDate);
+        TextView btnSave = view.findViewById(R.id.start_button);
 
-// Giả sử bạn có list các Task name
-        List<String> taskNames = Arrays.asList("17", "2", "3"); // Hoặc lấy từ ViewModel
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, taskNames);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerTask.setAdapter(adapter);
+        Calendar now = Calendar.getInstance();
+        String today = String.format(Locale.getDefault(), "%04d-%02d-%02d",
+                now.get(Calendar.YEAR), now.get(Calendar.MONTH) + 1, now.get(Calendar.DAY_OF_MONTH));
 
-// Xử lý chọn giờ
+        tvStartDate.setText(today);
+        tvEndDate.setText(today);
+
+        // Load Task List
+        viewModel.getTaskListLiveData().observe(getViewLifecycleOwner(), tasks -> {
+            if (tasks == null) return;
+            taskList = tasks;
+
+            List<String> taskTitles = new ArrayList<>();
+            taskTitles.add("-- No Task --"); // null option
+
+            for (Task t : tasks) {
+                taskTitles.add(t.getTitle());
+            }
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                    android.R.layout.simple_spinner_item, taskTitles);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerTask.setAdapter(adapter);
+            spinnerTask.setSelection(0);
+        });
+
+        viewModel.fetchTasks(requireContext());
+
+        // Pickers
         tvStartTime.setOnClickListener(v -> showTimePicker(tvStartTime));
         tvEndTime.setOnClickListener(v -> showTimePicker(tvEndTime));
+        tvStartDate.setOnClickListener(v -> showDatePicker(tvStartDate));
+        tvEndDate.setOnClickListener(v -> showDatePicker(tvEndDate));
 
-        TextView tvDate = view.findViewById(R.id.tvDate);
+        // Save
+        btnSave.setOnClickListener(v -> saveRecord(view, spinnerTask, tvStartDate, tvStartTime, tvEndDate, tvEndTime));
 
-// Khởi tạo ngày hiện tại
-        Calendar calendar = Calendar.getInstance();
-        tvDate.setText(String.format("%04d-%02d-%02d",
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH) + 1,
-                calendar.get(Calendar.DAY_OF_MONTH)));
-
-// Hiện DatePicker khi click vào tvDate
-        tvDate.setOnClickListener(v -> {
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-            DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
-                    (DatePicker view1, int selectedYear, int selectedMonth, int selectedDay) -> {
-                        // Cập nhật TextView ngày sau khi chọn
-                        tvDate.setText(String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay));
-                    }, year, month, day);
-
-            datePickerDialog.show();
-        });
-//Save Record:
-        btnSaveRecord.setOnClickListener(v -> saveRecord());
-//Back click
+        // Back click
         ViewUtils.backClick(this, view, R.id.add_record_title, R.id.ic_back);
+
         return view;
     }
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void showTimePicker(TextView targetView) {
-        Calendar calendar = Calendar.getInstance();
-        TimePickerDialog timePickerDialog = new TimePickerDialog(
-                getContext(),
-                (view, hourOfDay, minute) -> {
-                    String timeStr = String.format("%02d:%02d:00", hourOfDay, minute);
-                    targetView.setText(timeStr);
-                },
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                true
-        );
-        timePickerDialog.show();
+
+    private void showTimePicker(TextView target) {
+        Calendar cal = Calendar.getInstance();
+        new TimePickerDialog(getContext(), (view, hour, minute) -> {
+            String time = String.format(Locale.getDefault(), "%02d:%02d:00", hour, minute);
+            target.setText(time);
+        }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
+    }
+
+    private void showDatePicker(TextView target) {
+        Calendar cal = Calendar.getInstance();
+        new DatePickerDialog(getContext(), (view, y, m, d) -> {
+            String date = String.format(Locale.getDefault(), "%04d-%02d-%02d", y, m + 1, d);
+            target.setText(date);
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void saveRecord(){
-        pomodoroViewModel.getLastCreatedPomodoro().observe(getViewLifecycleOwner(), pomodoro -> {
-            if (pomodoro != null) {
-                Toast.makeText(getContext(), "Pomodoro created with ID: " + pomodoro.getId(), Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getContext(), "Failed to create Pomodoro", Toast.LENGTH_SHORT).show();
+    private void saveRecord(View root, Spinner spinner, TextView startDateView, TextView startTimeView, TextView endDateView, TextView endTimeView) {
+        try {
+            String startDateStr = startDateView.getText().toString();
+            String endDateStr = endDateView.getText().toString();
+            String startTimeStr = startTimeView.getText().toString();
+            String endTimeStr = endTimeView.getText().toString();
+
+            LocalDate startDate = LocalDate.parse(startDateStr);
+            LocalDate endDate = LocalDate.parse(endDateStr);
+            LocalTime startTime = LocalTime.parse(startTimeStr);
+            LocalTime endTime = LocalTime.parse(endTimeStr);
+
+            long startMillis = startDate.atTime(startTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            long endMillis = endDate.atTime(endTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+            if (endMillis <= startMillis) {
+                Toast.makeText(getContext(), "End time must be after start time", Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
 
-        Spinner spinnerTask = getView().findViewById(R.id.spinnerTask);
-        String taskId = spinnerTask.getSelectedItem().toString();
+            long duration = endMillis - startMillis;
 
-        // Lấy thời gian bắt đầu và kết thúc
-        TextView tvStartTime = getView().findViewById(R.id.tvStartTime);
-        TextView tvEndTime = getView().findViewById(R.id.tvEndTime);
-        TextView tvDate = getView().findViewById(R.id.tvDate);
+            Integer taskId = null;
+            int pos = spinner.getSelectedItemPosition();
+            if (pos > 0 && pos - 1 < taskList.size()) {
+                taskId = taskList.get(pos-1).getId();
+            }
 
-        String dueDate = tvDate.getText().toString();
+            Log.d("AddRecord", "Creating Pomodoro: userId=" + userId + ", taskId=" + taskId
+                    + ", startMillis=" + startMillis + ", endMillis=" + endMillis
+                    + ", totalTime=" + duration);
 
-        LocalTime startTime = LocalTime.parse(tvStartTime.getText().toString());
-        LocalTime endTime = LocalTime.parse(tvEndTime.getText().toString());
-
-        long totalTime = endTime.toSecondOfDay() - startTime.toSecondOfDay();
-        pomodoroViewModel.createPomodorofull(getContext(), userId, Integer.parseInt(taskId), startTime.toSecondOfDay(),
-                endTime.toSecondOfDay(), LocalDate.parse(dueDate), totalTime, false);
+            viewModel.createPomodorofull(
+                    getContext(),
+                    userId,
+                    taskId,
+                    startMillis,
+                    endMillis,
+                    startDate, // dùng ngày bắt đầu làm ngày hiển thị
+                    duration,
+                    false
+            );
+            Toast.makeText(getContext(), "Save successful", Toast.LENGTH_SHORT).show();
+            dismiss();
+        } catch (Exception e) {
+            Log.e("AddRecord", "Lỗi khi tạo Pomodoro: ", e);
+            Toast.makeText(getContext(), "Lỗi định dạng dữ liệu", Toast.LENGTH_SHORT).show();
+        }
     }
-
 }

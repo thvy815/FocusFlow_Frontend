@@ -2,6 +2,7 @@ package com.example.focusflow_frontend.presentation.pomo;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,7 +27,7 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
     private RecyclerView recyclerView;
     private FocusRecordAdapter adapter;
     private PomodoroViewModel viewModel;
-    private int userId, pomodoroId;
+    private int userId;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -64,26 +66,22 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.focus_record, container, false);
         userId = getArguments() != null ? getArguments().getInt("userId", -1) : -1;
-
-        if (userId == -1)
-        {
-            Toast.makeText(getContext(),"Không có thông tin người dùng",Toast.LENGTH_SHORT);
+        Log.d("FocusRecord", "userId = " + userId);
+        if (userId == -1) {
+            Toast.makeText(getContext(), "Không có thông tin người dùng", Toast.LENGTH_SHORT).show();
         }
+
         // Set Title Text
         ViewUtils.setTitleText(view, R.id.focus_record_title, R.id.titleText, "Focus Record");
 
+        // Add Button Click
         TextView btnAdd = view.findViewById(R.id.btnAdd);
-        btnAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addRecordClick();
-            }
-        });
-        setCancelable(false);
-        //Back click
+        btnAdd.setOnClickListener(v -> addRecordClick());
+
+        // Back Click
         ViewUtils.backClick(this, view, R.id.focus_record_title, R.id.ic_back);
 
         // RecyclerView setup
@@ -92,21 +90,26 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
-        // ViewModel
+        // ViewModel setup
         viewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
         observeData();
-        viewModel.getAllPomodoro(getContext(), userId);
+        loadData();
 
+        // Handle item click
         adapter.setOnItemClickListener(detail -> {
             DetailRecordBottomSheet statsSheet = new DetailRecordBottomSheet();
             Bundle args = new Bundle();
-            args.putInt("pomodoroId", pomodoroId);
+            args.putInt("pomodoroId", detail.getId()); // ✅ Sửa: truyền đúng ID
             args.putInt("userId", userId);
             statsSheet.setArguments(args);
+
+            // Refresh khi Detail đóng
+            statsSheet.setOnDismissListener(() -> loadData());
+
             statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
         });
-        setCancelable(false);
 
+        setCancelable(false);
         return view;
     }
 
@@ -117,16 +120,25 @@ public class FocusRecordBottomSheet extends BottomSheetDialogFragment {
                 viewModel.fetchTaskNames(requireContext(), pomodoros);
             }
         });
-       viewModel.getTaskNameMapLiveData().observe(getViewLifecycleOwner(), taskNameMap -> {
+
+        viewModel.getTaskNameMapLiveData().observe(getViewLifecycleOwner(), taskNameMap -> {
             adapter.setTaskNameMap(taskNameMap);
         });
     }
 
     public void addRecordClick() {
-        AddRecordBottomSheet statsSheet = new AddRecordBottomSheet();
+        AddRecordBottomSheet addSheet = new AddRecordBottomSheet();
         Bundle args = new Bundle();
         args.putInt("userId", userId);
-        statsSheet.setArguments(args);
-        statsSheet.show(getParentFragmentManager(), statsSheet.getTag());
+        addSheet.setArguments(args);
+
+        // Refresh khi Add đóng
+        addSheet.setOnDismissListener(() -> loadData());
+
+        addSheet.show(getParentFragmentManager(), addSheet.getTag());
+    }
+
+    private void loadData() {
+        viewModel.getAllPomodoro(requireContext(), userId);
     }
 }

@@ -1,12 +1,14 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,17 +21,28 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 public class DetailRecordBottomSheet extends BottomSheetDialogFragment {
-    int numeric = 0;
 
     private RecyclerView recyclerView;
     private DetailRecordAdapter adapter;
     private PomodoroViewModel viewModel;
     private int pomodoroId;
 
+    private Runnable onDismissListener;
+
+    public void setOnDismissListener(Runnable listener) {
+        this.onDismissListener = listener;
+    }
+
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (onDismissListener != null) onDismissListener.run();
+    }
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
-        pomodoroId = getArguments() != null ? getArguments().getInt("pomodotoId", 1) : 1;
+        pomodoroId = getArguments() != null ? getArguments().getInt("pomodoroId", 1) : 1;
 
         dialog.setOnShowListener(dialogInterface -> {
             BottomSheetDialog d = (BottomSheetDialog) dialogInterface;
@@ -62,13 +75,15 @@ public class DetailRecordBottomSheet extends BottomSheetDialogFragment {
             behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.detail_record, container, false);
 
-// Set Title Text
+        // Set Title Text
         ViewUtils.setTitleText(view, R.id.detail_record_title, R.id.titleText, "Detail Record");
-//Back click
+
+        // Back click
         ViewUtils.backClick(this, view, R.id.detail_record_title, R.id.ic_back);
 
         // RecyclerView setup
@@ -79,19 +94,20 @@ public class DetailRecordBottomSheet extends BottomSheetDialogFragment {
 
         // ViewModel
         viewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
+
         observeData();
-        viewModel.getAllPomodoro(getContext(), pomodoroId);
+
+        // ✅ Load chi tiết Pomodoro
+        viewModel.getPomodoroDetailsByPomodoroId(requireContext(), pomodoroId);
 
         return view;
     }
+
     private void observeData() {
         viewModel.getPomodoroDetailList().observe(getViewLifecycleOwner(), details -> {
             if (details != null) adapter.setRecords(details);
         });
     }
-
-
-
 
 
 }

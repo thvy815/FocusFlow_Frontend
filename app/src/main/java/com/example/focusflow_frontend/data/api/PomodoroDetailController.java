@@ -10,7 +10,7 @@ import retrofit2.http.*;
 public interface PomodoroDetailController {
 
     // Lấy tất cả PomodoroDetail theo pomodoroId
-    @GET("/api/pomodoroDetails/pomodoro/{pomodoroId}")
+    @GET("/api/pomodoroDetails/pomodoros/{pomodoroId}")
     Call<List<PomodoroDetail>> getPomodoroDetailsByPomodoroId(@Path("pomodoroId") int pomodoroId);
 
     // Lấy một PomodoroDetail theo id

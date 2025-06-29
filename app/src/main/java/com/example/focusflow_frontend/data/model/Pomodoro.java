@@ -4,7 +4,7 @@ public class Pomodoro {
 
     public Pomodoro(){}
 
-    public Pomodoro(int userId, int taskId, String startAt, String endAt, String dueDate, long totalTime, boolean isDeleted) {
+    public Pomodoro(int userId, Integer taskId, String startAt, String endAt, String dueDate, long totalTime, boolean isDeleted) {
         this.userId = userId;
         this.taskId = taskId;
         this.startAt = startAt;
@@ -16,14 +16,14 @@ public class Pomodoro {
 
     private Integer id;
     private int userId;
-    private int taskId;
+    private Integer taskId;
     private String startAt;
     private String endAt;
     private String dueDate;
     private long totalTime;
     private boolean isDeleted;
 
-    public Pomodoro(int userId, int taskId, String startAt, String dueDate) {
+    public Pomodoro(int userId, Integer taskId, String startAt, String dueDate) {
         this.userId = userId;
         this.taskId = taskId;
         this.startAt = startAt;
@@ -45,10 +45,10 @@ public class Pomodoro {
         this.userId = userId;
     }
 
-    public int getTaskId() {
+    public Integer getTaskId() {
         return taskId;
     }
-    public void setTaskId(int taskId) {
+    public void setTaskId(Integer taskId) {
         this.taskId = taskId;
     }
 

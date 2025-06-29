@@ -12,6 +12,9 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.model.PomodoroDetail;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,9 +58,42 @@ public class DetailRecordAdapter extends RecyclerView.Adapter<DetailRecordAdapte
         }
 
         public void bind(PomodoroDetail detail) {
-            txtStartTime.setText(detail.getStartAt());
-            txtEndTime.setText(detail.getEndAt());
-            txtDuration.setText(detail.getTotalTime()/60/1000 + "min");
+            try {
+                String startAtRaw = detail.getStartAt();
+                String endAtRaw = detail.getEndAt();
+
+                // Giả sử định dạng chuỗi từ BE là ISO-8601: "2024-06-28T10:20:00"
+                LocalDateTime start = LocalDateTime.parse(startAtRaw);
+                LocalDateTime end = LocalDateTime.parse(endAtRaw);
+
+                DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
+                DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+                String startDisplay, endDisplay;
+
+                if (start.toLocalDate().equals(end.toLocalDate())) {
+                    // Cùng ngày → chỉ hiển thị giờ
+                    startDisplay = start.format(timeFormat);
+                    endDisplay = end.format(timeFormat);
+                } else {
+                    // Khác ngày → hiển thị đầy đủ
+                    startDisplay = start.format(fullFormat);
+                    endDisplay = end.format(fullFormat);
+                }
+
+                txtStartTime.setText(startDisplay);
+                txtEndTime.setText(endDisplay);
+
+                // Tính duration
+                long durationMillis = detail.getTotalTime(); // Giả sử totalTime tính bằng millis
+                long durationMin = durationMillis / 1000 / 60;
+                txtDuration.setText(durationMin + " min");
+
+            } catch (DateTimeParseException e) {
+                txtStartTime.setText("Không rõ");
+                txtEndTime.setText("Không rõ");
+                txtDuration.setText("?");
+            }
         }
     }
 }

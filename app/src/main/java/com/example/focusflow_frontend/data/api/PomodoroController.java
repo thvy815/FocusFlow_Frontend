@@ -5,6 +5,7 @@ import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import retrofit2.Call;
@@ -16,7 +17,7 @@ public interface PomodoroController {
     Call<List<Pomodoro>> getPomodorosByUser(@Path("userId") int userId);
 
     // Lấy 1 phiên pomodoro theo id
-    @GET("/api/pomodoro/{id}")
+    @GET("/api/pomodoro/id/{id}")
     Call<Pomodoro> getPomodoroById(@Path("id") int id);
 
     // Tạo mới 1 phiên pomodoro
@@ -33,7 +34,7 @@ public interface PomodoroController {
     @GET("/api/pomodoro/user/{userId}/range")
     Call<List<Pomodoro>> getPomodoroByUserIdAndDateRange(
             @Path("userId") int userId,
-            @Query("startDate") String startDate,
-            @Query("endDate") String endDate
+            @Query("startDate") LocalDateTime startDate,
+            @Query("endDate") LocalDateTime endDate
     );
 }
