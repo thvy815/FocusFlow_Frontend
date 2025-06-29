@@ -163,7 +163,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
                 new ArrayList<>(),
                 (task, isChecked) -> task.setCompleted(isChecked), // listener checkbox
                 task -> showEditTaskBottomSheet(task),
-                userViewModel,
                 viewModel,
                 getViewLifecycleOwner()
         );
@@ -183,6 +182,12 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         sheet.setOnTaskUpdatedListener(updatedTask -> {
             adapter.updateTaskInAdapter(updatedTask);
         });
+
+        sheet.setOnTaskDeletedListener(deletedTaskId -> {
+            // Xóa task khỏi adapter nếu có
+            adapter.removeTaskFromAdapter(deletedTaskId);
+        });
+
 
         sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
     }
@@ -220,6 +225,7 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         // Truyền thêm groupId và userId nếu cần cho tạo task
         Bundle args = new Bundle();
         args.putSerializable("group", group);
+        args.putSerializable("user", user);
         sheet.setArguments(args);
 
         sheet.setOnTaskAddedListener(newTask -> {

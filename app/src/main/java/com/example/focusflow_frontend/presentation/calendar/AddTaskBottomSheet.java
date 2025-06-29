@@ -1,6 +1,7 @@
 package com.example.focusflow_frontend.presentation.calendar;
 
 import android.app.AlertDialog;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,6 +27,7 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.CtGroupUser;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.model.TaskGroupRequest;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
@@ -33,14 +35,18 @@ import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
 import com.example.focusflow_frontend.utils.TokenManager;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
     private EditText editTitle, editDescription;
-    private TextView nameTag, namePriority, nameDate, nameMember;
+    private TextView nameTag, namePriority, nameDate;
     private Button btnAddTask, btnCancel, btnDeleteTask;
     private ConstraintLayout btnSelectTag, btnSelectPriority, btnSelectDate, btnSelectMember;
     private String selectedTime = "None", selectedReminder = "None", selectedRepeat = "None";
     private int userId, memberIdSelected, newctId;
+    private List<Integer> selectedMemberIds = new ArrayList<>();
     private Group group;
     private TaskViewModel taskViewModel;
     private GroupViewModel groupViewModel;
@@ -63,6 +69,15 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         this.updateListener = listener;
     }
 
+    public interface OnTaskDeletedListener {
+        void onTaskDeleted(int deletedTaskId);
+    }
+    private OnTaskDeletedListener deleteListener;
+    public void setOnTaskDeletedListener(OnTaskDeletedListener listener) {
+        this.deleteListener = listener;
+    }
+
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -77,7 +92,6 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         nameTag = view.findViewById(R.id.nameTag);
         namePriority = view.findViewById(R.id.namePriority);
         nameDate = view.findViewById(R.id.nameDate);
-        nameMember = view.findViewById(R.id.nameMember);
         btnAddTask = view.findViewById(R.id.btnAddTask);
         btnDeleteTask = view.findViewById(R.id.btnDeleteTask);
         btnCancel = view.findViewById(R.id.btnCancel);
@@ -87,26 +101,6 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         btnSelectMember = view.findViewById(R.id.btn_select_member);
         LinearLayout listMembers = view.findViewById(R.id.list_members);
         ScrollView scrollView = view.findViewById(R.id.scrollView);
-
-        if (getArguments() != null) {
-            // Nhận Task (nếu có)
-            if (getArguments().containsKey("task")) {
-                editingTask = (Task) getArguments().getSerializable("task");
-            }
-            // Nhận ngày được chọn từ CalendarFragment
-            if (getArguments().containsKey("selected_date") && editingTask == null) {
-                String selectedDate = getArguments().getString("selected_date");
-                nameDate.setText(selectedDate);
-            }
-            // Group
-            if (getArguments().containsKey("group")) {
-                group = (Group) getArguments().getSerializable("group");
-                btnSelectMember.setVisibility(View.VISIBLE);
-            }
-            else {
-                btnSelectMember.setVisibility(View.GONE);
-            }
-        }
 
         // ViewModel
         taskViewModel = new ViewModelProvider(
@@ -122,6 +116,29 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                 ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())
         ).get(AuthViewModel.class);
 
+        if (getArguments() != null) {
+            // Nhận Task (nếu có)
+            if (getArguments().containsKey("task")) {
+                editingTask = (Task) getArguments().getSerializable("task");
+            }
+            // Nhận ngày được chọn từ CalendarFragment
+            if (getArguments().containsKey("selected_date") && editingTask == null) {
+                String selectedDate = getArguments().getString("selected_date");
+                nameDate.setText(selectedDate);
+            }
+            // Group
+            if (getArguments().containsKey("group")) {
+                group = (Group) getArguments().getSerializable("group");
+                btnSelectMember.setVisibility(View.VISIBLE);
+                scrollView.setVisibility(View.VISIBLE); // <- Hiện luôn danh sách nếu là nhóm
+                groupViewModel.fetchUsersInGroup(group.getId()); // <- Gọi API lấy member nhóm
+            }
+            else {
+                btnSelectMember.setVisibility(View.GONE);
+                scrollView.setVisibility(View.GONE);
+            }
+        }
+
         if (editingTask != null) {
             // Chế độ sửa
             btnAddTask.setText("Done");
@@ -133,25 +150,14 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             namePriority.setText(convertPriorityToText(editingTask.getPriority()));
             nameDate.setText(editingTask.getDueDate());
 
-            if (group != null) {
-                int ctId = editingTask.getCtGroupId();
-
-                groupViewModel.getCtByIdLiveData(ctId).observe(getViewLifecycleOwner(), ctGroupUser -> {
-                    if (ctGroupUser != null) {
-                        int userId = ctGroupUser.getUserId();
-
-                        authViewModel.getUserByIdLiveData(userId).observe(getViewLifecycleOwner(), user -> {
-                            if (user != null) {
-                                nameMember.setText(user.getUsername());
-                            } else {
-                                nameMember.setText("Unknown");
-                            }
-                        });
-                    } else {
-                        nameMember.setText("Unknown");
+            groupViewModel.getAssignedUsersOfTask(editingTask.getId()).observe(getViewLifecycleOwner(), users -> {
+                if (users != null && !users.isEmpty()) {
+                    selectedMemberIds.clear();
+                    for (User user : users) {
+                        selectedMemberIds.add(user.getId());
                     }
-                });
-            }
+                }
+            });
 
             selectedTime = editingTask.getTime();
             selectedReminder = editingTask.getReminderStyle();
@@ -162,24 +168,11 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             btnDeleteTask.setVisibility(View.GONE);
         }
 
-        // Khi bấm nút Member: ẩn/hiện danh sách
-        btnSelectMember.setOnClickListener(v -> {
-            if (group != null) {
-                // Toggle hiển thị nếu đã có data
-                if (scrollView.getVisibility() == View.VISIBLE) {
-                    scrollView.setVisibility(View.GONE);
-                } else {
-                    groupViewModel.fetchUsersInGroup(group.getId()); // Gọi API
-                    scrollView.setVisibility(View.VISIBLE); // Hiện vùng chứa danh sách
-                }
-            }
-        });
-
         groupViewModel.getUsersInGroup().observe(getViewLifecycleOwner(), users -> {
             listMembers.removeAllViews(); // Xóa cũ
             if (users != null && !users.isEmpty()) {
                 for (User user : users) {
-                    if (user.getId() != userId){
+                    //if (user.getId() != userId){
                         TextView tv = new TextView(getContext());
                         tv.setText(user.getUsername());
                         tv.setPadding(200, 10, 20, 10);
@@ -187,15 +180,24 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                         Typeface typeface = ResourcesCompat.getFont(getContext(), R.font.mpr1c_medium);
                         tv.setTypeface(typeface);
 
-                        // Thêm sự kiện click để chọn user
+                        // Nếu user đã được phân công → tô màu
+                        if (selectedMemberIds.contains(user.getId())) {
+                            tv.setBackgroundColor(Color.parseColor("#BDBDBD"));
+                        }
+
+                        // Thêm sự kiện click để chọn/bỏ user
                         tv.setOnClickListener(v1 -> {
-                            nameMember.setText(user.getUsername());  // hoặc tạo 1 TextView nameMember để hiển thị
-                            scrollView.setVisibility(View.GONE); // Ẩn danh sách sau khi chọn
-                            memberIdSelected = user.getId();
+                            if (selectedMemberIds.contains(user.getId())) {
+                                selectedMemberIds.remove(Integer.valueOf(user.getId()));
+                                tv.setBackgroundColor(Color.TRANSPARENT);
+                            } else {
+                                selectedMemberIds.add(user.getId());
+                                tv.setBackgroundColor(Color.parseColor("#BDBDBD")); // chọn màu chọn member
+                            }
                         });
 
                         listMembers.addView(tv);
-                    }
+                    //}
                 }
             } else {
                 TextView noData = new TextView(getContext());
@@ -220,110 +222,104 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
             int priorityLevel = convertPriorityToLevel(priority);
 
-            // Nếu có group (tức là task nhóm), cần lấy ct_id
-            if (group != null) {
-                // Gọi API lấy ctId → logic thêm task nằm trong callback
-                groupViewModel.getCtIdLiveData().removeObservers(getViewLifecycleOwner());
-                groupViewModel.getCtIdLiveData().observe(getViewLifecycleOwner(), ctId -> {
-                    if (ctId == null) {
-                        Toast.makeText(getContext(), "Không tìm thấy ct_id", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    newctId = ctId;
+            // Chỉnh sửa task
+            if (editingTask != null) {
+                editingTask.setTitle(title);
+                editingTask.setDescription(desc);
+                editingTask.setDueDate(date);
+                editingTask.setTime(selectedTime);
+                editingTask.setTag(tag);
+                editingTask.setPriority(priorityLevel);
+                editingTask.setReminderStyle(selectedReminder);
+                editingTask.setRepeatStyle(selectedRepeat);
 
-                    if (editingTask != null) {
-                        // Chỉnh sửa task
-                        editingTask.setTitle(title);
-                        editingTask.setDescription(desc);
-                        editingTask.setDueDate(date);
-                        editingTask.setTime(selectedTime);
-                        editingTask.setTag(tag);
-                        editingTask.setPriority(priorityLevel);
-                        editingTask.setReminderStyle(selectedReminder);
-                        editingTask.setRepeatStyle(selectedRepeat);
-                        editingTask.setCtGroupId(newctId);
+                if (group != null) {
+                    // Là task nhóm → cập nhật lại ct_ids
+                    groupViewModel.getCtIdsForGroupMembers(selectedMemberIds, group.getId());
 
-                        taskViewModel.updateTask(editingTask);
+                    groupViewModel.getCtIdLiveData().observe(getViewLifecycleOwner(), ctIds -> {
+                        if (ctIds == null || ctIds.isEmpty()) {
+                            Toast.makeText(getContext(), "Không tìm thấy ct_id", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        TaskGroupRequest request = new TaskGroupRequest(editingTask, ctIds); // request có taskId
+                        taskViewModel.updateTask(request); // gửi lên BE
+
                         Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
                         if (updateListener != null) updateListener.onTaskUpdated(editingTask);
                         dismiss();
-                    }
-                    else {
-                        // Thêm task mới
-                        Task newTask = new Task();
-                        newTask.setId(null);
-                        newTask.setUserId(userId);
-                        newTask.setTitle(title);
-                        newTask.setDescription(desc);
-                        newTask.setDueDate(date);
-                        newTask.setTime(selectedTime);
-                        newTask.setTag(tag);
-                        newTask.setPriority(priorityLevel);
-                        newTask.setReminderStyle(selectedReminder);
-                        newTask.setRepeatStyle(selectedRepeat);
-                        newTask.setCtGroupId(newctId);
-
-                        taskViewModel.getCreatedTask().observe(getViewLifecycleOwner(), createdTask -> {
-                            if (createdTask != null) {
-                                Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
-                                if (listener != null) listener.onTaskAdded(createdTask); // đã có task_id
-                                dismiss();
-                            } else {
-                                Toast.makeText(getContext(), "Add task failed", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                        // Gọi ViewModel để tạo task mới
-                        taskViewModel.createTask(newTask);
-                    }
-                });
-
-                // Gọi sau observe để không bỏ lỡ emit
-                groupViewModel.fetchCtIdByUserAndGroup(memberIdSelected, group.getId());
-
-            } else {
-                // Task cá nhân (không cần ct_id)
-                if (editingTask != null) {
-                    editingTask.setTitle(title);
-                    editingTask.setDescription(desc);
-                    editingTask.setDueDate(date);
-                    editingTask.setTime(selectedTime);
-                    editingTask.setTag(tag);
-                    editingTask.setPriority(priorityLevel);
-                    editingTask.setReminderStyle(selectedReminder);
-                    editingTask.setRepeatStyle(selectedRepeat);
-                    editingTask.setCtGroupId(null);
-
-                    taskViewModel.updateTask(editingTask);
+                    });
+                } else {
+                    // Task cá nhân → chỉ cần update task
+                    TaskGroupRequest request = new TaskGroupRequest(editingTask, null);
+                    taskViewModel.updateTask(request);
                     Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
                     if (updateListener != null) updateListener.onTaskUpdated(editingTask);
                     dismiss();
-                } else {
-                    Task newTask = new Task();
-                    newTask.setId(null);
-                    newTask.setUserId(userId);
-                    newTask.setTitle(title);
-                    newTask.setDescription(desc);
-                    newTask.setDueDate(date);
-                    newTask.setTime(selectedTime);
-                    newTask.setTag(tag);
-                    newTask.setPriority(priorityLevel);
-                    newTask.setReminderStyle(selectedReminder);
-                    newTask.setRepeatStyle(selectedRepeat);
-                    newTask.setCtGroupId(null);
+                }
+
+                return;
+            }
+
+            // Thêm task mới
+            Task newTask = new Task();
+            newTask.setId(null);
+            newTask.setUserId(userId);
+            newTask.setTitle(title);
+            newTask.setDescription(desc);
+            newTask.setDueDate(date);
+            newTask.setTime(selectedTime);
+            newTask.setTag(tag);
+            newTask.setPriority(priorityLevel);
+            newTask.setReminderStyle(selectedReminder);
+            newTask.setRepeatStyle(selectedRepeat);
+
+            if (group != null) {
+                if (selectedMemberIds.isEmpty()) {
+                    Toast.makeText(getContext(), "Please select at least one member", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Lấy ct_ids trước → xử lý sau trong observer
+                groupViewModel.getCtIdsForGroupMembers(selectedMemberIds, group.getId());
+
+                // Gọi API lấy ctIds → Sau khi nhận được mới gọi tạo Task
+                groupViewModel.getCtIdLiveData().observe(getViewLifecycleOwner(), ctIds -> {
+                    if (ctIds == null || ctIds.isEmpty()) {
+                        Toast.makeText(getContext(), "Không tìm thấy ct_id", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    TaskGroupRequest request = new TaskGroupRequest(newTask, ctIds);
+                    taskViewModel.createTask(request);
 
                     taskViewModel.getCreatedTask().observe(getViewLifecycleOwner(), createdTask -> {
                         if (createdTask != null) {
                             Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
-                            if (listener != null) listener.onTaskAdded(createdTask); // đã có task_id
+                            if (listener != null) listener.onTaskAdded(createdTask);
                             dismiss();
                         } else {
                             Toast.makeText(getContext(), "Add task failed", Toast.LENGTH_SHORT).show();
                         }
                     });
 
-                    taskViewModel.createTask(newTask);
-                }
+
+                });
+            } else {
+                // Task cá nhân
+                TaskGroupRequest request = new TaskGroupRequest(newTask, null);
+                taskViewModel.createTask(request);
+
+                taskViewModel.getCreatedTask().observe(getViewLifecycleOwner(), createdTask -> {
+                    if (createdTask != null) {
+                        Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
+                        if (listener != null) listener.onTaskAdded(createdTask);
+                        dismiss();
+                    } else {
+                        Toast.makeText(getContext(), "Add task failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
@@ -338,7 +334,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                             taskViewModel.getDeleteSuccess().observe(getViewLifecycleOwner(), success -> {
                                 if (success != null && success) {
                                     Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-                                    if (updateListener != null) updateListener.onTaskUpdated(null); // Cập nhật lại danh sách sau khi xoá
+                                    if (deleteListener != null) deleteListener.onTaskDeleted(editingTask.getId()); // Cập nhật lại danh sách sau khi xoá
                                     dismiss();
                                 } else {
                                     Toast.makeText(getContext(), "Delete failed, try again", Toast.LENGTH_SHORT).show();

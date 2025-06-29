@@ -1,6 +1,8 @@
 package com.example.focusflow_frontend.data.api;
 
 import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.model.TaskGroupRequest;
+import com.example.focusflow_frontend.data.model.User;
 
 import java.util.List;
 
@@ -23,11 +25,11 @@ public interface TaskController {
 
     // API thêm task mới
     @POST("api/tasks")
-    Call<Task> createTask(@Body Task task);
+    Call<Task> createTask(@Body TaskGroupRequest request);
 
     // API update task
-    @PUT("api/tasks/{id}")
-    Call<Void> updateTask(@Path("id") Integer id, @Body Task task);
+    @PUT("api/tasks")
+    Call<Void> updateTask(@Body TaskGroupRequest request);
 
     // API delete task
     @DELETE("api/tasks/{id}")

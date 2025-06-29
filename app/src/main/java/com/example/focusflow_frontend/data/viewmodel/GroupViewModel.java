@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.focusflow_frontend.data.api.GroupController;
 import com.example.focusflow_frontend.data.model.CtGroupUser;
+import com.example.focusflow_frontend.data.model.CtIdRequest;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.GroupWithUsersRequest;
 import com.example.focusflow_frontend.data.model.Task;
@@ -337,30 +338,56 @@ public class GroupViewModel extends AndroidViewModel {
         });
     }
 
-    private final MutableLiveData<Integer> ctIdLiveData = new MutableLiveData<>();
-    public LiveData<Integer> getCtIdLiveData() { return ctIdLiveData; }
-    public void fetchCtIdByUserAndGroup(int userId, int groupId) {
-        groupController.getCtIdByUserAndGroup(userId, groupId).enqueue(new Callback<Integer>() {
+    // LiveData để quan sát ctGroupIds trả về
+    private MutableLiveData<List<Integer>> ctIdsLiveData = new MutableLiveData<>();
+    public LiveData<List<Integer>> getCtIdLiveData() {
+        return ctIdsLiveData;
+    }
+    // Gọi API để lấy danh sách ct_id của các member trong group
+    public void getCtIdsForGroupMembers(List<Integer> userIds, int groupId) {
+        CtIdRequest request = new CtIdRequest(userIds, groupId);
+        groupController.getCtIdsForUsersInGroup(request).enqueue(new Callback<List<Integer>>() {
             @Override
-            public void onResponse(Call<Integer> call, Response<Integer> response) {
+            public void onResponse(Call<List<Integer>> call, Response<List<Integer>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    ctIdLiveData.setValue(response.body());
+                    ctIdsLiveData.postValue(response.body());
                 } else {
-                    ctIdLiveData.setValue(null);
+                    ctIdsLiveData.postValue(null);
                 }
             }
 
             @Override
-            public void onFailure(Call<Integer> call, Throwable t) {
-                ctIdLiveData.setValue(null);
+            public void onFailure(Call<List<Integer>> call, Throwable t) {
+                ctIdsLiveData.postValue(null);
             }
         });
     }
 
+    private final MutableLiveData<List<User>> assignedUsers = new MutableLiveData<>();
+    public LiveData<List<User>> getAssignedUsersOfTask(int taskId) {
+        groupController.getUsersAssignedToTask(taskId).enqueue(new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    assignedUsers.setValue(response.body());
+                } else {
+                    assignedUsers.setValue(new ArrayList<>()); // Rỗng nếu lỗi
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                Log.e("GroupViewModel", "Lỗi khi lấy assignees task " + taskId + ": " + t.getMessage());
+                assignedUsers.setValue(new ArrayList<>());
+            }
+        });
+        return assignedUsers;
+    }
+
+
     // LiveData để theo dõi kết quả thêm thành viên
     private final MutableLiveData<Boolean> addMembersResult = new MutableLiveData<>();
     public LiveData<Boolean> getAddMembersResult() { return addMembersResult; }
-
     // Hàm gọi API thêm thành viên vào nhóm
     public void addMembersToGroup(int groupId, List<Integer> userIds) {
         groupController.addMembersToGroup(groupId, userIds).enqueue(new Callback<Void>() {

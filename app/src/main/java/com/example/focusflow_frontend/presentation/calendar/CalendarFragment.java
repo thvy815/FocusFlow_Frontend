@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.model.TaskGroupRequest;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 import com.example.focusflow_frontend.data.viewmodel.StreakViewModel;
 import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
@@ -104,7 +105,8 @@ public class CalendarFragment extends Fragment {
             @Override
             public void onTaskChecked(Task task, boolean isChecked) {
                 task.setCompleted(isChecked);
-                taskViewModel.updateTask(task); // cập nhật DB
+                TaskGroupRequest request = new TaskGroupRequest(task, null);
+                taskViewModel.updateTask(request); // cập nhật DB
                 // Đợi update thành công rồi fetch lại danh sách
                 taskViewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
                     if (success != null && success) {
