@@ -78,6 +78,10 @@ public class ZaloPayBottomSheet extends BottomSheetDialogFragment {
         planGroup = view.findViewById(R.id.planGroup);
         btnPay = view.findViewById(R.id.btnPay);
 
+        ImageView imBack = view.findViewById(R.id.btnBack);
+        imBack.setOnClickListener(v-> {
+            dismiss();
+        });
         ZaloPaySDK.init(AppInfo.APP_ID, Environment.SANDBOX);
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
 
@@ -107,4 +111,5 @@ public class ZaloPayBottomSheet extends BottomSheetDialogFragment {
 
         return view;
     }
+
 }
