@@ -162,7 +162,7 @@
             android:id="@+id/imagePriority"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@drawable/ic_star"
+            android:src="@drawable/ic_flag"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -310,31 +310,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/imageMember"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/nameMember"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:text="None"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            android:fontFamily="@font/mpr1c_medium"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/imageMore4"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/textMember"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/imageMore4"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:src="@drawable/ic_arrow_right"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/black" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ScrollView

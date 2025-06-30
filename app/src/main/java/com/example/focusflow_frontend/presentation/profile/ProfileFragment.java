@@ -1,6 +1,9 @@
 package com.example.focusflow_frontend.presentation.profile;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,24 +45,20 @@ public class ProfileFragment extends Fragment {
         authViewModel.getCurrentUser();
         authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                // Lấy username
-                usernameTextView.setText(user.getUsername());
+                usernameTextView.setText(user.getFullName());
             }
         });
 
         setStreakAndScore(view);
 
         // Giả sử đây là danh sách badge người dùng đạt được, mới nhất nằm cuối
-        List<Integer> userBadges = getUserBadges(); // Trả về danh sách drawable resource ID
-
+        List<Integer> userBadges = getUserBadges();
         achievementLayout.removeAllViews();
 
-// Lấy 3 badge cuối cùng, nếu chưa đủ thì lấy hết
         int startIndex = Math.max(userBadges.size() - 3, 0);
 
         for (int i = startIndex; i < userBadges.size(); i++) {
             ImageView imageView = new ImageView(view.getContext());
-
             // Lấy drawable từ badge của user
             int badgeResId = userBadges.get(i);
             imageView.setImageResource(badgeResId);
@@ -67,15 +66,17 @@ public class ProfileFragment extends Fragment {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
             params.setMargins(10, 0, 10, 0);
             imageView.setLayoutParams(params);
+            imageView.setAdjustViewBounds(true);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
             achievementLayout.addView(imageView);
         }
-
-
         ImageView btnSettings = view.findViewById(R.id.btnSetting);
         btnSettings.setOnClickListener(v -> settingClick());
+
         ImageView avtClick = view.findViewById(R.id.avatarImage);
-        avtClick.setOnClickListener(v->editAvtClick());
+
+        avtClick.setOnClickListener(v->showImagePickDialog());
 
         Button btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
         boolean isPro = ProUtils.isProValid(getContext());
@@ -85,7 +86,6 @@ public class ProfileFragment extends Fragment {
             btnUpgradePro.setVisibility(View.VISIBLE);
             btnUpgradePro.setOnClickListener(v -> {
                 ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
-
                 // Thiết lập callback khi người dùng chọn gói Pro
                 sheet.setOnPlanSelectedListener((plan, amount) -> {
                     Log.d("ZaloPay", "Người dùng chọn gói: " + plan + ", amount: " + amount);
@@ -100,78 +100,99 @@ public class ProfileFragment extends Fragment {
                 sheet.show(getParentFragmentManager(), "ZaloPayBottomSheet");
             });
         }
-
         Log.d("pro" , "onCreateView: isPro"+ isPro);
         return view;
     }
-    public void editAvtClick() {
-
-        showImagePickDialog();
-    }
-
+    private static final int PICK_IMAGE_REQUEST = 1;
     private void showImagePickDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Chọn ảnh đại diện");
+
+        builder.setItems(new CharSequence[]{"Chọn từ album", "Chọn từ mẫu có sẵn"}, (dialog, which) -> {
+            if (which == 0) {
+                openGallery();
+            } else if (which == 1) {
+                showPredefinedAvatarDialog(); // Hàm hiện tại của bạn
+            }
+        });
+
+        builder.setNegativeButton("Hủy", null);
+        builder.show();
+    }
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(Intent.createChooser(intent, "Chọn ảnh"), PICK_IMAGE_REQUEST);
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            ImageView avatarImage = getView().findViewById(R.id.avatarImage);
+            avatarImage.setImageURI(imageUri);
+            avatarImage.setTag(imageUri); // Gán tag nếu bạn muốn dùng lại sau
+        }
+    }
+    private void showPredefinedAvatarDialog() {
         final int[] imageResIds = {
-                R.drawable.avatar1,
-                R.drawable.avatar2,
-                R.drawable.avatar3,
-                R.drawable.avatar4
+                R.drawable.avatar1, R.drawable.avatar2, R.drawable.avatar3, R.drawable.avatar4
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Chọn ảnh đại diện");
+        builder.setTitle("Chọn từ mẫu có sẵn");
 
         GridView gridView = new GridView(getContext());
         gridView.setNumColumns(3);
         gridView.setAdapter(new ImageAdapter(getContext(), imageResIds));
 
-        // Biến lưu tạm ID ảnh được chọn
-        final int[] selectedImageResId = { -1 };
-
-        gridView.setOnItemClickListener((parent, view, position, id) -> {
-            // Khi người dùng chọn ảnh, lưu ID tạm
-            selectedImageResId[0] = imageResIds[position];
-        });
-
         builder.setView(gridView);
-
-        // Nút Hủy: không làm gì, dialog đóng
         builder.setNegativeButton("Hủy", null);
 
-        // Nút OK: cập nhật avatar nếu có ảnh được chọn
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            if (selectedImageResId[0] != -1) {
-                ImageView avtImageView = getView().findViewById(R.id.avatarImage);
-                avtImageView.setImageResource(selectedImageResId[0]);
-                avtImageView.setTag(selectedImageResId[0]);
-            }
+        AlertDialog dialog = builder.create();
+
+        gridView.setOnItemClickListener((parent, view, position, id) -> {
+            int selectedResId = imageResIds[position];
+            ImageView avatarImage = getView().findViewById(R.id.avatarImage);
+            avatarImage.setImageResource(selectedResId);
+            avatarImage.setTag(selectedResId);
+            dialog.dismiss();
         });
 
-        builder.show();
+        dialog.show();
     }
 
     private void settingClick() {
-
-        ImageView avatarImage = getView().findViewById(R.id.avatarImage);
-
         FragmentManager fragmentManager = getParentFragmentManager();
         Fragment existing = fragmentManager.findFragmentByTag("ProfileSettingBottomSheet");
         if (existing != null && existing.isAdded()) {
             fragmentManager.beginTransaction().remove(existing).commit();
         }
 
-        // Tạo instance của BottomSheet
         ProfileSettingBottomSheet bottomSheet = new ProfileSettingBottomSheet();
 
-        avatarImage = getView().findViewById(R.id.avatarImage);
-
+        ImageView avatarImage = getView().findViewById(R.id.avatarImage);
         Bundle bundle = new Bundle();
+
+        // Gửi avatar (nếu có)
         if (avatarImage.getTag() != null) {
-            int imageResId = (int) avatarImage.getTag(); // Lấy lại ID từ tag
-            bundle.putInt("imageResId", imageResId); // Truyền theo kiểu int
+            int imageResId = (int) avatarImage.getTag();
+            bundle.putInt("imageResId", imageResId);
+        }
+        // Gửi thông tin user nếu đã có
+        AuthViewModel authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        if (authViewModel.getCurrentUserLiveData().getValue() != null) {
+            String username = authViewModel.getCurrentUserLiveData().getValue().getUsername();
+            String email = authViewModel.getCurrentUserLiveData().getValue().getEmail();
+
+            bundle.putString("username", username);
+            bundle.putString("email", email);
         }
         bottomSheet.setArguments(bundle);
-        bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
+        bottomSheet.show(fragmentManager, bottomSheet.getTag());
     }
+
 
     public class ImageAdapter extends BaseAdapter {
         private Context context;
@@ -211,21 +232,18 @@ public class ProfileFragment extends Fragment {
             return imageView;
         }
     }
-
     public List<Integer> getUserBadges() {
-        // Tạo danh sách tĩnh các badge (drawable resource)
         return Arrays.asList(
                 R.drawable.badge1000,
                 R.drawable.badge100,
                 R.drawable.badge7
         );
     }
-
     public void setStreakAndScore(View view){
         TextView streak = view.findViewById(R.id.streakValue);
         TextView score = view.findViewById(R.id.scoreValue);
-        streak.setText("189 profile fragment");
-        score.setText("tuong tu o tren");
+        streak.setText("");
+        score.setText("");
     }
 
 }

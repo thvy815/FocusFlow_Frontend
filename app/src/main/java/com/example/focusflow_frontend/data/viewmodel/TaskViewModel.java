@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.focusflow_frontend.data.api.TaskController;
+import com.example.focusflow_frontend.data.model.TaskGroupRequest;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.utils.ApiClient;
 
@@ -23,8 +24,6 @@ public class TaskViewModel extends AndroidViewModel {
     private MutableLiveData<List<Task>> taskList = new MutableLiveData<>();
     private MutableLiveData<List<Task>> groupTaskList = new MutableLiveData<>();
     public MutableLiveData<String> errorMessage = new MutableLiveData<>();
-    private MutableLiveData<Boolean> taskCreatedSuccess = new MutableLiveData<>();
-    private MutableLiveData<Boolean> updateSuccess = new MutableLiveData<>();
     private MutableLiveData<Boolean> deleteSuccess = new MutableLiveData<>();
     private TaskController taskController;
 
@@ -40,10 +39,6 @@ public class TaskViewModel extends AndroidViewModel {
     public LiveData<String> getErrorMessage() {
         return errorMessage;
     }
-    public LiveData<Boolean> getTaskCreatedSuccess() {
-        return taskCreatedSuccess;
-    }
-    public LiveData<Boolean> getUpdateSuccess() { return updateSuccess; }
     public LiveData<Boolean> getDeleteSuccess() { return deleteSuccess; }
 
     public void fetchTasks(int userId) {
@@ -85,18 +80,16 @@ public class TaskViewModel extends AndroidViewModel {
 
     private MutableLiveData<Task> createdTask = new MutableLiveData<>();
     public LiveData<Task> getCreatedTask() { return createdTask; }
-    public void createTask(Task task) {
-        taskController.createTask(task).enqueue(new Callback<Task>() {
+    public void createTask(TaskGroupRequest request) {
+        taskController.createTask(request).enqueue(new Callback<Task>() {
             @Override
             public void onResponse(Call<Task> call, Response<Task> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Task created = response.body(); // task từ backend, đã có ID
                     createdTask.postValue(created); // truyền task về cho View
-                    fetchTasks(task.getUserId()); // load lại danh sách sau khi thêm
-                    taskCreatedSuccess.postValue(true);  // báo thành công
+                    fetchTasks(request.userId); // load lại danh sách sau khi thêm
                 } else {
                     createdTask.postValue(null);
-                    taskCreatedSuccess.postValue(false); // báo thất bại
                     errorMessage.postValue("Failed to add task");
                 }
             }
@@ -104,19 +97,23 @@ public class TaskViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<Task> call, Throwable t) {
                 createdTask.postValue(null);
-                taskCreatedSuccess.postValue(false); // báo thất bại
                 errorMessage.postValue("Error: " + t.getMessage());
             }
         });
     }
 
-    public void updateTask(Task task) {
-        taskController.updateTask(task.getId(), task).enqueue(new Callback<Void>() {
+    private MutableLiveData<Boolean> updateSuccess = new MutableLiveData<>();
+    public LiveData<Boolean> getUpdateSuccess() { return updateSuccess; }
+    public void updateTask(TaskGroupRequest request) {
+        taskController.updateTask(request).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
                     Log.d("TaskUpdate", "Updated successfully");
                     updateSuccess.postValue(true);  // báo thành công
+                } else {
+                    updateSuccess.postValue(false);
+                    errorMessage.postValue("Update failed: " + response.code());
                 }
             }
 

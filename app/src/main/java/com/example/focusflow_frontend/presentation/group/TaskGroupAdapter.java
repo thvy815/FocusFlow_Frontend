@@ -4,15 +4,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Task;
-import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 
 import java.util.List;
@@ -21,7 +24,6 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     private List<Task> tasks; // Danh sách các task
     private final OnTaskCheckedChangeListener listener; // Lắng nghe thay đổi checkbox
     private OnTaskClickListener clickListener;
-    private final AuthViewModel authViewModel;
     private final GroupViewModel groupViewModel;
     private final LifecycleOwner lifecycleOwner;
 
@@ -39,13 +41,11 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     public TaskGroupAdapter(List<Task> tasks,
                             OnTaskCheckedChangeListener listener,
                             OnTaskClickListener clickListener,
-                            AuthViewModel authViewModel,
                             GroupViewModel groupViewModel,
                             LifecycleOwner lifecycleOwner) {
         this.tasks = tasks;
         this.listener = listener;
         this.clickListener = clickListener;
-        this.authViewModel = authViewModel;
         this.groupViewModel = groupViewModel;
         this.lifecycleOwner = lifecycleOwner;
     }
@@ -61,6 +61,16 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             if (tasks.get(i).getId().equals(updatedTask.getId())) {
                 tasks.set(i, updatedTask);
                 notifyItemChanged(i);
+                break;
+            }
+        }
+    }
+
+    public void removeTaskFromAdapter(int taskId) {
+        for (int i = 0; i < tasks.size(); i++) {
+            if (tasks.get(i).getId() != null && tasks.get(i).getId() == taskId) {
+                tasks.remove(i);
+                notifyItemRemoved(i);
                 break;
             }
         }
@@ -95,29 +105,71 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             if (listener != null) listener.onTaskCheckedChanged(task, isChecked);
         });
 
-        // Sự kiện click item
+        // Gán priority
+        String priorityText = null;
+        int priorityColor = 0;
+        switch (task.getPriority()) {
+            case 1:
+                priorityText = "Low";
+                priorityColor = android.graphics.Color.parseColor("#4CAF50"); // Xanh lá
+                break;
+            case 2:
+                priorityText = "Medium";
+                priorityColor = android.graphics.Color.parseColor("#FF9800"); // Cam
+                break;
+            case 3:
+                priorityText = "High";
+                priorityColor = android.graphics.Color.parseColor("#F44336"); // Đỏ
+                break;
+        }
+        if (priorityText != null) {
+            holder.priorityName.setText(priorityText);
+            holder.priorityName.setTextColor(priorityColor);
+            holder.priorityName.setVisibility(View.VISIBLE);
+            holder.imageFlag.setColorFilter(priorityColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            holder.imageFlag.setVisibility(View.VISIBLE);
+        } else {
+            holder.priorityName.setVisibility(View.GONE);
+            holder.imageFlag.setVisibility(View.GONE);
+        }
+
+        // Sự kiện click item task
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) {
                 clickListener.onTaskClick(tasks.get(holder.getAdapterPosition()));
             }
         });
 
-        // Lấy ctId từ task → lấy userId từ ct → lấy username từ user
-        int ctId = task.getCtGroupId();
+        // Lấy danh sách user được phân công task
+        groupViewModel.getAssignedUsersOfTask(task.getId()).observe(lifecycleOwner, users -> {
+            // Xóa avatar cũ trước khi add mới (tránh đè nhiều lần)
+            holder.avatarContainer.removeAllViews();
 
-        groupViewModel.getCtByIdLiveData(ctId).observe(lifecycleOwner, ctGroupUser -> {
-            if (ctGroupUser != null) {
-                int userId = ctGroupUser.getUserId();
+            if (users != null && !users.isEmpty()) {
+                int maxAvatars = 5;
+                int displayCount = Math.min(users.size(), maxAvatars);
 
-                authViewModel.getUserByIdLiveData(userId).observe(lifecycleOwner, user -> {
-                    if (user != null) {
-                        holder.txtUser.setText(user.getUsername());
-                    } else {
-                        holder.txtUser.setText("Unknown");
-                    }
-                });
-            } else {
-                holder.txtUser.setText("Unknown");
+                for (int i = 0; i < displayCount; i++) {
+                    View avatarView = createAvatarView(holder.avatarContainer, users.get(i));
+                    holder.avatarContainer.addView(avatarView);
+                }
+
+                // Nếu có nhiều hơn 5 member → hiển thị "+N"
+                if (users.size() > maxAvatars) {
+                    TextView moreView = new TextView(holder.avatarContainer.getContext());
+                    int size = (int) (holder.avatarContainer.getContext().getResources().getDisplayMetrics().density * 40);
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+                    params.setMargins(8, 0, 8, 0);
+                    moreView.setLayoutParams(params);
+
+                    moreView.setText("+" + (users.size() - maxAvatars));
+                    moreView.setTextColor(holder.avatarContainer.getContext().getResources().getColor(android.R.color.white));
+                    moreView.setBackgroundResource(R.drawable.bg_circle);
+                    moreView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    moreView.setGravity(android.view.Gravity.CENTER);
+                    moreView.setTextSize(16);
+                    holder.avatarContainer.addView(moreView);
+                }
             }
         });
     }
@@ -129,15 +181,55 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
 
     // ViewHolder để ánh xạ các view trong item
     static class TaskViewHolder extends RecyclerView.ViewHolder {
-        TextView txtTitle, txtUser, txtDeadline;
+        TextView txtTitle, txtDeadline, priorityName;
         CheckBox checkBox;
-
+        LinearLayout avatarContainer;
+        private final ImageView imageFlag;
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
             txtTitle = itemView.findViewById(R.id.title);
-            txtUser = itemView.findViewById(R.id.userName);
             txtDeadline = itemView.findViewById(R.id.deadline);
             checkBox = itemView.findViewById(R.id.checkbox);
+            avatarContainer = itemView.findViewById(R.id.avatarContainer);
+            imageFlag = itemView.findViewById(R.id.imageFlag);
+            priorityName = itemView.findViewById(R.id.priorityName);
+        }
+    }
+
+    private View createAvatarView(ViewGroup parent, User user) {
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+            // Có avatarUrl → ImageView
+            ImageView imageView = new ImageView(parent.getContext());
+            int size = (int) (parent.getContext().getResources().getDisplayMetrics().density * 40); // 40dp
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(8, 0, 8, 0);
+            imageView.setLayoutParams(params);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setBackgroundResource(R.drawable.bg_circle); // viền tròn nếu muốn
+
+            // Load ảnh bằng Glide
+            Glide.with(parent.getContext())
+                    .load(user.getAvatarUrl())
+                    .circleCrop()
+                    .placeholder(R.drawable.bg_circle)
+                    .into(imageView);
+
+            return imageView;
+        } else {
+            // Không có avatarUrl → dùng TextView bo tròn
+            TextView avatar = new TextView(parent.getContext());
+            int size = (int) (parent.getContext().getResources().getDisplayMetrics().density * 40);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(8, 0, 8, 0);
+            avatar.setLayoutParams(params);
+
+            avatar.setText(String.valueOf(user.getUsername().charAt(0)).toUpperCase());
+            avatar.setTextColor(parent.getContext().getResources().getColor(android.R.color.white));
+            avatar.setBackgroundResource(R.drawable.bg_circle);
+            avatar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            avatar.setGravity(android.view.Gravity.CENTER);
+            avatar.setTextSize(16);
+            return avatar;
         }
     }
 }

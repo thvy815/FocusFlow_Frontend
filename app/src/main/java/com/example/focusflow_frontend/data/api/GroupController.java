@@ -1,6 +1,7 @@
 package com.example.focusflow_frontend.data.api;
 
 import com.example.focusflow_frontend.data.model.CtGroupUser;
+import com.example.focusflow_frontend.data.model.CtIdRequest;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.GroupWithUsersRequest;
 import com.example.focusflow_frontend.data.model.User;
@@ -38,6 +39,12 @@ public interface GroupController {
 
     @GET("api/group-user/{id}")
     Call<CtGroupUser> getCtById(@Path("id") int id);
+
+    @POST("/api/group/ct-ids")
+    Call<List<Integer>> getCtIdsForUsersInGroup(@Body CtIdRequest request);
+
+    @GET("/api/tasks/{taskId}/assignees")
+    Call<List<User>> getUsersAssignedToTask(@Path("taskId") int taskId);
 
     @GET("/api/group-user/group/{groupId}/users")
     Call<List<User>> getUsersInGroup(@Path("groupId") int groupId);
