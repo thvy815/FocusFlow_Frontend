@@ -54,6 +54,11 @@ dependencies {
     implementation(fileTree("D:/Apps") {
         include("*.aar", "*.jar")
     })
+    implementation(fileTree(mapOf(
+        "dir" to "D:\\UIT_Nam2_Ky2",
+        "include" to listOf("*.aar", "*.jar"),
+        "exclude" to listOf("")
+    )))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

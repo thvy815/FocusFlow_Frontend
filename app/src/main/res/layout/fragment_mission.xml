@@ -32,8 +32,7 @@
             android:layout_height="48dp"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_back"
-            android:contentDescription="@string/previous_pet"
-            />
+            android:contentDescription="@string/previous_pet"/>
 
         <ImageView
             android:id="@+id/imgPet"
@@ -48,77 +47,31 @@
             android:layout_height="48dp"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_next"
-            android:contentDescription="@string/next_pet"
-            />
+            android:contentDescription="@string/next_pet"/>
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        >
-
-
-        <TextView
-            android:id="@+id/tvPetName"
-            android:text="@string/pet_name"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            android:fontFamily="@font/mpr1c_medium"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="5dp"
-            />
-
-        <ImageButton
-            android:id="@+id/button_edit"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:contentDescription="@string/edit_pet_name"
-            android:src="@drawable/ic_edit"
-            android:padding="5dp"
-            android:backgroundTint="@color/white"
-            />
-        <EditText
-            android:id="@+id/edit_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            android:hint="Enter new name"
-            android:visibility="gone"
-            android:layout_marginTop="8dp"/>
-        <Button
-            android:id="@+id/buttonApplyEdit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Apply"
-            android:visibility="gone"
-            android:layout_marginTop="8dp"/>
-    </LinearLayout>
-
-
+    <!-- Progress bar hiển thị điểm phát triển -->
     <ProgressBar
         android:id="@+id/progressGrowth"
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:progress="0"
-        android:max="10"
-         />
+        android:max="10"/>
 
+    <!-- Text hiển thị điểm: 15/100 -->
     <TextView
         android:id="@+id/tvGrowthPoint"
-        android:text="@string/a_1_10"
+        android:text="0/10"
         android:textColor="@color/black"
         android:fontFamily="@font/mpr1c_medium"
         android:layout_marginBottom="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <!-- Mission checklist -->
     <LinearLayout
         android:orientation="vertical"
-        android:background="@android:color/white"
         android:layout_width="330dp"
         android:layout_height="330dp"
         android:elevation="4dp"
@@ -126,8 +79,7 @@
         android:layout_gravity="center"
         android:backgroundTint="#FFFFFF"
         android:layout_margin="8dp"
-        android:paddingTop="10dp"
-        >
+        android:paddingTop="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -140,10 +92,8 @@
                 android:id="@+id/imgCheck1"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:gravity="center"
                 android:src="@drawable/ic_check"
                 app:tint="@color/gray" />
-
 
             <TextView
                 android:id="@+id/btnTask1"
@@ -153,9 +103,7 @@
                 android:paddingHorizontal="15dp"
                 android:text="@string/complete_3_tasks_n_1_growth_point"
                 android:textColor="@color/black"
-
                 android:textSize="17sp" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -163,18 +111,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:padding="5dp"
-            >
+            android:padding="5dp">
 
             <ImageView
                 android:id="@+id/imgCheck2"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/ic_check"
-                android:gravity="center"
-                android:tintMode="src_in"
                 app:tint="@color/gray" />
-
 
             <TextView
                 android:id="@+id/btnTask2"
@@ -185,9 +129,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="17sp"
-                android:paddingHorizontal="15dp"
-                />
-
+                android:paddingHorizontal="15dp"/>
         </LinearLayout>
 
         <LinearLayout
@@ -195,18 +137,14 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:padding="5dp"
-            >
+            android:padding="5dp">
 
             <ImageView
                 android:id="@+id/imgCheck3"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/ic_check"
-                android:gravity="center"
-                android:tintMode="src_in"
                 app:tint="@color/gray" />
-
 
             <TextView
                 android:id="@+id/btnTask3"
@@ -216,10 +154,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="17sp"
-                android:paddingHorizontal="15dp"
-                />
-
+                android:paddingHorizontal="15dp"/>
         </LinearLayout>
-
     </LinearLayout>
 </LinearLayout>
