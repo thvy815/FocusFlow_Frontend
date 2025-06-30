@@ -1,157 +1,117 @@
 package com.example.focusflow_frontend.data.viewmodel;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import androidx.lifecycle.ViewModel;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.api.MissionController;
+import com.example.focusflow_frontend.utils.ApiClient;
+import com.example.focusflow_frontend.data.model.User;
 
-import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MissionViewModel extends ViewModel {
-    private static final String PREFS_NAME = "pet_prefs";
-    private SharedPreferences prefs;
+    private Context context;
+    private int currentPetIndex = 0;
+    private int userScore = 0;
+    private int[] petLevelScores = {10, 20, 100, 200, 400};
 
-    private int currentPetIndex;
-    private int currentGrowth;
-    private int currentLevel;
-    private boolean[] taskCompleted;
-    private String[] petNames;
-
-    private final int[] petImages = {
+    private int userId;
+    private int[] petImages = {
             R.drawable.ic_pet_level1,
             R.drawable.ic_pet_level2,
             R.drawable.ic_pet_level3,
             R.drawable.ic_pet_level4,
             R.drawable.ic_pet_level5
     };
-    private final int[] levelThresholds = {10, 20, 100, 200, 500};
 
-    /**
-     * Must be called before using other methods, e.g. in Fragment.onCreateView
-     */
+    private boolean[] taskCompleted = {false, false, false}; // task, pomo, allTasks
+
     public void init(Context context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        taskCompleted = new boolean[3];
-        petNames = new String[petImages.length];
-
-        resetTasksIfNeeded();
-        loadState();
+        this.context = context;
     }
 
-    private void resetTasksIfNeeded() {
-        String lastDate = prefs.getString("last_reset_date", "");
-        String today = LocalDate.now().toString();
-        if (!today.equals(lastDate)) {
-            SharedPreferences.Editor editor = prefs.edit();
-            for (int i = 0; i < taskCompleted.length; i++) {
-                editor.putBoolean("task_" + i, false);
+    public void fetchScoreFromBackend(Context context,int userId, Runnable callback) {
+        MissionController controller = ApiClient.getMissionController(context);
+
+        controller.evaluateMission(userId).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        String responseBody = response.body();
+                        String numberPart = responseBody.replaceAll("\\D+", "");
+                        userScore = Integer.parseInt(numberPart);
+                        determinePetIndex();
+                        if (callback != null) callback.run(); // Gọi callback update UI
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-            editor.putString("last_reset_date", today);
-            editor.apply();
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
+    }
+
+
+    private void determinePetIndex() {
+        for (int i = 0; i < petLevelScores.length; i++) {
+            if (userScore < petLevelScores[i]) {
+                currentPetIndex = i;
+                return;
+            }
         }
+        currentPetIndex = petLevelScores.length - 1;
     }
 
-    private void loadState() {
-        for (int i = 0; i < taskCompleted.length; i++) {
-            taskCompleted[i] = prefs.getBoolean("task_" + i, false);
-        }
-        currentGrowth = prefs.getInt("current_growth", 0);
-        currentLevel = prefs.getInt("current_level", 0);
-        currentPetIndex = prefs.getInt("current_pet_index", 0);
-        for (int i = 0; i < petNames.length; i++) {
-            petNames[i] = prefs.getString("pet_name_" + i, "Pet " + (i + 1));
-        }
+    public int getCurrentPetIndex() {
+        return currentPetIndex;
     }
 
-    public void nextPet() {
-        currentPetIndex = (currentPetIndex + 1) % petImages.length;
-        prefs.edit().putInt("current_pet_index", currentPetIndex).apply();
-    }
-
-    public void prevPet() {
-        currentPetIndex = (currentPetIndex - 1 + petImages.length) % petImages.length;
-        prefs.edit().putInt("current_pet_index", currentPetIndex).apply();
-    }
-
-    public void renamePet(String newName) {
-        petNames[currentPetIndex] = newName;
-        prefs.edit().putString("pet_name_" + currentPetIndex, newName).apply();
-    }
-
-    /**
-     * Handle task completion status from backend or other module
-     */
-    public void applyTaskStatus(int taskIndex, boolean isCompleted, int point) {
-        if (isCompleted && !taskCompleted[taskIndex]) {
-            taskCompleted[taskIndex] = true;
-            currentGrowth += point;
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putBoolean("task_" + taskIndex, true)
-                    .putInt("current_growth", currentGrowth)
-                    .apply();
-            updateLevel();
-        }
-    }
-
-    /**
-     * Reset all test data (for dummy simulation)
-     */
-    public void resetTestData() {
-        currentGrowth = 0;
-        currentLevel = 0;
-        for (int i = 0; i < taskCompleted.length; i++) {
-            taskCompleted[i] = false;
-        }
-    }
-
-    private void updateLevel() {
-        while (currentLevel < levelThresholds.length
-                && currentGrowth >= levelThresholds[currentLevel]) {
-            currentLevel++;
-        }
-        prefs.edit().putInt("current_level", currentLevel).apply();
-    }
-
-    // --- Getters for UI binding ---
     public int getPetImageRes() {
         return petImages[currentPetIndex];
     }
 
-    public String getPetName() {
-        return petNames[currentPetIndex];
-    }
 
-    public int getCurrentGrowth() {
-        return currentGrowth;
-    }
 
-    public int getCurrentLevel() {
-        return currentLevel;
-    }
+
 
     public int getProgress() {
-        int prevMax = currentLevel == 0 ? 0 : levelThresholds[currentLevel - 1];
-        return currentGrowth - prevMax;
+        return userScore;
     }
 
     public int getProgressMax() {
-        int max = currentLevel < levelThresholds.length
-                ? levelThresholds[currentLevel]
-                : levelThresholds[levelThresholds.length - 1];
-        int prevMax = currentLevel == 0 ? 0 : levelThresholds[currentLevel - 1];
-        return max - prevMax;
+        return petLevelScores[currentPetIndex];
     }
 
-    public boolean isTaskCompleted(int taskIndex) {
-        return taskCompleted[taskIndex];
+    public boolean isTaskCompleted(int index) {
+        return taskCompleted[index];
     }
 
-    /**
-     * Expose current pet index for fragment
-     */
-    public int getCurrentPetIndex() {
-        return currentPetIndex;
+    public void applyTaskStatus(int index, boolean completed, int score) {
+        taskCompleted[index] = completed;
+        if (completed) userScore += score;
+    }
+
+    public void resetTestData() {
+        taskCompleted = new boolean[]{false, false, false};
+    }
+
+    public void nextPet() {
+        currentPetIndex = (currentPetIndex + 1) % petImages.length;
+    }
+
+    public void prevPet() {
+        currentPetIndex = (currentPetIndex - 1 + petImages.length) % petImages.length;
     }
 }
