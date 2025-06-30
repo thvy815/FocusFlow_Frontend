@@ -83,8 +83,11 @@ public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
         }
 
         // Thiết lập các trường dữ liệu
-        setTextLayout(view.findViewById(R.id.userName), "Username", "user123");
-        setTextLayout(view.findViewById(R.id.emailRow), "Email", "william.he");
+        String username = getArguments() != null ? getArguments().getString("username", "") : "";
+        String email = getArguments() != null ? getArguments().getString("email", "") : "";
+
+        setTextLayout(view.findViewById(R.id.userName), "Username", username);
+        setTextLayout(view.findViewById(R.id.emailRow), "Email", email);
         setTextLayout(view.findViewById(R.id.google), "Google", "user123");
         setTextLayout(view.findViewById(R.id.android), "Android", "user123");
 
