@@ -5,7 +5,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:paddingVertical="12dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:background="@color/white">
 
     <TextView
         android:id="@+id/titleText"

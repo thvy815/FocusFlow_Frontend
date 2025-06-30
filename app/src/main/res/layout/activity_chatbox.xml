@@ -2,7 +2,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/bg_card">
+    android:background="@drawable/bg_card"
+    android:backgroundTint="@color/white">
 
     <!-- RecyclerView hiển thị tin nhắn -->
     <androidx.recyclerview.widget.RecyclerView

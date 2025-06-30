@@ -3,7 +3,8 @@
     android:orientation="vertical"
     android:padding="24dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@color/white">
 
     <EditText
         android:id="@+id/editText"
@@ -11,6 +12,6 @@
         android:layout_height="48dp"
         android:background="@android:color/transparent"
         android:textSize="16sp"
-        android:hint="Nhập nội dung mới"
+        android:hint="Enter new content"
         android:inputType="textPersonName" />
 </LinearLayout>

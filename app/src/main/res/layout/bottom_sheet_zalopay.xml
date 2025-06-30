@@ -64,25 +64,25 @@
                     android:id="@+id/plan1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1 month - 29,000₫" />
+                    android:text="1 month - 29,000 VND" />
 
                 <RadioButton
                     android:id="@+id/plan3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="3 months - 79,000₫" />
+                    android:text="3 months - 79,000 VND" />
 
                 <RadioButton
                     android:id="@+id/plan6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="6 months - 149,000₫" />
+                    android:text="6 months - 149,000 VND" />
 
                 <RadioButton
                     android:id="@+id/plan12"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1 year - 279,000₫" />
+                    android:text="1 year - 279,000 VND" />
             </RadioGroup>
 
             <!-- Nút thanh toán -->
@@ -90,6 +90,7 @@
                 android:id="@+id/btnPay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@color/black"
                 android:text="Pay with ZaloPay"
                 android:layout_marginTop="20dp" />
 
