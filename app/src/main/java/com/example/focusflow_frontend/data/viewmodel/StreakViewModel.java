@@ -12,8 +12,10 @@ import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.api.StreakRepository;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class StreakViewModel extends AndroidViewModel {
 
@@ -57,7 +59,8 @@ public class StreakViewModel extends AndroidViewModel {
         List<LocalDate> completedDates = new ArrayList<>();
         for (Task t : tasks) {
             if (Boolean.TRUE.equals(t.isCompleted()) && t.getDueDate() != null) {
-                completedDates.add(LocalDate.parse(t.getDueDate()));
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.getDefault());
+                completedDates.add(LocalDate.parse(t.getDueDate(), formatter));
             }
         }
         datesLive.setValue(completedDates);

@@ -4,6 +4,7 @@ import com.example.focusflow_frontend.data.model.GoogleLoginRequest;
 import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.data.model.UserUpdateRequest;
 
 import java.util.List;
 import retrofit2.Call;
@@ -37,4 +38,6 @@ public interface UserController {
 
     @POST("/auth/google-signin")
     Call<SignInResponse> signInWithGoogle(@Body GoogleLoginRequest request);
+    @PUT("/api/user/update")
+    Call<User> updateUser(@Body UserUpdateRequest updateRequest);
 }
