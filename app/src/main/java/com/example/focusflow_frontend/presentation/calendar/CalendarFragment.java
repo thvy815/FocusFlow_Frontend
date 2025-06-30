@@ -105,16 +105,11 @@ public class CalendarFragment extends Fragment {
             @Override
             public void onTaskChecked(Task task, boolean isChecked) {
                 task.setCompleted(isChecked);
-                TaskGroupRequest request = new TaskGroupRequest(task, null);
-                taskViewModel.updateTask(request); // cập nhật DB
-                // Đợi update thành công rồi fetch lại danh sách
-                taskViewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
-                    if (success != null && success) {
-                        taskViewModel.fetchTasks(userId);
-                    } else {
-                        Toast.makeText(getContext(), "Update task failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                taskViewModel.updateTask(new TaskGroupRequest(task, null));
+                taskAdapter.notifyDataSetChanged(); // đảm bảo re-bind lại adapter
+
+                // Cập nhật local luôn
+                taskAdapter.notifyItemChanged(filteredTasks.indexOf(task));
             }
         }, new TaskAdapter.OnTaskClickListener() {
             @Override
@@ -227,6 +222,15 @@ public class CalendarFragment extends Fragment {
                 streakViewModel.checkTasks(tasks); // Đếm streak từ task
             } else {
                 Log.d("TaskFilter", "No tasks available.");
+            }
+        });
+
+        // Đợi update thành công rồi fetch lại danh sách
+        taskViewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
+            if (success != null && success) {
+                taskViewModel.fetchTasks(userId);
+            } else {
+                Toast.makeText(getContext(), "Update task failed", Toast.LENGTH_SHORT).show();
             }
         });
 

@@ -13,6 +13,7 @@ public class TaskGroupRequest {
     public Integer priority;
     public String repeatStyle;
     public String reminderStyle;
+    private boolean isCompleted = false;
     private List<Integer> ctGroupIds;
 
     public TaskGroupRequest(Task task, List<Integer> ctGroupIds) {
@@ -26,6 +27,7 @@ public class TaskGroupRequest {
         this.priority = task.getPriority();
         this.repeatStyle = task.getRepeatStyle();
         this.reminderStyle = task.getReminderStyle();
+        this.isCompleted = task.isCompleted();
         this.ctGroupIds = ctGroupIds;
     }
 

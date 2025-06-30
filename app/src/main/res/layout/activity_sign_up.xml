@@ -89,6 +89,7 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
+        app:hintEnabled="false"
         app:endIconMode="password_toggle"
         app:layout_constraintTop_toBottomOf="@+id/et_email"
         app:layout_constraintStart_toStartOf="parent"

@@ -111,7 +111,6 @@ public class TaskViewModel extends AndroidViewModel {
                 if (response.isSuccessful()) {
                     Log.d("TaskUpdate", "Updated successfully");
                     updateSuccess.postValue(true);  // báo thành công
-                    fetchTasks(request.getUserId());
                 } else {
                     updateSuccess.postValue(false);
                     errorMessage.postValue("Update failed: " + response.code());
