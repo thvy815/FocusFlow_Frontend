@@ -5,7 +5,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:id="@+id/profile_row_layout">
+    android:id="@+id/profile_row_layout"
+    android:background="@color/white">
 
     <ImageView
         android:id="@+id/ic_back"

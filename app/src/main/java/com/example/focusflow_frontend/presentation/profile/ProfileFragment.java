@@ -1,20 +1,12 @@
 package com.example.focusflow_frontend.presentation.profile;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.GridView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.view.*;
+import android.widget.*;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
@@ -30,111 +22,93 @@ import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class ProfileFragment extends Fragment {
+    private static final int PICK_IMAGE_REQUEST = 1;
+
+    private AuthViewModel authViewModel;
+    private ImageView avatarImage;
+    private String savedAvatar;
+    private String fullname = "";
+    private String username = "";
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        AuthViewModel authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-
-        LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
+        avatarImage = view.findViewById(R.id.avatarImage);
         TextView usernameTextView = view.findViewById(R.id.userName);
+        LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
+        Button btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
+        ImageView btnSettings = view.findViewById(R.id.btnSetting);
 
-        // Lấy username
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         authViewModel.getCurrentUser();
         authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                usernameTextView.setText(user.getFullName());
+                fullname = user.getFullName();
+                username = user.getUsername();
+                usernameTextView.setText(fullname);
+
+                // Hiển thị avatar
+                if (user.getAvatarUrl() != null) {
+                    String avatar = user.getAvatarUrl();
+                    savedAvatar = avatar;
+                    if (avatar.startsWith("uri:")) {
+                        avatarImage.setImageURI(Uri.parse(avatar.substring(4)));
+                    } else if (avatar.startsWith("res:")) {
+                        avatarImage.setImageResource(Integer.parseInt(avatar.substring(4)));
+                    }
+                }
             }
         });
 
-        setStreakAndScore(view);
+        // Avatar click
+        avatarImage.setOnClickListener(v -> showImagePickDialog());
 
-        // Giả sử đây là danh sách badge người dùng đạt được, mới nhất nằm cuối
-        List<Integer> userBadges = getUserBadges();
-        achievementLayout.removeAllViews();
+        // Badge gắn liền với thành tích
+        setUserBadges(achievementLayout);
 
-        int startIndex = Math.max(userBadges.size() - 3, 0);
-
-        for (int i = startIndex; i < userBadges.size(); i++) {
-            ImageView imageView = new ImageView(view.getContext());
-            // Lấy drawable từ badge của user
-            int badgeResId = userBadges.get(i);
-            imageView.setImageResource(badgeResId);
-
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
-            params.setMargins(10, 0, 10, 0);
-            imageView.setLayoutParams(params);
-            imageView.setAdjustViewBounds(true);
-            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-            achievementLayout.addView(imageView);
-        }
-        ImageView btnSettings = view.findViewById(R.id.btnSetting);
-        btnSettings.setOnClickListener(v -> settingClick());
-
-        ImageView avtClick = view.findViewById(R.id.avatarImage);
-
-        avtClick.setOnClickListener(v->showImagePickDialog());
-
-        Button btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
+        // Nâng cấp Pro
         boolean isPro = ProUtils.isProValid(getContext());
-        if (isPro) {
-            btnUpgradePro.setVisibility(View.GONE); // Ẩn nếu đã Pro
-        } else {
-            btnUpgradePro.setVisibility(View.VISIBLE);
-            btnUpgradePro.setOnClickListener(v -> {
-                ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
-                // Thiết lập callback khi người dùng chọn gói Pro
-                sheet.setOnPlanSelectedListener((plan, amount) -> {
-                    Log.d("ZaloPay", "Người dùng chọn gói: " + plan + ", amount: " + amount);
+        btnUpgradePro.setVisibility(isPro ? View.GONE : View.VISIBLE);
+        btnUpgradePro.setOnClickListener(v -> openZaloPay());
 
-                    // Gọi hàm xử lý thanh toán từ MainActivity
-                    if (getActivity() instanceof MainActivity) {
-                        ((MainActivity) getActivity()).createAndPayOrder(plan, amount);
-                    }
-                });
+        // Mở phần cài đặt
+        btnSettings.setOnClickListener(v -> openSettings());
 
-                // Hiển thị BottomSheet
-                sheet.show(getParentFragmentManager(), "ZaloPayBottomSheet");
-            });
-        }
-        Log.d("pro" , "onCreateView: isPro"+ isPro);
+        setStreakAndScore(view);
         return view;
     }
-    private static final int PICK_IMAGE_REQUEST = 1;
+
     private void showImagePickDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Chọn ảnh đại diện");
-
         builder.setItems(new CharSequence[]{"Chọn từ album", "Chọn từ mẫu có sẵn"}, (dialog, which) -> {
-            if (which == 0) {
-                openGallery();
-            } else if (which == 1) {
-                showPredefinedAvatarDialog(); // Hàm hiện tại của bạn
-            }
+            if (which == 0) openGallery();
+            else showPredefinedAvatarDialog();
         });
-
         builder.setNegativeButton("Hủy", null);
         builder.show();
     }
+
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         startActivityForResult(Intent.createChooser(intent, "Chọn ảnh"), PICK_IMAGE_REQUEST);
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             Uri imageUri = data.getData();
-            ImageView avatarImage = getView().findViewById(R.id.avatarImage);
+            savedAvatar = "uri:" + imageUri.toString();
             avatarImage.setImageURI(imageUri);
-            avatarImage.setTag(imageUri); // Gán tag nếu bạn muốn dùng lại sau
+            avatarImage.setTag(imageUri);
+            authViewModel.updateUser(fullname, username, savedAvatar);
         }
     }
+
     private void showPredefinedAvatarDialog() {
         final int[] imageResIds = {
                 R.drawable.avatar1, R.drawable.avatar2, R.drawable.avatar3, R.drawable.avatar4
@@ -153,98 +127,70 @@ public class ProfileFragment extends Fragment {
         AlertDialog dialog = builder.create();
 
         gridView.setOnItemClickListener((parent, view, position, id) -> {
-            int selectedResId = imageResIds[position];
-            ImageView avatarImage = getView().findViewById(R.id.avatarImage);
-            avatarImage.setImageResource(selectedResId);
-            avatarImage.setTag(selectedResId);
+            int resId = imageResIds[position];
+            savedAvatar = "res:" + resId;
+            avatarImage.setImageResource(resId);
+            avatarImage.setTag(resId);
+            authViewModel.updateUser(fullname, username, savedAvatar);
             dialog.dismiss();
         });
 
         dialog.show();
     }
 
-    private void settingClick() {
-        FragmentManager fragmentManager = getParentFragmentManager();
-        Fragment existing = fragmentManager.findFragmentByTag("ProfileSettingBottomSheet");
-        if (existing != null && existing.isAdded()) {
-            fragmentManager.beginTransaction().remove(existing).commit();
-        }
-
-        ProfileSettingBottomSheet bottomSheet = new ProfileSettingBottomSheet();
-
-        ImageView avatarImage = getView().findViewById(R.id.avatarImage);
-        Bundle bundle = new Bundle();
-
-        // Gửi avatar (nếu có)
-        if (avatarImage.getTag() != null) {
-            int imageResId = (int) avatarImage.getTag();
-            bundle.putInt("imageResId", imageResId);
-        }
-        // Gửi thông tin user nếu đã có
-        AuthViewModel authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        if (authViewModel.getCurrentUserLiveData().getValue() != null) {
-            String username = authViewModel.getCurrentUserLiveData().getValue().getUsername();
-            String email = authViewModel.getCurrentUserLiveData().getValue().getEmail();
-
-            bundle.putString("username", username);
-            bundle.putString("email", email);
-        }
-        bottomSheet.setArguments(bundle);
-        bottomSheet.show(fragmentManager, bottomSheet.getTag());
-    }
-
-
-    public class ImageAdapter extends BaseAdapter {
-        private Context context;
-        private int[] imageResIds;
-
-        public ImageAdapter(Context context, int[] imageResIds) {
-            this.context = context;
-            this.imageResIds = imageResIds;
-        }
-
-        @Override
-        public int getCount() {
-            return imageResIds.length;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return imageResIds[position];
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView imageView;
-            if (convertView == null) {
-                LayoutInflater inflater = LayoutInflater.from(context);
-                imageView = (ImageView) inflater.inflate(R.layout.item_image, parent, false);
-            } else {
-                imageView = (ImageView) convertView;
+    private void openZaloPay() {
+        ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
+        sheet.setOnPlanSelectedListener((plan, amount) -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).createAndPayOrder(plan, amount);
             }
+        });
+        sheet.show(getParentFragmentManager(), "ZaloPayBottomSheet");
+    }
 
-            imageView.setImageResource(imageResIds[position]);
-            return imageView;
+    private void openSettings() {
+        FragmentManager fm = getParentFragmentManager();
+        Fragment existing = fm.findFragmentByTag("ProfileSettingBottomSheet");
+        if (existing != null && existing.isAdded()) {
+            fm.beginTransaction().remove(existing).commit();
+        }
+
+        ProfileSettingBottomSheet sheet = new ProfileSettingBottomSheet();
+        Bundle bundle = new Bundle();
+        bundle.putString("fullname", fullname);
+        bundle.putString("username", username);
+        if (savedAvatar != null) bundle.putString("savedAvatar", savedAvatar);
+
+        if (authViewModel.getCurrentUserLiveData().getValue() != null) {
+            bundle.putString("email", authViewModel.getCurrentUserLiveData().getValue().getEmail());
+        }
+
+        sheet.setArguments(bundle);
+        sheet.show(fm, "ProfileSettingBottomSheet");
+    }
+
+    private void setUserBadges(LinearLayout layout) {
+        List<Integer> userBadges = Arrays.asList(
+                R.drawable.badge1000, R.drawable.badge100, R.drawable.badge7
+        );
+        layout.removeAllViews();
+        int startIndex = Math.max(userBadges.size() - 3, 0);
+        for (int i = startIndex; i < userBadges.size(); i++) {
+            ImageView img = new ImageView(getContext());
+            img.setImageResource(userBadges.get(i));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+            params.setMargins(10, 0, 10, 0);
+            img.setLayoutParams(params);
+            img.setAdjustViewBounds(true);
+            img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            layout.addView(img);
         }
     }
-    public List<Integer> getUserBadges() {
-        return Arrays.asList(
-                R.drawable.badge1000,
-                R.drawable.badge100,
-                R.drawable.badge7
-        );
-    }
-    public void setStreakAndScore(View view){
+
+    private void setStreakAndScore(View view) {
         TextView streak = view.findViewById(R.id.streakValue);
         TextView score = view.findViewById(R.id.scoreValue);
-        streak.setText("");
+        streak.setText("");  // Tuỳ bạn có dữ liệu hay không
         score.setText("");
     }
-
 }
-

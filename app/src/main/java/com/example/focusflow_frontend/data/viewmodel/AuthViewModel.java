@@ -14,6 +14,7 @@ import com.example.focusflow_frontend.data.model.GoogleLoginRequest;
 import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
 import com.example.focusflow_frontend.data.model.User;
+import com.example.focusflow_frontend.data.model.UserUpdateRequest;
 import com.example.focusflow_frontend.utils.ApiClient;
 
 import java.util.HashMap;
@@ -207,6 +208,24 @@ public class AuthViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 errorMessage.postValue("Lỗi mạng khi xóa tài khoản: " + t.getMessage());
+            }
+        });
+    }
+    public void updateUser(String fullName, String username, String avatarUrl) {
+        UserUpdateRequest request = new UserUpdateRequest(fullName, username, avatarUrl);
+        userController.updateUser(request).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    currentUser.postValue(response.body());
+                } else {
+                    errorMessage.postValue("Cập nhật thất bại");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                errorMessage.postValue("Lỗi khi cập nhật: " + t.getMessage());
             }
         });
     }

@@ -101,8 +101,8 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
         public void bind(Pomodoro detail, Map<Integer, String> taskNameMap, OnItemClickListener listener) {
             // Đặt dữ liệu text
             String taskName = taskNameMap != null ?
-                    taskNameMap.getOrDefault(detail.getTaskId(), "") :
-                    "";
+                    taskNameMap.getOrDefault(detail.getTaskId(), "No task") :
+                    "No task";
 
             txtTask.setText(taskName);
 
@@ -110,15 +110,11 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
                 LocalDateTime start = LocalDateTime.parse(detail.getStartAt());
                 LocalDateTime end = LocalDateTime.parse(detail.getEndAt());
 
-                DateTimeFormatter fullFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+                DateTimeFormatter fullFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy " +
+                        "HH:mm:ss");
 
                 String displayTime;
-                if (start.toLocalDate().equals(end.toLocalDate())) {
-                    displayTime = start.format(fullFormatter) + " - " + end.format(timeFormatter);
-                } else {
-                    displayTime = start.format(fullFormatter) + " - " + end.format(fullFormatter);
-                }
+                displayTime = start.format(fullFormatter) + "\n" + end.format(fullFormatter);
 
                 txtStartTime.setText(displayTime);
             } catch (Exception e) {
@@ -126,7 +122,7 @@ public class FocusRecordAdapter extends RecyclerView.Adapter<FocusRecordAdapter.
             }
 
             long duration = detail.getTotalTime() / 60 / 1000;
-            txtDuration.setText(duration + "min");
+            txtDuration.setText(duration + " min");
 
             txtEndTime.setText(""); // không cần hiển thị riêng end time nữa
 

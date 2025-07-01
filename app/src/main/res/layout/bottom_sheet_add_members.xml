@@ -15,6 +15,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
+        android:layout_marginTop="15dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
@@ -61,12 +62,11 @@
         android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@id/group_title">
 
-        <!--         Flow layout hiển thị chip người đã chọn-->
+        <!--Flow layout hiển thị chip người đã chọn-->
         <com.google.android.flexbox.FlexboxLayout
             android:id="@+id/chipGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             app:flexWrap="wrap"
             android:background="@drawable/bg_card"
             app:justifyContent="flex_start" />

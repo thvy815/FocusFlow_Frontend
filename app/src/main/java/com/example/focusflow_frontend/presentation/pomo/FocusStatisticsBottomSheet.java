@@ -29,11 +29,13 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -298,15 +300,25 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                     pieChart.setNoDataText("No focus sessions today.");
                     return;
                 }
-
                 // 7. Vẽ chart
                 PieDataSet dataSet = new PieDataSet(entries, "Today's Pomodoro Tasks");
                 dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
                 dataSet.setValueTextSize(14f);
                 dataSet.setValueTextColor(Color.WHITE);
+                // ✅ Custom hiển thị phần trăm với 1–2 chữ số thập phân
+                dataSet.setValueFormatter(new ValueFormatter() {
+                    private final DecimalFormat format = new DecimalFormat("##0.0#"); // 1–2 chữ số thập phân
+
+                    @Override
+                    public String getFormattedValue(float value) {
+                        return format.format(value) + " %";
+                    }
+                });
 
                 PieData pieData = new PieData(dataSet);
                 pieChart.setData(pieData);
+
+                // Thiết lập phần trăm
                 pieChart.setUsePercentValues(true);
                 pieChart.setDrawHoleEnabled(false);
                 pieChart.getDescription().setEnabled(false);
@@ -333,14 +345,8 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
                     LocalDateTime end = LocalDateTime.parse(endTime);
 
                     DateTimeFormatter full = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-                    DateTimeFormatter timeOnly = DateTimeFormatter.ofPattern("HH:mm");
-
                     String displayTime;
-                    if (start.toLocalDate().equals(end.toLocalDate())) {
-                        displayTime = start.format(full) + " - " + end.format(timeOnly);
-                    } else {
-                        displayTime = start.format(full) + " - " + end.format(full);
-                    }
+                    displayTime = start.format(full) + "\n" + end.format(full);
 
                     txtStartTime.setText(displayTime);
                 } else {
@@ -352,15 +358,15 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
             }
 
             txtEndTime.setText("");
-            txtDuration.setText(latest.getTotalTime() / 60 / 1000 + "min");
+            txtDuration.setText(latest.getTotalTime() / 60 / 1000 + " min");
 
             // Hiển thị tên task từ ViewModel
             viewModel.getTaskNameMapLiveData().observe(getViewLifecycleOwner(), taskNameMap -> {
                 if (taskNameMap != null) {
                     String taskName = taskNameMap.get(latest.getTaskId());
-                    txtTask.setText(taskName != null ? taskName : "Another");
+                    txtTask.setText(taskName != null ? taskName : "No task");
                 } else {
-                    txtTask.setText("Another");
+                    txtTask.setText("No task");
                 }
             });
 
