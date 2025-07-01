@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center_horizontal"
-    android:padding="30dp"
+    android:padding="20dp"
     android:background="@color/white">
 
     <TextView
@@ -47,29 +47,117 @@
             android:id="@+id/fire_icon"
             android:layout_width="175dp"
             android:layout_height="175dp"
-
             android:src="@drawable/ic_fire_color"
             android:contentDescription="@string/fire_icon" />
 
-        <TextView
-            android:id="@+id/streak_count"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/values"
+            android:layout_width="330dp"
             android:layout_height="wrap_content"
-            android:text="@string/a_0"
-            android:textColor="@color/black"
-            android:fontFamily="@font/mpr1c_extrabold"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:paddingTop="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="2"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp">
 
-        <TextView
-            android:id="@+id/streak_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/day_streak"
-            android:textColor="@color/black"
-            android:fontFamily="@font/mpr1c_bold"
-            android:textSize="20sp" />
+            <!--Total Pomo-->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:background="@drawable/background"
+                android:layout_marginEnd="10dp">
+
+                <ImageView
+                    android:id="@+id/streakIcon"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="5dp"
+                    android:src="@drawable/ic_event"
+                    android:contentDescription="Streak Icon" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:id="@+id/totalTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current Streak"
+                        android:textSize="14sp"
+                        android:textColor="#757575"
+                        android:fontFamily="@font/mpr1c_extrabold"
+                        android:shadowRadius="2"/>
+
+                    <TextView
+                        android:id="@+id/streak_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10"
+                        android:gravity="center_horizontal"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF5722"
+                        android:fontFamily="@font/mpr1c_bold"
+                        android:shadowRadius="2"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Today Pomo -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/background"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginStart="10dp">
+
+                <ImageView
+                    android:id="@+id/ic_today"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_medal"
+                    android:contentDescription="Streak Icon" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="15dp">
+
+                    <TextView
+                        android:id="@+id/todayTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Max Streak"
+                        android:textSize="14sp"
+                        android:textColor="#757575"
+                        android:fontFamily="@font/mpr1c_extrabold"
+                        android:shadowRadius="2"/>
+
+                    <TextView
+                        android:id="@+id/max_streak"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF5722"
+                        android:fontFamily="@font/mpr1c_bold"
+                        android:shadowRadius="2"/>
+
+                </LinearLayout>
+            </LinearLayout>
     </LinearLayout>
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -88,6 +176,6 @@
     </LinearLayout>
 
 
-
+    </LinearLayout>
 
 </LinearLayout>

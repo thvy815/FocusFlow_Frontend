@@ -3,6 +3,7 @@ package com.example.focusflow_frontend.data.model;
 import com.google.gson.annotations.SerializedName;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class Streak {
 
@@ -12,13 +13,16 @@ public class Streak {
     private Integer userId;
 
     @SerializedName("lastValidDate")
-    private LocalDate lastValidDate;
+    private String lastValidDate;
 
     @SerializedName("currentStreak")
     private int currentStreak;
 
     @SerializedName("maxStreak")
     private int maxStreak;
+
+    @SerializedName("validDates")
+    private List<String> validDates;
 
     // Getters and setters
 
@@ -38,11 +42,11 @@ public class Streak {
         this.userId = userId;
     }
 
-    public LocalDate getLastValidDate() {
+    public String getLastValidDate() {
         return lastValidDate;
     }
 
-    public void setLastValidDate(LocalDate lastValidDate) {
+    public void setLastValidDate(String lastValidDate) {
         this.lastValidDate = lastValidDate;
     }
 
@@ -60,5 +64,13 @@ public class Streak {
 
     public void setMaxStreak(int maxStreak) {
         this.maxStreak = maxStreak;
+    }
+
+    public List<String> getValidDates() {
+        return validDates;
+    }
+
+    public void setValidDates(List<String> validDates) {
+        this.validDates = validDates;
     }
 }

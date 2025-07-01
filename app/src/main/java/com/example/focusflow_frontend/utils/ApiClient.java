@@ -75,11 +75,6 @@ public class ApiClient {
     public static TaskController getTaskController(Context context) {
         return getRetrofit(context).create(TaskController.class);
     }
-
-
-    public static StreakController getStreakController(Context context) {
-        return getRetrofit(context).create(StreakController.class);
-    }
     public static MissionController getMissionController(Context context) {
         return getRetrofit(context).create(MissionController.class);
     }

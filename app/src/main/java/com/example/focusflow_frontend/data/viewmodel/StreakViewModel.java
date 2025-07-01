@@ -1,66 +1,61 @@
 package com.example.focusflow_frontend.data.viewmodel;
 
 import android.app.Application;
+import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.focusflow_frontend.data.api.StreakController;
+import com.example.focusflow_frontend.data.api.UserController;
 import com.example.focusflow_frontend.data.model.Streak;
 import com.example.focusflow_frontend.data.model.Task;
-import com.example.focusflow_frontend.data.api.StreakRepository;
+import com.example.focusflow_frontend.utils.ApiClient;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class StreakViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Integer> streakCountLive = new MutableLiveData<>();
     private final MutableLiveData<List<LocalDate>> datesLive = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Streak> streakLive = new MutableLiveData<>();
-
-    private final StreakRepository repository;
+    private final StreakController streakController;
 
     public StreakViewModel(@NonNull Application application) {
         super(application);
-        this.repository = new StreakRepository(application.getApplicationContext());
+        Context context = getApplication().getApplicationContext();
+        streakController = ApiClient.getRetrofit(context).create(StreakController.class);
     }
 
-    public LiveData<Integer> getStreakCountLive() {
-        return streakCountLive;
+    public interface StreakCallback {
+        void onSuccess(Streak streak);
+        void onFailure(String errorMessage);
     }
 
-    public LiveData<List<LocalDate>> getDatesLive() {
-        return datesLive;
-    }
+    public void getStreakByUser(int userId, StreakCallback callback) {
+        streakController.getStreakByUserId(userId).enqueue(new Callback<Streak>() {
+            @Override
+            public void onResponse(Call<Streak> call, Response<Streak> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onFailure("Không tìm thấy streak.");
+                }
+            }
 
-    public LiveData<Streak> getStreakLive() {
-        return streakLive;
-    }
-
-    public void fetchStreakData(int userId) {
-        repository.fetchStreak(userId, streakLive);
-        repository.fetchStreakDates(userId, datesLive);
-
-        // ✅ Gán giá trị cho streakCount khi dữ liệu về
-        streakLive.observeForever(streak -> {
-            if (streak != null) {
-                streakCountLive.postValue(streak.getCurrentStreak());
+            @Override
+            public void onFailure(Call<Streak> call, Throwable t) {
+                callback.onFailure(t.getMessage());
             }
         });
     }
 
-    // Optional: Local task fallback
-    public void checkTasks(List<Task> tasks) {
-        List<LocalDate> completedDates = new ArrayList<>();
-        for (Task t : tasks) {
-            if (Boolean.TRUE.equals(t.isCompleted()) && t.getDueDate() != null) {
-                completedDates.add(LocalDate.parse(t.getDueDate()));
-            }
-        }
-        datesLive.setValue(completedDates);
-        streakCountLive.setValue(completedDates.size());
-    }
 }

@@ -219,7 +219,7 @@ public class CalendarFragment extends Fragment {
                 for (Task task : tasks) {
                     updateTaskAndRefresh(task);
                 }
-                streakViewModel.checkTasks(tasks); // Đếm streak từ task
+                //streakViewModel.checkTasks(tasks); // Đếm streak từ task
             } else {
                 Log.d("TaskFilter", "No tasks available.");
             }
@@ -239,11 +239,11 @@ public class CalendarFragment extends Fragment {
             Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
         });
 
-        streakViewModel.getStreakCountLive().observe(getViewLifecycleOwner(), count -> {
-            if (count != null) {
-                tvStreakCount.setText(String.valueOf(count));
-            }
-        });
+//        streakViewModel.getStreakCountLive().observe(getViewLifecycleOwner(), count -> {
+//            if (count != null) {
+//                tvStreakCount.setText(String.valueOf(count));
+//            }
+//        });
 
         // Gọi API lấy dữ liệu tất cả các task
         if (userId != -1) {
