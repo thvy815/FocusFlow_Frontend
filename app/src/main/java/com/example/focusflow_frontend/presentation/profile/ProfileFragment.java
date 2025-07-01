@@ -65,8 +65,12 @@ public class ProfileFragment extends Fragment {
         // Avatar click
         avatarImage.setOnClickListener(v -> showImagePickDialog());
 
-        // Badge gắn liền với thành tích
-        setUserBadges(achievementLayout);
+        List<Integer> earnedBadges = Arrays.asList(
+                R.drawable.badge100,
+                R.drawable.pomo3,
+                R.drawable.pomo100
+        );
+        setUserBadges(achievementLayout, earnedBadges);
 
         // Nâng cấp Pro
         boolean isPro = ProUtils.isProValid(getContext());
@@ -169,24 +173,38 @@ public class ProfileFragment extends Fragment {
         sheet.show(fm, "ProfileSettingBottomSheet");
     }
 
-    private void setUserBadges(LinearLayout layout) {
-        List<Integer> userBadges = Arrays.asList(
-                R.drawable.badge1000, R.drawable.badge100, R.drawable.badge7
+    private void setUserBadges(LinearLayout layout, List<Integer> earnedBadges) {
+        // Tất cả huy hiệu có thể có
+        List<Integer> allBadges = Arrays.asList(
+                R.drawable.badge1000,
+                R.drawable.badge100,
+                R.drawable.badge7,
+                R.drawable.pomo3,
+                R.drawable.pomo7,
+                R.drawable.pomo100
         );
-        layout.removeAllViews();
-        int startIndex = Math.max(userBadges.size() - 3, 0);
-        for (int i = startIndex; i < userBadges.size(); i++) {
+        layout.removeAllViews(); // Xoá huy hiệu cũ nếu có
+
+        for (int badgeRes : allBadges) {
             ImageView img = new ImageView(getContext());
-            img.setImageResource(userBadges.get(i));
+            img.setImageResource(badgeRes);
+
+            // Layout params
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
             params.setMargins(10, 0, 10, 0);
             img.setLayoutParams(params);
             img.setAdjustViewBounds(true);
             img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+            // Nếu chưa đạt huy hiệu -> làm mờ đi
+            if (!earnedBadges.contains(badgeRes)) {
+                img.setAlpha(0.3f); // Làm mờ (30% độ đậm)
+            } else {
+                img.setAlpha(1.0f); // Hiển thị bình thường
+            }
             layout.addView(img);
         }
     }
-
     private void setStreakAndScore(View view) {
         TextView streak = view.findViewById(R.id.streakValue);
         TextView score = view.findViewById(R.id.scoreValue);
