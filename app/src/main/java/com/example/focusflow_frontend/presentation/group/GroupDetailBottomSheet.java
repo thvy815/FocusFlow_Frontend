@@ -8,16 +8,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,7 +23,6 @@ import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.model.User;
-import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
 import com.example.focusflow_frontend.presentation.calendar.AddTaskBottomSheet;
@@ -34,8 +30,14 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import ua.naiksoftware.stomp.Stomp;
+import ua.naiksoftware.stomp.StompClient;
 
 public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
 
@@ -45,11 +47,11 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
     private User user;
     private GroupViewModel viewModel;
     private TaskViewModel taskViewModel;
-    private AuthViewModel userViewModel;
     private TaskGroupAdapter adapter;
     private List<Task> allTasks = new ArrayList<>();
+    private StompClient stompClient;
 
-//lấy tham số của group ở đây
+    //lấy tham số của group ở đây
     public static GroupDetailBottomSheet newInstance(Group group, User user) {
         GroupDetailBottomSheet fragment = new GroupDetailBottomSheet();
         Bundle args = new Bundle();
@@ -108,7 +110,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         // Setup ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
         taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
-        userViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
         setupRecycleView(view);
 
         // // Gọi API để lấy task theo groupId
@@ -151,7 +152,10 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        viewModel.clearFilteredTasks(allTasks); // Bạn tạo thêm hàm này trong ViewModel
+        viewModel.clearFilteredTasks(allTasks); // Bạn tạo thêm hàm này trong ViewModel4
+        if (stompClient != null && stompClient.isConnected()) {
+            stompClient.disconnect();
+        }
     }
 
     private void setupRecycleView(View view){
@@ -188,6 +192,8 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             adapter.removeTaskFromAdapter(deletedTaskId);
         });
 
+        // Kết nối WebSocket để nhận task mới theo thời gian thực
+        connectWebSocket(group.getId());
 
         sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
     }
@@ -234,5 +240,76 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         });
 
         sheet.show(getParentFragmentManager(), "AddTaskBottomSheet");
+    }
+
+    private void connectWebSocket(int groupId) {
+        String websocketUrl = "ws://10.0.2.2:8080/ws/websocket"; // thay bằng IP backend thật
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl);
+        stompClient.connect();
+
+        stompClient.lifecycle().subscribe(lifecycleEvent -> {
+            switch (lifecycleEvent.getType()) {
+                case OPENED:
+                    Log.d("WS", "WebSocket Opened");
+                    break;
+                case ERROR:
+                    Log.e("WS", "Error", lifecycleEvent.getException());
+                    break;
+                case CLOSED:
+                    Log.d("WS", "WebSocket Closed");
+                    break;
+            }
+        });
+
+        stompClient.topic("/topic/group/" + groupId).subscribe(topicMessage -> {
+            try {
+                JSONObject json = new JSONObject(topicMessage.getPayload());
+                String action = json.getString("action");
+                JSONObject taskJson = json.getJSONObject("task");
+
+                Task task = convertJsonToTask(taskJson);
+
+                requireActivity().runOnUiThread(() -> {
+                    switch (action) {
+                        case "created":
+                            adapter.addTaskToAdapter(task);
+                            allTasks.add(task);
+                            break;
+                        case "updated":
+                            adapter.updateTaskInAdapter(task);
+                            for (int i = 0; i < allTasks.size(); i++) {
+                                if (allTasks.get(i).getId() == task.getId()) {
+                                    allTasks.set(i, task);
+                                    break;
+                                }
+                            }
+                            break;
+                        case "deleted":
+                            adapter.removeTaskFromAdapter(task.getId());
+                            allTasks.removeIf(t -> t.getId() == task.getId());
+                            break;
+                    }
+                });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private Task convertJsonToTask(JSONObject taskJson) throws JSONException {
+        Task task = new Task();
+        task.setId(taskJson.optInt("id"));
+        task.setUserId(taskJson.optInt("userId"));
+        task.setTitle(taskJson.optString("title", ""));
+        task.setDescription(taskJson.optString("description", ""));
+        task.setDueDate(taskJson.optString("dueDate", ""));
+        task.setTime(taskJson.optString("time", ""));
+        task.setTag(taskJson.optString("tag", ""));
+        task.setPriority(taskJson.optInt("priority", 0));
+        task.setReminderStyle(taskJson.optString("reminderStyle", ""));
+        task.setRepeatStyle(taskJson.optString("repeatStyle", ""));
+        task.setCompleted(taskJson.optBoolean("completed", false));
+
+        return task;
     }
 }
