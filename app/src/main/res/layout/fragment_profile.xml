@@ -217,13 +217,23 @@
                 android:layout_marginTop="32dp"
                 android:fontFamily="@font/mpr1c_bold" />
 
-            <LinearLayout
-                android:id="@+id/achievementLayout"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:weightSum="3" />
+                android:fillViewport="true"
+                android:scrollbars="none"
+                android:contentDescription="@string/app_name">
+
+                <LinearLayout
+                    android:id="@+id/achievementLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp" />
+            </HorizontalScrollView>
+
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
