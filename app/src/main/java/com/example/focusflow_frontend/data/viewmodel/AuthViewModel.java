@@ -13,9 +13,11 @@ import com.example.focusflow_frontend.data.api.UserController;
 import com.example.focusflow_frontend.data.model.GoogleLoginRequest;
 import com.example.focusflow_frontend.data.model.SignInRequest;
 import com.example.focusflow_frontend.data.model.SignInResponse;
+import com.example.focusflow_frontend.data.model.SignUpRequest;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.model.UserUpdateRequest;
 import com.example.focusflow_frontend.utils.ApiClient;
+import com.google.gson.Gson;
 
 import java.util.HashMap;
 import java.util.List;
@@ -70,8 +72,9 @@ public class AuthViewModel extends AndroidViewModel {
     }
 
     public void signUp(String fullName, String username, String email, String password) {
-        User user = new User(fullName, username, email, password);
-        userController.createUser(user).enqueue(new Callback<User>() {
+        SignUpRequest request = new SignUpRequest(fullName, username, email, password);
+
+        userController.signUp(request).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -226,6 +229,66 @@ public class AuthViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 errorMessage.postValue("Lỗi khi cập nhật: " + t.getMessage());
+            }
+        });
+    }
+    public void updateUserScore(int score) {
+        Map<String, Integer> body = new HashMap<>();
+        body.put("score", score);
+
+        userController.updateUserScore(body).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) {
+                    Log.e("UpdateScore", "Failed: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("UpdateScore", "Error: " + t.getMessage());
+            }
+        });
+    }
+
+    public MutableLiveData<Boolean> forgotPasswordResult = new MutableLiveData<>();
+    public void sendForgotPasswordEmail(String email) {
+        userController.forgotPassword(email).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    forgotPasswordResult.postValue(true);
+                } else {
+                    errorMessage.postValue("Không thể gửi email: " + response.code());
+                    forgotPasswordResult.postValue(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                errorMessage.postValue("Lỗi khi gửi email: " + t.getMessage());
+                forgotPasswordResult.postValue(false);
+            }
+        });
+    }
+
+    public MutableLiveData<Boolean> resetPasswordResult = new MutableLiveData<>();
+    public void resetPassword(String token, String newPassword) {
+        userController.resetPassword(token, newPassword).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    resetPasswordResult.postValue(true);
+                } else {
+                    errorMessage.postValue("Token đã hết hạn hoặc không hợp lệ.");
+                    resetPasswordResult.postValue(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                errorMessage.postValue("Lỗi mạng: " + t.getMessage());
+                resetPasswordResult.postValue(false);
             }
         });
     }

@@ -62,8 +62,9 @@ public class SignUpActivity extends AppCompatActivity {
         // Dữ liệu đăng ký đúng
         viewModel.signUpResult.observe(this, user -> {
             Toast.makeText(this, "Sign up successful", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, MainActivity.class));
+            startActivity(new Intent(this, SignInActivity.class));
             finish();
+            Toast.makeText(this, "Please sign in to continue", Toast.LENGTH_SHORT).show();
         });
 
         // Dữ liệu đăng ký sai

@@ -1,5 +1,8 @@
 package com.example.focusflow_frontend.presentation.group;
 
+import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,6 +57,15 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     public void setTaskList(List<Task> tasks) {
         this.tasks = tasks;
         notifyDataSetChanged();
+    }
+
+    public int getTaskIndexById(int taskId) {
+        for (int i = 0; i < tasks.size(); i++) {
+            if (tasks.get(i).getId() == taskId) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public void updateTaskInAdapter(Task updatedTask) {
@@ -142,8 +154,7 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
 
         // Lấy danh sách user được phân công task
         groupViewModel.getAssignedUsersOfTask(task.getId()).observe(lifecycleOwner, users -> {
-            // Xóa avatar cũ trước khi add mới (tránh đè nhiều lần)
-            holder.avatarContainer.removeAllViews();
+            holder.avatarContainer.removeAllViews(); // xóa avatar cũ TRƯỚC khi add mới
 
             if (users != null && !users.isEmpty()) {
                 int maxAvatars = 5;
@@ -197,6 +208,9 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
     }
 
     private View createAvatarView(ViewGroup parent, User user) {
+        Context context = parent.getContext();
+        String avatarUrl = user.getAvatarUrl();
+
         if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
             // Có avatarUrl → ImageView
             ImageView imageView = new ImageView(parent.getContext());
@@ -207,12 +221,34 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             imageView.setBackgroundResource(R.drawable.bg_circle); // viền tròn nếu muốn
 
-            // Load ảnh bằng Glide
-            Glide.with(parent.getContext())
-                    .load(user.getAvatarUrl())
-                    .circleCrop()
-                    .placeholder(R.drawable.bg_circle)
-                    .into(imageView);
+            if (avatarUrl.startsWith("res:")) {
+                // 🔹 Ảnh từ resource nội bộ
+                int resId = Integer.parseInt(avatarUrl.substring(4));
+                Glide.with(context)
+                        .load(resId)
+                        .circleCrop()
+                        .placeholder(R.drawable.bg_circle)
+                        .into(imageView);
+            } else if (avatarUrl.startsWith("uri:")) {
+                // 🔹 Ảnh từ album, MediaStore, Google Photos, etc.
+                Uri uri = Uri.parse(avatarUrl.substring(4));
+                Log.d("AvatarDebug", "Parsed Uri: " + uri.toString());
+                Glide.with(context)
+                        .load(uri)
+                        .circleCrop()
+                        .placeholder(R.drawable.bg_circle)
+                        .into(imageView);
+            } else if (avatarUrl.startsWith("http")) {
+                // 🔹 URL online
+                Glide.with(context)
+                        .load(avatarUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.bg_circle)
+                        .into(imageView);
+            } else {
+                // Không rõ định dạng
+                imageView.setImageResource(R.drawable.bg_circle);
+            }
 
             return imageView;
         } else {
@@ -224,7 +260,7 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             avatar.setLayoutParams(params);
 
             avatar.setText(String.valueOf(user.getUsername().charAt(0)).toUpperCase());
-            avatar.setTextColor(parent.getContext().getResources().getColor(android.R.color.white));
+            avatar.setTextColor(parent.getContext().getResources().getColor(android.R.color.black));
             avatar.setBackgroundResource(R.drawable.bg_circle);
             avatar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             avatar.setGravity(android.view.Gravity.CENTER);

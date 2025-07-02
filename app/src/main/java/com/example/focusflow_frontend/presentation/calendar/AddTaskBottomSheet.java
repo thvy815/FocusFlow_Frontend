@@ -45,12 +45,11 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
     private Button btnAddTask, btnCancel, btnDeleteTask;
     private ConstraintLayout btnSelectTag, btnSelectPriority, btnSelectDate, btnSelectMember;
     private String selectedTime = "None", selectedReminder = "None", selectedRepeat = "None";
-    private int userId, memberIdSelected, newctId;
+    private int userId;
     private List<Integer> selectedMemberIds = new ArrayList<>();
     private Group group;
     private TaskViewModel taskViewModel;
     private GroupViewModel groupViewModel;
-    private AuthViewModel authViewModel;
     private Task editingTask = null;
 
     public interface OnTaskAddedListener {
@@ -76,7 +75,6 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
     public void setOnTaskDeletedListener(OnTaskDeletedListener listener) {
         this.deleteListener = listener;
     }
-
 
     @Nullable
     @Override
@@ -111,10 +109,6 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                 requireActivity(),
                 ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())
         ).get(GroupViewModel.class);
-        authViewModel = new ViewModelProvider(
-                requireActivity(),
-                ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())
-        ).get(AuthViewModel.class);
 
         if (getArguments() != null) {
             // Nhận Task (nếu có)
@@ -150,62 +144,53 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             namePriority.setText(convertPriorityToText(editingTask.getPriority()));
             nameDate.setText(editingTask.getDueDate());
 
-            groupViewModel.getAssignedUsersOfTask(editingTask.getId()).observe(getViewLifecycleOwner(), users -> {
-                if (users != null && !users.isEmpty()) {
-                    selectedMemberIds.clear();
-                    for (User user : users) {
-                        selectedMemberIds.add(user.getId());
-                    }
-                }
-            });
-
             selectedTime = editingTask.getTime();
             selectedReminder = editingTask.getReminderStyle();
             selectedRepeat = editingTask.getRepeatStyle();
+
+            if (group != null) {
+                // Khởi tạo biến chứa dữ liệu
+                List<User>[] groupMembers = new List[]{new ArrayList<>()};
+                List<User>[] assignedUsers = new List[]{new ArrayList<>()};
+
+                // Observer 1: thành viên trong nhóm
+                groupViewModel.getUsersInGroup().observe(getViewLifecycleOwner(), users -> {
+                    if (users != null && !users.isEmpty()) {
+                        groupMembers[0] = users;
+
+                        // Nếu đã có assignedUsers thì render
+                        if (!assignedUsers[0].isEmpty()) {
+                            updateSelectedIdsAndRender(groupMembers[0], assignedUsers[0], listMembers);
+                        }
+                    } else {
+                        listMembers.removeAllViews();
+                        TextView noData = new TextView(getContext());
+                        noData.setText("No members found.");
+                        noData.setPadding(20, 10, 20, 10);
+                        listMembers.addView(noData);
+                    }
+                });
+
+                // Observer 2: thành viên được assign task
+                groupViewModel.refreshAssignedUsersOfTask(editingTask.getId());
+                groupViewModel.getAssignedUsersLiveData(editingTask.getId()).observe(getViewLifecycleOwner(), assigned -> {
+                    if (assigned != null) {
+                        assignedUsers[0] = assigned;
+                    } else {
+                        assignedUsers[0] = new ArrayList<>();
+                    }
+
+                    // Nếu đã có groupMembers thì render
+                    if (!groupMembers[0].isEmpty()) {
+                        updateSelectedIdsAndRender(groupMembers[0], assignedUsers[0], listMembers);
+                    }
+                });
+            }
         } else {
             // Chế độ thêm mới
             btnAddTask.setText("Add");
             btnDeleteTask.setVisibility(View.GONE);
         }
-
-        groupViewModel.getUsersInGroup().observe(getViewLifecycleOwner(), users -> {
-            listMembers.removeAllViews(); // Xóa cũ
-            if (users != null && !users.isEmpty()) {
-                for (User user : users) {
-                    //if (user.getId() != userId){
-                        TextView tv = new TextView(getContext());
-                        tv.setText(user.getUsername());
-                        tv.setPadding(200, 10, 20, 10);
-                        tv.setTextSize(18);
-                        Typeface typeface = ResourcesCompat.getFont(getContext(), R.font.mpr1c_medium);
-                        tv.setTypeface(typeface);
-
-                        // Nếu user đã được phân công → tô màu
-                        if (selectedMemberIds.contains(user.getId())) {
-                            tv.setBackgroundColor(Color.parseColor("#BDBDBD"));
-                        }
-
-                        // Thêm sự kiện click để chọn/bỏ user
-                        tv.setOnClickListener(v1 -> {
-                            if (selectedMemberIds.contains(user.getId())) {
-                                selectedMemberIds.remove(Integer.valueOf(user.getId()));
-                                tv.setBackgroundColor(Color.TRANSPARENT);
-                            } else {
-                                selectedMemberIds.add(user.getId());
-                                tv.setBackgroundColor(Color.parseColor("#BDBDBD")); // chọn màu chọn member
-                            }
-                        });
-
-                        listMembers.addView(tv);
-                    //}
-                }
-            } else {
-                TextView noData = new TextView(getContext());
-                noData.setText("No members found.");
-                noData.setPadding(20, 10, 20, 10);
-                listMembers.addView(noData);
-            }
-        });
 
         // Xử lý nút Add (Edit)
         btnAddTask.setOnClickListener(v -> {
@@ -365,6 +350,42 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         btnSelectDate.setOnClickListener(v -> showDateBottomSheet());
 
         return view;
+    }
+
+    private void updateSelectedIdsAndRender(List<User> users, List<User> assignedUsers, LinearLayout container) {
+        selectedMemberIds.clear();
+        for (User user : assignedUsers) {
+            selectedMemberIds.add(user.getId());
+        }
+        renderUserViews(users, selectedMemberIds, container);
+    }
+
+    private void renderUserViews(List<User> users, List<Integer> selectedIds, LinearLayout container) {
+        container.removeAllViews();
+        for (User user : users) {
+            TextView tv = new TextView(getContext());
+            tv.setText(user.getUsername());
+            tv.setPadding(200, 10, 20, 10);
+            tv.setTextSize(18);
+            Typeface typeface = ResourcesCompat.getFont(getContext(), R.font.mpr1c_medium);
+            tv.setTypeface(typeface);
+
+            if (selectedIds.contains(user.getId())) {
+                tv.setBackgroundColor(Color.parseColor("#BDBDBD"));
+            }
+
+            tv.setOnClickListener(v -> {
+                if (selectedIds.contains(user.getId())) {
+                    selectedIds.remove(Integer.valueOf(user.getId()));
+                    tv.setBackgroundColor(Color.TRANSPARENT);
+                } else {
+                    selectedIds.add(user.getId());
+                    tv.setBackgroundColor(Color.parseColor("#BDBDBD"));
+                }
+            });
+
+            container.addView(tv);
+        }
     }
 
     private int convertPriorityToLevel(String priority) {

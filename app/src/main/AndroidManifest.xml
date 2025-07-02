@@ -43,8 +43,21 @@
             </intent-filter>
         </activity>
 
-        <!-- Đăng ký SignUpActivity -->
         <activity android:name=".presentation.login.SignUpActivity" />
+        <activity android:name=".presentation.login.ForgotPasswordActivity" />
+
+        <activity android:name=".presentation.login.ResetPasswordActivity" android:exported="true">
+            <intent-filter android:label="reset_password_link">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:scheme="focusflow"
+                    android:host="reset-password"/>
+            </intent-filter>
+        </activity>
+
 
         <activity
             android:name=".presentation.chatbox.ChatActivity"

@@ -5,24 +5,18 @@ import android.content.Context;
 import androidx.lifecycle.ViewModel;
 
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.api.MissionController;
-import com.example.focusflow_frontend.utils.ApiClient;
-import com.example.focusflow_frontend.data.model.User;
-
-import java.util.Arrays;
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MissionViewModel extends ViewModel {
     private Context context;
     private int currentPetIndex = 0;
     private int userScore = 0;
     private int[] petLevelScores = {10, 20, 100, 200, 400};
+    private boolean[] taskCompleted = {false, false, false}; // 3 mission
+    private AuthViewModel authViewModel;
+    public void setAuthViewModel(AuthViewModel authViewModel) {
+        this.authViewModel = authViewModel;
+    }
 
-    private int userId;
     private int[] petImages = {
             R.drawable.ic_pet_level1,
             R.drawable.ic_pet_level2,
@@ -30,39 +24,6 @@ public class MissionViewModel extends ViewModel {
             R.drawable.ic_pet_level4,
             R.drawable.ic_pet_level5
     };
-
-    private boolean[] taskCompleted = {false, false, false}; // task, pomo, allTasks
-
-    public void init(Context context) {
-        this.context = context;
-    }
-
-    public void fetchScoreFromBackend(Context context,int userId, Runnable callback) {
-        MissionController controller = ApiClient.getMissionController(context);
-
-        controller.evaluateMission(userId).enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String responseBody = response.body();
-                        String numberPart = responseBody.replaceAll("\\D+", "");
-                        userScore = Integer.parseInt(numberPart);
-                        determinePetIndex();
-                        if (callback != null) callback.run(); // Gọi callback update UI
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                t.printStackTrace();
-            }
-        });
-    }
-
 
     private void determinePetIndex() {
         for (int i = 0; i < petLevelScores.length; i++) {
@@ -73,18 +34,6 @@ public class MissionViewModel extends ViewModel {
         }
         currentPetIndex = petLevelScores.length - 1;
     }
-
-    public int getCurrentPetIndex() {
-        return currentPetIndex;
-    }
-
-    public int getPetImageRes() {
-        return petImages[currentPetIndex];
-    }
-
-
-
-
 
     public int getProgress() {
         return userScore;
@@ -98,15 +47,6 @@ public class MissionViewModel extends ViewModel {
         return taskCompleted[index];
     }
 
-    public void applyTaskStatus(int index, boolean completed, int score) {
-        taskCompleted[index] = completed;
-        if (completed) userScore += score;
-    }
-
-    public void resetTestData() {
-        taskCompleted = new boolean[]{false, false, false};
-    }
-
     public void nextPet() {
         currentPetIndex = (currentPetIndex + 1) % petImages.length;
     }
@@ -114,4 +54,48 @@ public class MissionViewModel extends ViewModel {
     public void prevPet() {
         currentPetIndex = (currentPetIndex - 1 + petImages.length) % petImages.length;
     }
+
+    private static final String PREF_NAME = "mission_pref";
+
+    public void saveMissionState() {
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("mission_0", taskCompleted[0])
+                .putBoolean("mission_1", taskCompleted[1])
+                .putBoolean("mission_2", taskCompleted[2])
+                .putInt("user_score", userScore)
+                .apply();
+    }
+
+    public void loadMissionState() {
+        var prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        taskCompleted[0] = prefs.getBoolean("mission_0", false);
+        taskCompleted[1] = prefs.getBoolean("mission_1", false);
+        taskCompleted[2] = prefs.getBoolean("mission_2", false);
+        userScore = prefs.getInt("user_score", 0);
+
+        determinePetIndex();
+    }
+
+    public void init(Context context) {
+        this.context = context;
+        loadMissionState();
+    }
+
+    public void applyTaskStatus(int index, boolean completed, int score) {
+        if (taskCompleted[index]) return;
+
+        taskCompleted[index] = completed;
+        if (completed) {
+            userScore += score;
+            determinePetIndex();
+            saveMissionState();
+
+            if (authViewModel != null) {
+                authViewModel.updateUserScore(userScore); // Gửi lên backend
+            }
+        }
+    }
+
+
 }

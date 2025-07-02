@@ -21,7 +21,9 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -363,27 +365,54 @@ public class GroupViewModel extends AndroidViewModel {
         });
     }
 
-    private final MutableLiveData<List<User>> assignedUsers = new MutableLiveData<>();
+    private final Map<Integer, MutableLiveData<List<User>>> assignedUsersMap = new HashMap<>();
     public LiveData<List<User>> getAssignedUsersOfTask(int taskId) {
+        // Nếu chưa có LiveData thì tạo mới và gán vào map
+        if (!assignedUsersMap.containsKey(taskId)) {
+            assignedUsersMap.put(taskId, new MutableLiveData<>());
+        }
+
+        final MutableLiveData<List<User>> liveData = assignedUsersMap.get(taskId);
+
+        // Nếu chưa có dữ liệu thì mới gọi API
+        if (liveData.getValue() == null) {
+            fetchAssignedUsers(taskId, liveData);
+        }
+
+        return liveData;
+    }
+
+    public void refreshAssignedUsersOfTask(int taskId) {
+        if (!assignedUsersMap.containsKey(taskId)) {
+            assignedUsersMap.put(taskId, new MutableLiveData<>());
+        }
+
+        final MutableLiveData<List<User>> liveData = assignedUsersMap.get(taskId);
+        fetchAssignedUsers(taskId, liveData);
+    }
+
+    public LiveData<List<User>> getAssignedUsersLiveData(int taskId) {
+        return assignedUsersMap.getOrDefault(taskId, new MutableLiveData<>());
+    }
+
+    private void fetchAssignedUsers(int taskId, MutableLiveData<List<User>> liveData) {
         groupController.getUsersAssignedToTask(taskId).enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    assignedUsers.setValue(response.body());
+                    liveData.postValue(response.body());
                 } else {
-                    assignedUsers.setValue(new ArrayList<>()); // Rỗng nếu lỗi
+                    liveData.postValue(new ArrayList<>());
                 }
             }
 
             @Override
             public void onFailure(Call<List<User>> call, Throwable t) {
                 Log.e("GroupViewModel", "Lỗi khi lấy assignees task " + taskId + ": " + t.getMessage());
-                assignedUsers.setValue(new ArrayList<>());
+                liveData.postValue(new ArrayList<>());
             }
         });
-        return assignedUsers;
     }
-
 
     // LiveData để theo dõi kết quả thêm thành viên
     private final MutableLiveData<Boolean> addMembersResult = new MutableLiveData<>();

@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.model.Streak;
 import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.model.TaskGroupRequest;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
@@ -60,9 +61,10 @@ public class CalendarFragment extends Fragment {
     private List<Task> filteredTasks = new ArrayList<>();
     private Set<LocalDate> taskDates = new HashSet<>();
     private TaskViewModel taskViewModel;
-    private GroupViewModel groupViewModel;
+    private StreakViewModel streakViewModel;
     private LocalDate selectedDate = LocalDate.now();
     private int userId;
+    private TextView tvStreakCount;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,7 +77,7 @@ public class CalendarFragment extends Fragment {
         calendarView = view.findViewById(R.id.calendarView);
         recyclerView = view.findViewById(R.id.recyclerViewTasks);
         ImageButton btnAddTask = view.findViewById(R.id.btn_add_task);
-        TextView tvStreakCount = view.findViewById(R.id.tvStreakCount);
+        tvStreakCount = view.findViewById(R.id.tvStreakCount);
 
         // Button Add Task
         btnAddTask.setOnClickListener(v -> {
@@ -210,8 +212,7 @@ public class CalendarFragment extends Fragment {
 
         // ViewModel
         taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
-        groupViewModel = new ViewModelProvider(this).get(GroupViewModel.class);
-        StreakViewModel streakViewModel = new ViewModelProvider(this).get(StreakViewModel.class);
+        streakViewModel = new ViewModelProvider(this).get(StreakViewModel.class);
 
         taskViewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
             if (tasks != null && !tasks.isEmpty()) {
@@ -219,7 +220,6 @@ public class CalendarFragment extends Fragment {
                 for (Task task : tasks) {
                     updateTaskAndRefresh(task);
                 }
-                //streakViewModel.checkTasks(tasks); // Đếm streak từ task
             } else {
                 Log.d("TaskFilter", "No tasks available.");
             }
@@ -239,18 +239,30 @@ public class CalendarFragment extends Fragment {
             Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
         });
 
-//        streakViewModel.getStreakCountLive().observe(getViewLifecycleOwner(), count -> {
-//            if (count != null) {
-//                tvStreakCount.setText(String.valueOf(count));
-//            }
-//        });
-
         // Gọi API lấy dữ liệu tất cả các task
         if (userId != -1) {
             taskViewModel.fetchTasks(userId);
         }
 
+        loadStreak(userId);
+
         return view;
+    }
+
+    private void loadStreak(int userId) {
+        streakViewModel.getStreakByUser(userId, new StreakViewModel.StreakCallback() {
+            @Override
+            public void onSuccess(Streak streak) {
+                // Hiển thị lên giao diện
+                tvStreakCount.setText(String.valueOf(streak.getCurrentStreak()));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e("STREAK_ERROR", errorMessage);
+                Toast.makeText(getContext(), "Lỗi khi tải streak: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void removeTaskAndRefresh(Task task) {

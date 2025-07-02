@@ -184,7 +184,15 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
 
         // Khi task được update xong
         sheet.setOnTaskUpdatedListener(updatedTask -> {
-            adapter.updateTaskInAdapter(updatedTask);
+            // Gọi lại API để lấy avt assigned users mới
+            viewModel.refreshAssignedUsersOfTask(updatedTask.getId());
+
+            // Tìm vị trí task trong adapter
+            int index = adapter.getTaskIndexById(updatedTask.getId());
+            if (index != -1) {
+                adapter.updateTaskInAdapter(updatedTask);
+                adapter.notifyItemChanged(index);
+            }
         });
 
         sheet.setOnTaskDeletedListener(deletedTaskId -> {
@@ -244,24 +252,31 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
 
     private void connectWebSocket(int groupId) {
         String websocketUrl = "ws://10.0.2.2:8080/ws/websocket"; // thay bằng IP backend thật
+        Log.d("WebSocket", "🌐 Connecting to: " + websocketUrl);
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl);
         stompClient.connect();
 
         stompClient.lifecycle().subscribe(lifecycleEvent -> {
             switch (lifecycleEvent.getType()) {
                 case OPENED:
-                    Log.d("WS", "WebSocket Opened");
+                    Log.d("WS", "✅ WebSocket connected successfully");
+                    subscribeToGroupTopic(groupId);
                     break;
                 case ERROR:
-                    Log.e("WS", "Error", lifecycleEvent.getException());
+                    Log.e("WS", "❌ WebSocket connection error", lifecycleEvent.getException());
                     break;
                 case CLOSED:
-                    Log.d("WS", "WebSocket Closed");
+                    Log.d("WS", "WebSocket closed");
                     break;
             }
+        }, throwable -> {
+            Log.e("WS", "❌ WebSocket lifecycle exception", throwable);
         });
+    }
 
+    private void subscribeToGroupTopic(int groupId) {
         stompClient.topic("/topic/group/" + groupId).subscribe(topicMessage -> {
+            Log.d("WS", "📨 Received message: " + topicMessage.getPayload());
             try {
                 JSONObject json = new JSONObject(topicMessage.getPayload());
                 String action = json.getString("action");
@@ -293,6 +308,8 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }, throwable -> {
+            Log.e("WS", "Error subscribing to topic", throwable);
         });
     }
 

@@ -17,19 +17,32 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.data.model.Pomodoro;
+import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.data.viewmodel.MissionViewModel;
+import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
+import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
 import com.example.focusflow_frontend.utils.TokenManager;
 
-public class MissionFragment extends Fragment {
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
+public class MissionFragment extends Fragment {
     private ImageView imgPet;
     private TextView  tvGrowthPoint;
     private ProgressBar progressGrowth;
     private ImageButton btnNextPet, btnPrevPet;
     private ImageView[] checkIcons;
-
     private MissionViewModel viewModel;
-    private int userId;
+    private TaskViewModel taskViewModel;
+    private PomodoroViewModel pomodoroViewModel;
+    private SimpleDateFormat fullFormat;
+    private SimpleDateFormat dateFormat;
 
     @Nullable
     @Override
@@ -40,7 +53,15 @@ public class MissionFragment extends Fragment {
     ) {
         View view = inflater.inflate(R.layout.fragment_mission, container, false);
 
+        fullFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+        dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+
         viewModel = new ViewModelProvider(this).get(MissionViewModel.class);
+        taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
+        pomodoroViewModel = new ViewModelProvider(requireActivity()).get(PomodoroViewModel.class);
+        AuthViewModel authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
+        viewModel.setAuthViewModel(authViewModel);
+
         viewModel.init(requireContext());
 
         // Bind views
@@ -65,12 +86,77 @@ public class MissionFragment extends Fragment {
             updateUI();
         });
 
-
-        // Lấy userId từ token và gọi API để cập nhật điểm số, Pet
-        userId = TokenManager.getUserId(requireContext());
-        viewModel.fetchScoreFromBackend(requireContext(), userId, this::updateUI);
-
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        int completedTasks = countCompletedTasksToday(taskViewModel);
+        int finishedPomodoros = countFinishedPomodorosToday(pomodoroViewModel);
+        int tasksForTomorrow = countTasksForTomorrow(taskViewModel);
+
+        if (completedTasks >= 1) viewModel.applyTaskStatus(0, true, 10);
+        if (finishedPomodoros >= 1) viewModel.applyTaskStatus(1, true, 10);
+        if (tasksForTomorrow >= 3) viewModel.applyTaskStatus(2, true, 10);
+
+        updateUI();
+    }
+
+    private int countCompletedTasksToday(TaskViewModel taskViewModel) {
+        List<Task> tasks = taskViewModel.getTaskList().getValue();
+        if (tasks == null) return 0;
+
+        String today = dateFormat.format(new Date());
+        int count = 0;
+
+        for (Task task : tasks) {
+            if (task.getDueDate() != null && task.getDueDate().equals(today)
+                    && Boolean.TRUE.equals(task.isCompleted())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int countFinishedPomodorosToday(PomodoroViewModel pomoVM) {
+        List<Pomodoro> pomodoros = pomoVM.getPomodoroList().getValue();
+        if (pomodoros == null) return 0;
+
+        String today = dateFormat.format(new Date());
+        int count = 0;
+
+        for (Pomodoro p : pomodoros) {
+            try {
+                Date startDate = fullFormat.parse(p.getStartAt());
+                String startDateStr = dateFormat.format(startDate);
+                if (today.equals(startDateStr)) {
+                    count++;
+                }
+            } catch (Exception e) {
+                Log.w("MissionFragment", "Lỗi parse pomo date: " + p.getStartAt());
+            }
+        }
+        return count;
+    }
+
+    private int countTasksForTomorrow(TaskViewModel taskViewModel) {
+        List<Task> tasks = taskViewModel.getTaskList().getValue();
+        if (tasks == null) return 0;
+
+        // Định dạng ngày mai dưới dạng dd/MM/yyyy
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, 1);
+        String tomorrow = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.getTime());
+
+        int count = 0;
+        for (Task task : tasks) {
+            if (tomorrow.equals(task.getDueDate())) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void updateUI() {

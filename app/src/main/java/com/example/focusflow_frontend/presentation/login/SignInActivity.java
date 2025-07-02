@@ -59,6 +59,13 @@ public class SignInActivity extends AppCompatActivity {
         cbRememberMe = findViewById(R.id.cb_remember_me);
         btnSignIn = findViewById(R.id.btn_sign_in);
         LinearLayout googleLogin = findViewById(R.id.btnGoogleLogin);
+        TextView tvForgotPassword = findViewById(R.id.tv_forgot_password);
+
+        // Forgot Password
+        tvForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(SignInActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
 
         // Sign in Google
         googleLogin.setOnClickListener(view -> {

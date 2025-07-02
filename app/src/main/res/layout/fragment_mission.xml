@@ -72,8 +72,8 @@
     <!-- Mission checklist -->
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="330dp"
-        android:layout_height="330dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:elevation="4dp"
         android:gravity="center_horizontal"
         android:layout_gravity="center"
@@ -101,7 +101,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/mpr1c_medium"
                 android:paddingHorizontal="15dp"
-                android:text="@string/complete_3_tasks_n_1_growth_point"
+                android:text="Complete 3 tasks today."
                 android:textColor="@color/black"
                 android:textSize="17sp" />
         </LinearLayout>
@@ -122,14 +122,13 @@
 
             <TextView
                 android:id="@+id/btnTask2"
-                android:text="@string/complete_3_pomodoro_sessions_n_3_growth_points"
-                android:fontFamily="@font/mpr1c_medium"
-                android:layout_marginBottom="8dp"
-                android:textColor="@color/black"
-                android:layout_width="match_parent"
+                android:layout_width="272dp"
                 android:layout_height="wrap_content"
-                android:textSize="17sp"
-                android:paddingHorizontal="15dp"/>
+                android:fontFamily="@font/mpr1c_medium"
+                android:paddingHorizontal="15dp"
+                android:text="Finish 4 pomodoros today (Total time >= 100)."
+                android:textColor="@color/black"
+                android:textSize="17sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -137,6 +136,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
+            android:layout_marginTop="5dp"
             android:padding="5dp">
 
             <ImageView
@@ -148,7 +148,7 @@
 
             <TextView
                 android:id="@+id/btnTask3"
-                android:text="@string/complete_all_tasks_for_the_day_n_3_growth_points"
+                android:text="Create 5 tasks for tomorrow."
                 android:fontFamily="@font/mpr1c_medium"
                 android:textColor="@color/black"
                 android:layout_width="match_parent"
