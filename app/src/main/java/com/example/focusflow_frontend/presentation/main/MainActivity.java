@@ -36,6 +36,7 @@ import com.example.focusflow_frontend.presentation.streak.StreakFragment;
 import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.FirebaseApp;
 
 import org.json.JSONObject;
 
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(this);
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         assistiveButton = findViewById(R.id.assistive_button);

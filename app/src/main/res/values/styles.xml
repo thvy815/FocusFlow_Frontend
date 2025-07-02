@@ -15,6 +15,12 @@
         <item name="android:fontFamily">@font/mpr1c_bold</item>
     </style>
 
+    <style name="CustomAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
     <!-- Style cho ngày của Calendar -->
     <style name="CalendarDateText">
         <item name="android:textSize">14sp</item>
@@ -39,4 +45,10 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="RoundedImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item> <!-- Điều chỉnh độ bo góc ở đây -->
+    </style>
+
 </resources>

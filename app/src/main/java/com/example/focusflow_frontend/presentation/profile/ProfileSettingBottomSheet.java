@@ -42,12 +42,15 @@ public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
         dialog.setOnShowListener(dialogInterface -> {
-            FrameLayout bottomSheet = dialog.findViewById(R.id.design_bottom_sheet);
+            BottomSheetDialog bottomSheetDialog = (BottomSheetDialog) dialogInterface;
+            FrameLayout bottomSheet = bottomSheetDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
             if (bottomSheet != null) {
                 bottomSheet.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                bottomSheet.requestLayout(); // <-- thêm dòng này
+
                 BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
-                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
                 behavior.setSkipCollapsed(true);
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         });
         dialog.setCanceledOnTouchOutside(false);

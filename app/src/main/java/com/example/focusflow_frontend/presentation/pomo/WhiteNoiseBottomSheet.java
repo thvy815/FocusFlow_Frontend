@@ -12,6 +12,7 @@ import android.media.MediaPlayer;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.utils.ViewUtils;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
@@ -67,13 +68,7 @@ public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
             ViewUtils.handleBackClick(this);
         });
 
-//        MediaPlayer testPlayer = MediaPlayer.create(requireContext(), R.raw.clock_sound);
-//        testPlayer.start();
-//        testPlayer.setOnErrorListener((mp, what, extra) -> {
-//            Log.e("WhiteNoise", "MediaPlayer error: what=" + what + ", extra=" + extra);
-//            return true;
-//        });
-
+        boolean isProUser = ProUtils.isProValid(requireContext());
 
         ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise1, R.drawable.volume_off);
         ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise2, R.drawable.clock);
@@ -88,8 +83,14 @@ public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
         ViewUtils.setVolume(view, R.id.Row1, R.id.noise2, R.raw.clock_sound, whiteNoisePlayer);
         ViewUtils.setVolume(view, R.id.Row1, R.id.noise3, R.raw.fan_sound, whiteNoisePlayer);
 
-        ViewUtils.setVolume(view, R.id.Row2, R.id.noise1, R.raw.rain_sound, whiteNoisePlayer);
-        ViewUtils.setVolume(view, R.id.Row2, R.id.noise2, R.raw.underwater_sound, whiteNoisePlayer);
+        if (isProUser) {
+            ViewUtils.setVolume(view, R.id.Row2, R.id.noise1, R.raw.rain_sound, whiteNoisePlayer);
+            ViewUtils.setVolume(view, R.id.Row2, R.id.noise2, R.raw.underwater_sound, whiteNoisePlayer);
+        } else {
+            ViewUtils.stopVolumeWithDialog(WhiteNoiseBottomSheet.this, view, R.id.Row2, R.id.noise1, whiteNoisePlayer, isProUser);
+            ViewUtils.stopVolumeWithDialog(WhiteNoiseBottomSheet.this, view, R.id.Row2, R.id.noise2, whiteNoisePlayer, isProUser);
+        }
+
         return view;
     }
 }
