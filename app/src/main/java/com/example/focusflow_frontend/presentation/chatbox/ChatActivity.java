@@ -1,8 +1,13 @@
 package com.example.focusflow_frontend.presentation.chatbox;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -15,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.api.AiController;
 import com.example.focusflow_frontend.data.model.ChatBox;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
+import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
 import com.example.focusflow_frontend.utils.ApiClient;
 
 import java.text.SimpleDateFormat;
@@ -56,6 +63,9 @@ public class ChatActivity extends AppCompatActivity {
 
         checkAndResetDailyLimit();
 
+        SharedPreferences prefs = getSharedPreferences("chat_prefs", MODE_PRIVATE);
+        messageCount = prefs.getInt("message_count", 0);
+        Log.d("chatAI", "68");
         editTextMessage = findViewById(R.id.editTextMessage);
         buttonSend = findViewById(R.id.buttonSend);
         recyclerView = findViewById(R.id.recyclerViewChat);
@@ -71,22 +81,27 @@ public class ChatActivity extends AppCompatActivity {
 
             if (message.isEmpty()) return;
 
+            Log.d("chatAI", "84");
             if (messageCount >= MAX_FREE_MESSAGES) {
-                showUpgradeDialog();  // Hiển thị popup quảng cáo
+                Log.d("chatAI", "86");
+                showUpgradeDialog(this);  // Hiển thị popup quảng cáo
                 return;
             }
 
             // 1. Hiển thị tin nhắn người dùng
             addMessage(message, true);
+            Log.d("chatAI", "92");
             editTextMessage.setText("");
 
             // 2. Thêm message "Đang trả lời..."
             addMessage("Generating your response...", false);
 
+            Log.d("chatAI", "97");
             // 3. Gọi AI
             callAI(message);
-
+            Log.d("chatAI", "99");
             messageCount++;
+            Log.d("chatAI", "100");
         });
 
     }
@@ -103,18 +118,43 @@ public class ChatActivity extends AppCompatActivity {
             editor.apply();
         }
     }
+    public static void showUpgradeDialog(Activity activity) {
+        if (activity == null || activity.isFinishing()) return;
 
-    private void showUpgradeDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Upgrade to Pro")
-                .setMessage("You have reached the limit of 5 free messages.\nUpgrade to the Pro version to continue chatting without limits.")
-                .setPositiveButton("Upgrade", (dialog, which) -> {
-                    // TODO: Redirect to upgrade page or open another activity
-                })
-                .setNegativeButton("Later", null)
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        View dialogView = LayoutInflater.from(activity).inflate(R.layout.dialog_upgrade_pro, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+
+        // Kiểm tra null trước khi gọi getWindow()
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        dialog.show();
+
+        dialogView.findViewById(R.id.closeButton).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.tvNoThanks).setOnClickListener(v -> dialog.dismiss());
+
+        dialogView.findViewById(R.id.btnUpgrade).setOnClickListener(v -> {
+            dialog.dismiss();
+
+            // Đảm bảo activity là AppCompatActivity trước khi ép kiểu
+            if (activity instanceof AppCompatActivity) {
+                ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
+                sheet.setOnPlanSelectedListener((plan, amount) -> {
+                    if (activity instanceof MainActivity) {
+                        ((MainActivity) activity).createAndPayOrder(plan, amount);
+                    }
+                });
+                sheet.show(((AppCompatActivity) activity).getSupportFragmentManager(), "ZaloPayBottomSheet");
+            } else {
+                Log.e("UpgradeDialog", "Activity is not AppCompatActivity");
+            }
+        });
     }
-
 
     private void addMessage(String text, boolean isUser) {
         messageList.add(new ChatBox(text, isUser));
@@ -129,35 +169,44 @@ public class ChatActivity extends AppCompatActivity {
         aiApiService.chatWithAI(body).enqueue(new Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
-                // Xoá message cuối ("Generating your response...") trước khi thêm kết quả thật
-                if (!messageList.isEmpty() && messageList.get(messageList.size() - 1).getContent().equals("Generating your response...")) {
-                    messageList.remove(messageList.size() - 1);
-                    chatAdapter.notifyItemRemoved(messageList.size());
+                int lastIndex = messageList.size() - 1;
+                if (lastIndex >= 0 && messageList.get(lastIndex).getContent().equals("Generating your response...")) {
+                    messageList.remove(lastIndex);
+                    chatAdapter.notifyItemRemoved(lastIndex);
                 }
 
                 if (response.isSuccessful() && response.body() != null) {
                     addMessage(response.body(), false);
+
+                    aiApiService.incrementAiUsage().enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {}
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Log.e("ChatActivity", "Failed to update AI usage count: " + t.getMessage());
+                        }
+                    });
+
+                    messageCount++;
+                    SharedPreferences prefs = getSharedPreferences("chat_prefs", MODE_PRIVATE);
+                    prefs.edit().putInt("message_count", messageCount).apply();
                 } else {
-                    String errorBody = "";
-                    try {
-                        errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
-                    } catch (Exception e) {
-                        errorBody = "Error reading errorBody: " + e.getMessage();
-                    }
-                    addMessage("Lỗi phản hồi từ AI.\nStatus: " + response.code() + "\nError: " + errorBody, false);
+                    addMessage("Lỗi phản hồi từ AI", false);
                 }
             }
 
             @Override
             public void onFailure(Call<String> call, Throwable t) {
-                // Xoá message cuối ("Generating your response...") trước khi thêm lỗi
-                if (!messageList.isEmpty() && messageList.get(messageList.size() - 1).getContent().equals("Generating your response...")) {
-                    messageList.remove(messageList.size() - 1);
-                    chatAdapter.notifyItemRemoved(messageList.size());
+                int lastIndex = messageList.size() - 1;
+                if (lastIndex >= 0 && messageList.get(lastIndex).getContent().equals("Generating your response...")) {
+                    messageList.remove(lastIndex);
+                    chatAdapter.notifyItemRemoved(lastIndex);
                 }
 
                 addMessage("Lỗi kết nối: " + t.getMessage(), false);
             }
+
         });
     }
+
 }
