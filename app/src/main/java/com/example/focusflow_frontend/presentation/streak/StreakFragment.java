@@ -140,34 +140,28 @@ public class StreakFragment extends Fragment {
                     .commit();
         });
 
-        loadStreak(userId);
+        viewModel.getStreakByUser(userId);
 
-        return view;
-    }
-
-    private void loadStreak(int userId) {
-        viewModel.getStreakByUser(userId, new StreakViewModel.StreakCallback() {
-            @Override
-            public void onSuccess(Streak streak) {
-                // Hiển thị lên giao diện
+        viewModel.getStreakLive().observe(getViewLifecycleOwner(), streak -> {
+            if (streak != null) {
                 streakCountTextView.setText(String.valueOf(streak.getCurrentStreak()));
                 maxStreakTextView.setText(String.valueOf(streak.getMaxStreak()));
 
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                // Nếu muốn hiển thị validDates (làm đậm ngày có streak):
                 streakDates.clear();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 for (String dateStr : streak.getValidDates()) {
-                        LocalDate date = LocalDate.parse(dateStr, formatter);
-                        streakDates.add(date);
+                    LocalDate date = LocalDate.parse(dateStr, formatter);
+                    streakDates.add(date);
                 }
                 calendarView.notifyCalendarChanged();
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e("STREAK_ERROR", errorMessage);
-                Toast.makeText(getContext(), "Lỗi khi tải streak: " + errorMessage, Toast.LENGTH_SHORT).show();
+            } else {
+                streakCountTextView.setText("0");
+                maxStreakTextView.setText("0");
             }
         });
+
+        return view;
     }
 
     public static class DayViewContainer extends ViewContainer {

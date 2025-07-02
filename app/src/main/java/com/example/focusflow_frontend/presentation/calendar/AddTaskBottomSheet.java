@@ -187,6 +187,21 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                 });
             }
         } else {
+            if (group != null) {
+                groupViewModel.getUsersInGroup().observe(getViewLifecycleOwner(), users -> {
+                    if (users != null && !users.isEmpty()) {
+                        selectedMemberIds.clear(); // chưa chọn ai cả
+                        renderUserViews(users, selectedMemberIds, listMembers);
+                    } else {
+                        listMembers.removeAllViews();
+                        TextView noData = new TextView(getContext());
+                        noData.setText("No members found.");
+                        noData.setPadding(20, 10, 20, 10);
+                        listMembers.addView(noData);
+                    }
+                });
+            }
+
             // Chế độ thêm mới
             btnAddTask.setText("Add");
             btnDeleteTask.setVisibility(View.GONE);
@@ -231,9 +246,17 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                         TaskGroupRequest request = new TaskGroupRequest(editingTask, ctIds); // request có taskId
                         taskViewModel.updateTask(request); // gửi lên BE
 
-                        Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
-                        if (updateListener != null) updateListener.onTaskUpdated(editingTask);
-                        dismiss();
+                        taskViewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
+                            if (Boolean.TRUE.equals(success)) {
+                                // Cập nhật lại user assigned
+                                groupViewModel.refreshAssignedUsersOfTask(editingTask.getId());
+                                Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
+                                if (updateListener != null) updateListener.onTaskUpdated(editingTask);
+                                dismiss();
+                            } else {
+                                Toast.makeText(getContext(), "Update failed", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     });
                 } else {
                     // Task cá nhân → chỉ cần update task

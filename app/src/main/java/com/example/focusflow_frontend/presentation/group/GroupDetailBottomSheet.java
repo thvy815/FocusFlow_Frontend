@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.Task;
+import com.example.focusflow_frontend.data.model.TaskGroupRequest;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.viewmodel.GroupViewModel;
 import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
@@ -165,7 +166,10 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
 
         adapter = new TaskGroupAdapter(
                 new ArrayList<>(),
-                (task, isChecked) -> task.setCompleted(isChecked), // listener checkbox
+                (task, isChecked) -> {
+                    task.setCompleted(isChecked);
+                    taskViewModel.updateTask(new TaskGroupRequest(task, null));
+                }, // listener checkbox
                 task -> showEditTaskBottomSheet(task),
                 viewModel,
                 getViewLifecycleOwner()
@@ -277,56 +281,11 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
     private void subscribeToGroupTopic(int groupId) {
         stompClient.topic("/topic/group/" + groupId).subscribe(topicMessage -> {
             Log.d("WS", "📨 Received message: " + topicMessage.getPayload());
-            try {
-                JSONObject json = new JSONObject(topicMessage.getPayload());
-                String action = json.getString("action");
-                JSONObject taskJson = json.getJSONObject("task");
-
-                Task task = convertJsonToTask(taskJson);
-
-                requireActivity().runOnUiThread(() -> {
-                    switch (action) {
-                        case "created":
-                            adapter.addTaskToAdapter(task);
-                            allTasks.add(task);
-                            break;
-                        case "updated":
-                            adapter.updateTaskInAdapter(task);
-                            for (int i = 0; i < allTasks.size(); i++) {
-                                if (allTasks.get(i).getId() == task.getId()) {
-                                    allTasks.set(i, task);
-                                    break;
-                                }
-                            }
-                            break;
-                        case "deleted":
-                            adapter.removeTaskFromAdapter(task.getId());
-                            allTasks.removeIf(t -> t.getId() == task.getId());
-                            break;
-                    }
-                });
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            requireActivity().runOnUiThread(() -> {
+                taskViewModel.fetchTasksByGroup(group.getId());
+            });
         }, throwable -> {
-            Log.e("WS", "Error subscribing to topic", throwable);
+            Log.e("WS", "❌ Error subscribing to topic", throwable);
         });
-    }
-
-    private Task convertJsonToTask(JSONObject taskJson) throws JSONException {
-        Task task = new Task();
-        task.setId(taskJson.optInt("id"));
-        task.setUserId(taskJson.optInt("userId"));
-        task.setTitle(taskJson.optString("title", ""));
-        task.setDescription(taskJson.optString("description", ""));
-        task.setDueDate(taskJson.optString("dueDate", ""));
-        task.setTime(taskJson.optString("time", ""));
-        task.setTag(taskJson.optString("tag", ""));
-        task.setPriority(taskJson.optInt("priority", 0));
-        task.setReminderStyle(taskJson.optString("reminderStyle", ""));
-        task.setRepeatStyle(taskJson.optString("repeatStyle", ""));
-        task.setCompleted(taskJson.optBoolean("completed", false));
-
-        return task;
     }
 }

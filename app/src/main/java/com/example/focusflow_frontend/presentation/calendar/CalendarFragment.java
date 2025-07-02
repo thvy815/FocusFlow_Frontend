@@ -244,25 +244,17 @@ public class CalendarFragment extends Fragment {
             taskViewModel.fetchTasks(userId);
         }
 
-        loadStreak(userId);
+        streakViewModel.getStreakByUser(userId);
 
-        return view;
-    }
-
-    private void loadStreak(int userId) {
-        streakViewModel.getStreakByUser(userId, new StreakViewModel.StreakCallback() {
-            @Override
-            public void onSuccess(Streak streak) {
-                // Hiển thị lên giao diện
+        streakViewModel.getStreakLive().observe(getViewLifecycleOwner(), streak -> {
+            if (streak != null) {
                 tvStreakCount.setText(String.valueOf(streak.getCurrentStreak()));
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e("STREAK_ERROR", errorMessage);
-                Toast.makeText(getContext(), "Lỗi khi tải streak: " + errorMessage, Toast.LENGTH_SHORT).show();
+            } else {
+                tvStreakCount.setText("0");
             }
         });
+
+        return view;
     }
 
     private void removeTaskAndRefresh(Task task) {

@@ -25,7 +25,6 @@ import retrofit2.Response;
 public class StreakViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Integer> streakCountLive = new MutableLiveData<>();
-    private final MutableLiveData<List<LocalDate>> datesLive = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Streak> streakLive = new MutableLiveData<>();
     private final StreakController streakController;
 
@@ -35,27 +34,29 @@ public class StreakViewModel extends AndroidViewModel {
         streakController = ApiClient.getRetrofit(context).create(StreakController.class);
     }
 
-    public interface StreakCallback {
-        void onSuccess(Streak streak);
-        void onFailure(String errorMessage);
-    }
-
-    public void getStreakByUser(int userId, StreakCallback callback) {
+    public void getStreakByUser(int userId) {
         streakController.getStreakByUserId(userId).enqueue(new Callback<Streak>() {
             @Override
             public void onResponse(Call<Streak> call, Response<Streak> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body());
+                    streakLive.setValue(response.body());
                 } else {
-                    callback.onFailure("Không tìm thấy streak.");
+                    streakLive.setValue(null);
                 }
             }
 
             @Override
             public void onFailure(Call<Streak> call, Throwable t) {
-                callback.onFailure(t.getMessage());
+                streakLive.setValue(null);
             }
         });
     }
 
+    public LiveData<Integer> getStreakCountLive() {
+        return streakCountLive;
+    }
+
+    public LiveData<Streak> getStreakLive() {
+        return streakLive;
+    }
 }
