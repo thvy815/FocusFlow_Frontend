@@ -9,15 +9,13 @@ public class User implements Serializable {
     private String email;
     private String password;
     private String avatarUrl;
-    private int score;
 
     // Constructors, getters, setters
-    public User(String fullName, String username, String email, String password, int score) {
+    public User(String fullName, String username, String email, String password) {
         this.fullName = fullName;
         this.username = username;
         this.email = email;
         this.password = password;
-        this.score = score;
     }
 
     public int getId() {
@@ -57,6 +55,26 @@ public class User implements Serializable {
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
-    public int getScore(){return score;}
-    public void setScore(int score){this.score=score;}
+    private int aiUsageCount = 0;
+    private String planName;
+
+    public String getPlanName() {
+        return planName;
+    }
+
+    public void setPlanName(String planName) {
+        this.planName = planName;
+    }
+
+    public int getAiUsageCount() {
+        return aiUsageCount;
+    }
+
+    public void setAiUsageCount(int aiUsageCount) {
+        this.aiUsageCount = aiUsageCount;
+    }
+
+    public void incrementAiUsageCount() {
+        this.aiUsageCount++;
+    }
 }

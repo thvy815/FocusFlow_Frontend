@@ -2,15 +2,14 @@ package com.example.focusflow_frontend.utils;
 
 import android.content.Context;
 
+import com.example.focusflow_frontend.data.api.AiController;
+
 import com.example.focusflow_frontend.data.api.PomodoroController;
 import com.example.focusflow_frontend.data.api.PomodoroDetailController;
 import com.example.focusflow_frontend.data.api.ProController;
 
-
 import java.util.concurrent.TimeUnit;
 import com.example.focusflow_frontend.data.api.TaskController;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -73,5 +72,8 @@ public class ApiClient {
     }
     public static TaskController getTaskController(Context context) {
         return getRetrofit(context).create(TaskController.class);
+    }
+    public static AiController getAiController(Context context) {
+        return getRetrofit(context).create(AiController.class);
     }
 }

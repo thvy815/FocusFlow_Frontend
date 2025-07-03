@@ -46,6 +46,8 @@ dependencies {
     implementation ("io.noties.markwon:core:4.6.2")
     implementation ("com.google.android.gms:play-services-auth:21.0.0")
     implementation(libs.lifecycle.viewmodel.android)
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 
     implementation(fileTree("D:/zalopay_sdk") {
         include("*.aar", "*.jar")

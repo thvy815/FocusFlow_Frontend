@@ -5,6 +5,12 @@ public class ProStatusResponse {
     private String planName;
     private long expireTime;
 
+    public ProStatusResponse(boolean isPro, String planName, long expireTime) {
+        this.isPro = isPro;
+        this.planName = planName;
+        this.expireTime = expireTime;
+    }
+
     public boolean isPro() {
         return isPro;
     }
@@ -15,5 +21,14 @@ public class ProStatusResponse {
 
     public long getExpireTime() {
         return expireTime;
+    }
+
+    @Override
+    public String toString() {
+        return "ProStatusResponse{" +
+                "isPro=" + isPro +
+                ", planName='" + planName + '\'' +
+                ", expireTime=" + expireTime +
+                '}';
     }
 }

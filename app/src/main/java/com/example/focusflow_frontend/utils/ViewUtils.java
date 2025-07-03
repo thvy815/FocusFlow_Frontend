@@ -1,12 +1,16 @@
 package com.example.focusflow_frontend.utils;
 
+import static android.app.PendingIntent.getActivity;
+
 import android.content.Context;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.presentation.pomo.WhiteNoisePlayer;
+import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -78,7 +82,49 @@ public class ViewUtils {
             }
         }
     }
+    public static void stopVolumeWithDialog(androidx.fragment.app.Fragment fragment, View rootView, int rootId, int noiseId, WhiteNoisePlayer whiteNoisePlayer, boolean isProUser) {
+        if (rootView == null || whiteNoisePlayer == null) return;
 
+        View noiseLayout = rootView.findViewById(rootId);
+        if (noiseLayout != null) {
+            ImageView noise = noiseLayout.findViewById(noiseId);
+            if (noise != null) {
+                Context context = rootView.getContext();
+                noise.setOnClickListener(v -> {
+                    whiteNoisePlayer.stopWhiteNoise();
+
+                    if (!isProUser && context != null && fragment != null) {
+                        showUpgradeProDialog(context, fragment);
+                    }
+                });
+            }
+        }
+    }
+
+    private static void showUpgradeProDialog(Context context, androidx.fragment.app.Fragment fragment) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
+        View dialogView = android.view.LayoutInflater.from(context).inflate(R.layout.dialog_upgrade_pro, null);
+        builder.setView(dialogView);
+
+        android.app.AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.show();
+
+        dialogView.findViewById(R.id.closeButton).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.tvNoThanks).setOnClickListener(v -> dialog.dismiss());
+
+        dialogView.findViewById(R.id.btnUpgrade).setOnClickListener(v -> {
+            dialog.dismiss();
+            ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
+            sheet.setOnPlanSelectedListener((plan, amount) -> {
+                if (fragment.getActivity() instanceof MainActivity) {
+                    ((MainActivity) fragment.getActivity()).createAndPayOrder(plan, amount);
+                }
+            });
+            sheet.show(fragment.getParentFragmentManager(), "ZaloPayBottomSheet");
+        });
+    }
 
     public static void backClick(androidx.fragment.app.Fragment fragment, View rootView, int rootId, int backIcon){
         if (rootView != null){
