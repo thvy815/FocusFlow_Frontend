@@ -80,4 +80,7 @@ public class ApiClient {
     public static AiController getAiController(Context context) {
         return getRetrofit(context).create(AiController.class);
     }
+    public static UserController getUserController(Context context) {
+        return getRetrofit(context).create(UserController.class);
+    }
 }
