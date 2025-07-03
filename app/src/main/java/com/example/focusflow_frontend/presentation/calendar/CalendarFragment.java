@@ -288,7 +288,17 @@ public class CalendarFragment extends Fragment {
 
         if (task.getDueDate() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate baseDate = LocalDate.parse(task.getDueDate(), formatter);
+            String dueDateStr = task.getDueDate();
+            if (dueDateStr == null || dueDateStr.trim().isEmpty() || dueDateStr.equalsIgnoreCase("None")) return;
+
+            formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate baseDate;
+            try {
+                baseDate = LocalDate.parse(dueDateStr, formatter);
+            } catch (Exception e) {
+                Log.e("CalendarFragment", "Không thể parse dueDate: " + dueDateStr);
+                return;
+            }
 
             // Xóa các ngày cũ của task ra khỏi taskDates (dọn sạch để thêm lại)
             removeOldRepeatDates(task);

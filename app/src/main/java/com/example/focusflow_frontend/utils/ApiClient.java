@@ -10,6 +10,7 @@ import com.example.focusflow_frontend.data.api.ProController;
 
 import java.util.concurrent.TimeUnit;
 import com.example.focusflow_frontend.data.api.TaskController;
+import com.example.focusflow_frontend.data.api.UserController;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -19,7 +20,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class ApiClient {
-    private static final String BASE_URL = "http://10.0.2.2:8080/";
+    private static final String BASE_URL = "http://192.168.1.18:8080/";
     private static Retrofit retrofit = null;
 
     public static Retrofit getRetrofit(Context context) {
@@ -75,5 +76,8 @@ public class ApiClient {
     }
     public static AiController getAiController(Context context) {
         return getRetrofit(context).create(AiController.class);
+    }
+    public static UserController getUserController(Context context) {
+        return getRetrofit(context).create(UserController.class);
     }
 }

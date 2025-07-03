@@ -52,5 +52,7 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item> <!-- Điều chỉnh độ bo góc ở đây -->
     </style>
-
+    <style name="RoundedDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@drawable/rounded_dialog_background</item>
+    </style>
 </resources>
