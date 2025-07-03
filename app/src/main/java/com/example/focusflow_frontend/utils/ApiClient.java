@@ -71,6 +71,9 @@ public class ApiClient {
     public static ProController getProController(Context context) {
         return getRetrofit(context).create(ProController.class);
     }
+    public static UserController getUserController(Context context) {
+        return getRetrofit(context).create(UserController.class);
+    }
     public static TaskController getTaskController(Context context) {
         return getRetrofit(context).create(TaskController.class);
     }

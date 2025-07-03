@@ -338,6 +338,12 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
+    private final MutableLiveData<Boolean> avatarUpdateSuccess = new MutableLiveData<>();
+    public LiveData<Boolean> getAvatarUpdateSuccess() {
+        return avatarUpdateSuccess;
+    }
+
+
 
     private final MutableLiveData<String> avatarUrl = new MutableLiveData<>();
     private final MutableLiveData<String> fullName = new MutableLiveData<>();
