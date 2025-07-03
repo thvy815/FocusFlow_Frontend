@@ -44,6 +44,9 @@ public class MissionFragment extends Fragment {
     private SimpleDateFormat fullFormat;
     private SimpleDateFormat dateFormat;
 
+
+
+
     @Nullable
     @Override
     public View onCreateView(
@@ -61,8 +64,12 @@ public class MissionFragment extends Fragment {
         pomodoroViewModel = new ViewModelProvider(requireActivity()).get(PomodoroViewModel.class);
         AuthViewModel authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
         viewModel.setAuthViewModel(authViewModel);
-
+        viewModel.setTaskViewModel(taskViewModel);
+        viewModel.setPomodoroViewModel(pomodoroViewModel);
         viewModel.init(requireContext());
+
+
+
 
         // Bind views
         imgPet = view.findViewById(R.id.imgPet);
@@ -86,78 +93,79 @@ public class MissionFragment extends Fragment {
             updateUI();
         });
 
+        authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                taskViewModel.fetchTasks(user.getId()); // Dùng lại hàm đã có!
+            }
+        });
+
+        authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                int userId = user.getId();
+                taskViewModel.fetchTasks(userId); // ✅ gọi task
+                pomodoroViewModel.fetchPomodorosByUser(requireContext(),user.getId()); // ✅ gọi pomo
+            }
+        });
+
+        authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
+            if (user != null) {
+                viewModel.setUserScore(user.getScore());
+                updateUI();
+            }
+        });
+
         return view;
     }
+
 
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("MissionFragment", "onResume called");
 
-        int completedTasks = countCompletedTasksToday(taskViewModel);
-        int finishedPomodoros = countFinishedPomodorosToday(pomodoroViewModel);
-        int tasksForTomorrow = countTasksForTomorrow(taskViewModel);
+        taskViewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
+            Log.d("MissionFragment", "Task list updated: " + tasks.size());
+            checkMissionsAndUpdate();
+        });
 
-        if (completedTasks >= 1) viewModel.applyTaskStatus(0, true, 10);
-        if (finishedPomodoros >= 1) viewModel.applyTaskStatus(1, true, 10);
-        if (tasksForTomorrow >= 3) viewModel.applyTaskStatus(2, true, 10);
+        pomodoroViewModel.getPomodoroList().observe(getViewLifecycleOwner(), pomodoros -> {
+            Log.d("MissionFragment", "Pomodoro list updated: " + pomodoros.size());
+            checkMissionsAndUpdate();
+        });
+
 
         updateUI();
     }
 
-    private int countCompletedTasksToday(TaskViewModel taskViewModel) {
-        List<Task> tasks = taskViewModel.getTaskList().getValue();
-        if (tasks == null) return 0;
+    private void checkMissionsAndUpdate() {
+        Log.d("MissionCheck", "Checking mission completion...");
 
-        String today = dateFormat.format(new Date());
-        int count = 0;
-
-        for (Task task : tasks) {
-            if (task.getDueDate() != null && task.getDueDate().equals(today)
-                    && Boolean.TRUE.equals(task.isCompleted())) {
-                count++;
-            }
+        if (viewModel.isMissionCompleted(0)) {
+            Log.d("MissionCheck", "Mission 0 completed");
+            viewModel.applyTaskStatus(0, true, 3);
+        } else {
+            Log.d("MissionCheck", "Mission 0 not completed");
         }
-        return count;
+
+        if (viewModel.isMissionCompleted(1)) {
+            Log.d("MissionCheck", "Mission 1 completed");
+            viewModel.applyTaskStatus(1, true, 5);
+        } else {
+            Log.d("MissionCheck", "Mission 1 not completed");
+        }
+
+        if (viewModel.isMissionCompleted(2)) {
+            Log.d("MissionCheck", "Mission 2 completed");
+            viewModel.applyTaskStatus(2, true, 5);
+        } else {
+            Log.d("MissionCheck", "Mission 2 not completed");
+        }
+
+        updateUI();
     }
 
-    private int countFinishedPomodorosToday(PomodoroViewModel pomoVM) {
-        List<Pomodoro> pomodoros = pomoVM.getPomodoroList().getValue();
-        if (pomodoros == null) return 0;
 
-        String today = dateFormat.format(new Date());
-        int count = 0;
 
-        for (Pomodoro p : pomodoros) {
-            try {
-                Date startDate = fullFormat.parse(p.getStartAt());
-                String startDateStr = dateFormat.format(startDate);
-                if (today.equals(startDateStr)) {
-                    count++;
-                }
-            } catch (Exception e) {
-                Log.w("MissionFragment", "Lỗi parse pomo date: " + p.getStartAt());
-            }
-        }
-        return count;
-    }
-
-    private int countTasksForTomorrow(TaskViewModel taskViewModel) {
-        List<Task> tasks = taskViewModel.getTaskList().getValue();
-        if (tasks == null) return 0;
-
-        // Định dạng ngày mai dưới dạng dd/MM/yyyy
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DATE, 1);
-        String tomorrow = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.getTime());
-
-        int count = 0;
-        for (Task task : tasks) {
-            if (tomorrow.equals(task.getDueDate())) {
-                count++;
-            }
-        }
-        return count;
-    }
 
     private void updateUI() {
 
@@ -165,11 +173,13 @@ public class MissionFragment extends Fragment {
         int max = viewModel.getProgressMax();
         progressGrowth.setMax(max);
         progressGrowth.setProgress(progress);
+        imgPet.setImageResource(viewModel.getCurrentPetImage());
         tvGrowthPoint.setText(progress + "/" + max);
+
 
         for (int i = 0; i < checkIcons.length; i++) {
             checkIcons[i].setColorFilter(
-                    viewModel.isTaskCompleted(i)
+                    viewModel.isMissionCompleted(i)
                             ? getResources().getColor(R.color.orange)
                             : getResources().getColor(R.color.gray)
             );

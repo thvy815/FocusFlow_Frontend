@@ -36,6 +36,22 @@ public class AuthViewModel extends AndroidViewModel {
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final Map<Integer, MutableLiveData<User>> userLiveDataMap = new HashMap<>();
     private final MutableLiveData<List<User>> allUsers = new MutableLiveData<>();
+    private final MutableLiveData<Integer> userScore = new MutableLiveData<>(0);
+    public LiveData<Integer> getUserScore() {
+        return userScore;
+    }
+
+    public void increaseScore(int amount) {
+        Integer current = userScore.getValue();
+        if (current == null) current = 0;
+        int updated = current + amount;
+        userScore.setValue(updated);
+        Log.d("Score", "Score increased immediately to: " + updated);
+
+        // Cập nhật lên server nếu muốn
+        updateUserScore(updated);
+    }
+
 
     public LiveData<List<User>> getAllUsers() {
         return allUsers;

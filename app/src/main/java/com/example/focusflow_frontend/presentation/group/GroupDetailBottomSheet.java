@@ -100,6 +100,7 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         super.onCreate(savedInstanceState);
         View view = inflater.inflate(R.layout.bottom_sheet_group_detail, container, false);
 
+
         TextView groupNameTextView = view.findViewById(R.id.group_name);
         if (getArguments() != null) {
             group = (Group) getArguments().getSerializable(ARG_GROUP);
@@ -108,6 +109,10 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             groupNameTextView.setText(group.getGroupName());
 
         }
+
+        // Kết nối WebSocket để nhận task mới theo thời gian thực
+        connectWebSocket(group.getId());
+
         // Setup ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
         taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
@@ -204,8 +209,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             adapter.removeTaskFromAdapter(deletedTaskId);
         });
 
-        // Kết nối WebSocket để nhận task mới theo thời gian thực
-        connectWebSocket(group.getId());
 
         sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
     }
@@ -255,7 +258,7 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void connectWebSocket(int groupId) {
-        String websocketUrl = "ws://10.0.2.2:8080/ws/websocket"; // thay bằng IP backend thật
+        String websocketUrl = "ws://192.168.1.5:8080/ws/websocket"; // thay bằng IP backend thật
         Log.d("WebSocket", "🌐 Connecting to: " + websocketUrl);
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl);
         stompClient.connect();
