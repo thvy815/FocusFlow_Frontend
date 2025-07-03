@@ -1,40 +1,45 @@
 package com.example.focusflow_frontend.presentation.login;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 
-public class ForgotPasswordActivity extends AppCompatActivity {
+public class ForgotPasswordDialogFragment extends DialogFragment {
     private EditText emailEditText;
     private Button sendButton;
     private AuthViewModel authViewModel;
     private TextView messageTextView;
 
+    @NonNull
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_forgot_password);
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.activity_forgot_password, null);
 
-        emailEditText = findViewById(R.id.editTextEmail);
-        sendButton = findViewById(R.id.buttonSend);
-        messageTextView = findViewById(R.id.textViewMessage);
+        emailEditText = view.findViewById(R.id.editTextEmail);
+        Button sendButton = view.findViewById(R.id.buttonSend);
+        messageTextView = view.findViewById(R.id.textViewMessage);
 
         // ViewModel
-        authViewModel = new ViewModelProvider(this,
-                ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(AuthViewModel.class);
+        authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
 
         sendButton.setOnClickListener(v -> {
             String email = emailEditText.getText().toString().trim();
             if (email.isEmpty()) {
-                Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Please enter your email", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -58,6 +63,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                 messageTextView.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
             }
         });
+
+        return new AlertDialog.Builder(requireContext())
+                .setView(view)
+                .setCancelable(true)
+                .create();
     }
 }
 

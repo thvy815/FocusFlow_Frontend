@@ -2,6 +2,7 @@ package com.example.focusflow_frontend.presentation.login;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.*;
@@ -37,6 +38,7 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        handleDeepLink(getIntent());
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken("410988307717-aitcia4ljjebo74lhehmj7t9ol6tuhmo.apps.googleusercontent.com")
@@ -63,8 +65,8 @@ public class SignInActivity extends AppCompatActivity {
 
         // Forgot Password
         tvForgotPassword.setOnClickListener(v -> {
-            Intent intent = new Intent(SignInActivity.this, ForgotPasswordActivity.class);
-            startActivity(intent);
+            ForgotPasswordDialogFragment dialog = new ForgotPasswordDialogFragment();
+            dialog.show(getSupportFragmentManager(), "ForgotPasswordDialog");
         });
 
         // Sign in Google
@@ -162,6 +164,26 @@ public class SignInActivity extends AppCompatActivity {
                 Toast.makeText(this, "Google Sign-In thất bại", Toast.LENGTH_SHORT).show();
                 Log.e("GoogleSignIn", "Lỗi: " + e.getStatusCode(), e);
             }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    private void handleDeepLink(Intent intent) {
+        Uri data = intent.getData();
+        if (data != null && "focusflow".equals(data.getScheme())
+                && "reset-password".equals(data.getHost())
+                && data.getQueryParameter("token") != null) {
+
+            String token = data.getQueryParameter("token");
+
+            ResetPasswordDialogFragment dialog = ResetPasswordDialogFragment.newInstance(token);
+            dialog.show(getSupportFragmentManager(), "ResetPasswordDialog");
         }
     }
 }
