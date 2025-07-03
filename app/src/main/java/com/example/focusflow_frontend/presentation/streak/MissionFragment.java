@@ -109,7 +109,7 @@ public class MissionFragment extends Fragment {
 
         authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                viewModel.setUserScore(user.getScore());
+                //viewModel.setUserScore(user.getScore());
                 updateUI();
             }
         });

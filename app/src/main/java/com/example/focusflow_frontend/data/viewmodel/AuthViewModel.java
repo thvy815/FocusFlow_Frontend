@@ -343,26 +343,7 @@ public class AuthViewModel extends AndroidViewModel {
         return avatarUpdateSuccess;
     }
 
-    public void updateAvatarUrlToServer(Context context, String avatarUrl) {
-        Map<String, String> body = new HashMap<>();
-        body.put("avatarUrl", avatarUrl);
 
-        ApiClient.getUserController(context).updateAvatar(body).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("AVATAR", "Cập nhật avatar thành công trên server");
-                } else {
-                    Log.e("AVATAR", "Thất bại: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("AVATAR", "Lỗi mạng: " + t.getMessage());
-            }
-        });
-    }
 
     private final MutableLiveData<String> avatarUrl = new MutableLiveData<>();
     private final MutableLiveData<String> fullName = new MutableLiveData<>();

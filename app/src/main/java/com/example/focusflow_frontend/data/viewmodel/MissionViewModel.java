@@ -245,7 +245,7 @@ public class MissionViewModel extends ViewModel {
             authViewModel.getCurrentUser(); // Gọi API lấy user
             authViewModel.getCurrentUserLiveData().observeForever(user -> {
                 if (user != null) {
-                    userScore = user.getScore(); // Gán điểm vào userScore
+                    //userScore = user.getScore(); // Gán điểm vào userScore
                     determinePetIndex();
                 }
             });
