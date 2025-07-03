@@ -119,14 +119,6 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
             adapter.setUserList(users);
         });
 
-        // Khi bam vao tim kiem: hien ra trang detail --> tim kiem task
-        LinearLayout btnSearch = view.findViewById(R.id.search_layout);
-        btnSearch.setOnClickListener(v -> searchClick(viewModel));
-
-        //Khi bam bat/tat thong bao:
-        LinearLayout btnNotification = view.findViewById(R.id.noti_layout);
-        btnNotification.setOnClickListener(v->notificationClick(view));
-
         //Khi bam them nguoi:
         LinearLayout btnAdd = view.findViewById(R.id.add_layout);
         btnAdd.setOnClickListener(v->addMemberClick());
@@ -149,26 +141,6 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
         return view;
     }
 
-    private void searchClick(GroupViewModel viewModel){
-        viewModel.requestFocusOnSearch(true); // gửi tín hiệu cho Detail
-        dismiss();
-    }
-    private boolean isNotification = true;
-    private void notificationClick(View view){
-        ImageView imv = view.findViewById(R.id.noti);
-        TextView txt = view.findViewById(R.id.txtNoti);
-        isNotification = !isNotification;
-        //Bat thong  bao
-        if (isNotification){
-            imv.setImageResource(R.drawable.ic_noti);
-            txt.setText("Notification");
-        }
-        //Tat thong bao
-        else{
-            imv.setImageResource(R.drawable.ic_none_noti);
-            txt.setText("None");
-        }
-    }
     private void addMemberClick(){
         AddMemberBottomSheet addSheet = new AddMemberBottomSheet();
 
@@ -238,9 +210,5 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
-    }
-
-    private void removeMemberClick(Context context){
-        Toast.makeText(context, "Hàm xóa member dòng 207", Toast.LENGTH_SHORT).show();
     }
 }

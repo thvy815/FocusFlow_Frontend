@@ -27,8 +27,8 @@ import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.TokenManager;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+//import com.google.firebase.storage.FirebaseStorage;
+//import com.google.firebase.storage.StorageReference;
 
 import java.util.*;
 
@@ -89,22 +89,22 @@ public class ProfileFragment extends Fragment {
 
         // Streak
         StreakViewModel streakViewModel = new ViewModelProvider(this).get(StreakViewModel.class);
-        streakViewModel.getStreakByUser(userId, new StreakViewModel.StreakCallback() {
-            @Override
-            public void onSuccess(Streak streak) {
-                maxStreak = streak.getMaxStreak();
-                isStreakReady = true;
-                tryShowBadges(achievementLayout);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e("STREAK_ERROR", errorMessage);
-                Toast.makeText(getContext(), "Failed to load streak: " + errorMessage, Toast.LENGTH_SHORT).show();
-                isStreakReady = true;
-                tryShowBadges(achievementLayout);
-            }
-        });
+//        streakViewModel.getStreakByUser(userId, new StreakViewModel.StreakCallback() {
+//            @Override
+//            public void onSuccess(Streak streak) {
+//                maxStreak = streak.getMaxStreak();
+//                isStreakReady = true;
+//                tryShowBadges(achievementLayout);
+//            }
+//
+//            @Override
+//            public void onFailure(String errorMessage) {
+//                Log.e("STREAK_ERROR", errorMessage);
+//                Toast.makeText(getContext(), "Failed to load streak: " + errorMessage, Toast.LENGTH_SHORT).show();
+//                isStreakReady = true;
+//                tryShowBadges(achievementLayout);
+//            }
+//        });
 
         // Avatar
         avatarImage.setOnClickListener(v -> showImagePickDialog());
@@ -228,27 +228,27 @@ public class ProfileFragment extends Fragment {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             Uri imageUri = data.getData();
 
-            // Hiển thị trước
-            avatarImage.setImageURI(imageUri);
-            Log.d("truoc storage", "loi");
-            // Tạo reference đến Firebase Storage
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference("avatars/" + UUID.randomUUID().toString() + ".jpg");
-            Log.d("Image", "onActivityResult: ");
-            // Upload ảnh
-            storageRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        // Lấy URL sau khi upload thành công
-                        storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            String downloadUrl = uri.toString();
-                            savedAvatar = "url:" + downloadUrl;
-
-                            // Cập nhật avatar vào ViewModel hoặc server của bạn
-                            authViewModel.updateUser(fullname, username, savedAvatar);
-                        });
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Upload avatar thất bại", Toast.LENGTH_SHORT).show();
-                    });
+//            // Hiển thị trước
+//            avatarImage.setImageURI(imageUri);
+//            Log.d("truoc storage", "loi");
+//            // Tạo reference đến Firebase Storage
+//            StorageReference storageRef = FirebaseStorage.getInstance().getReference("avatars/" + UUID.randomUUID().toString() + ".jpg");
+//            Log.d("Image", "onActivityResult: ");
+//            // Upload ảnh
+//            storageRef.putFile(imageUri)
+//                    .addOnSuccessListener(taskSnapshot -> {
+//                        // Lấy URL sau khi upload thành công
+//                        storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+//                            String downloadUrl = uri.toString();
+//                            savedAvatar = "url:" + downloadUrl;
+//
+//                            // Cập nhật avatar vào ViewModel hoặc server của bạn
+//                            authViewModel.updateUser(fullname, username, savedAvatar);
+//                        });
+//                    })
+//                    .addOnFailureListener(e -> {
+//                        Toast.makeText(getContext(), "Upload avatar thất bại", Toast.LENGTH_SHORT).show();
+//                    });
         }
     }
 

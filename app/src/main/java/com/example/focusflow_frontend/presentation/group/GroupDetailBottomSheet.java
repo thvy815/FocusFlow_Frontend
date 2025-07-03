@@ -1,6 +1,9 @@
 package com.example.focusflow_frontend.presentation.group;
 
 import android.app.Dialog;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -12,9 +15,13 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -94,6 +101,15 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
+    private boolean checkPermission() {
+        if (user == null || group == null || user.getId() != group.getLeaderId()) {
+            Toast.makeText(getContext(), "❌ You are not authorized to perform this action.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -108,6 +124,10 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             groupNameTextView.setText(group.getGroupName());
 
         }
+
+        // Kết nối WebSocket để nhận task mới theo thời gian thực
+        connectWebSocket(group.getId());
+
         // Setup ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
         taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
@@ -141,7 +161,10 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         imMenu.setOnClickListener(v->openMenu(viewModel));
         //Add Task
         ImageView addBtn = view.findViewById(R.id.btnAdd);
-        addBtn.setOnClickListener(v->addTask());
+        addBtn.setOnClickListener(v -> {
+            if (!checkPermission()) return;
+            addTask();
+        });
         //Tro lai group
         ImageView imBack = view.findViewById(R.id.btnBack);
         imBack.setOnClickListener(v -> {dismiss();});
@@ -204,9 +227,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             adapter.removeTaskFromAdapter(deletedTaskId);
         });
 
-        // Kết nối WebSocket để nhận task mới theo thời gian thực
-        connectWebSocket(group.getId());
-
         sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
     }
 
@@ -264,7 +284,8 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             switch (lifecycleEvent.getType()) {
                 case OPENED:
                     Log.d("WS", "✅ WebSocket connected successfully");
-                    subscribeToGroupTopic(groupId);
+                    subscribeToGroupTopic(groupId);           // để cập nhật task UI
+                    subscribeToUserTopic(user.getId());       // để hiện notification
                     break;
                 case ERROR:
                     Log.e("WS", "❌ WebSocket connection error", lifecycleEvent.getException());
@@ -280,12 +301,63 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
 
     private void subscribeToGroupTopic(int groupId) {
         stompClient.topic("/topic/group/" + groupId).subscribe(topicMessage -> {
-            Log.d("WS", "📨 Received message: " + topicMessage.getPayload());
+            Log.d("WS-Group", "📨 Received message: " + topicMessage.getPayload());
+
             requireActivity().runOnUiThread(() -> {
+                // 🔁 Chỉ cập nhật UI, không hiện notification ở đây
                 taskViewModel.fetchTasksByGroup(group.getId());
             });
         }, throwable -> {
-            Log.e("WS", "❌ Error subscribing to topic", throwable);
+            Log.e("WS-Group", "❌ Error subscribing to topic", throwable);
         });
+    }
+
+    private void subscribeToUserTopic(int userId) {
+        stompClient.topic("/topic/user/" + userId).subscribe(topicMessage -> {
+            Log.d("WS-User", "📨 Received message: " + topicMessage.getPayload());
+
+            requireActivity().runOnUiThread(() -> {
+                try {
+                    JSONObject json = new JSONObject(topicMessage.getPayload());
+                    String type = json.optString("type", "");
+                    String taskTitle = json.optString("title", "New Task");
+
+                    if ("created".equals(type)) {
+                        showNotification("📌 New Group Task", taskTitle);
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
+        }, throwable -> {
+            Log.e("WS-User", "❌ Error subscribing to user topic", throwable);
+        });
+    }
+
+
+    private void showNotification(String title, String message) {
+        Context context = getContext();
+        if (context == null) return;
+
+        // ⚠️ Kiểm tra quyền thông báo nếu Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // 👉 Không có quyền, không gửi notification
+                Log.w("Notification", "⚠️ Missing POST_NOTIFICATIONS permission");
+                return;
+            }
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "task_channel")
+                .setSmallIcon(R.drawable.ic_noti) // dùng icon của bạn
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        NotificationManagerCompat manager = NotificationManagerCompat.from(context);
+        manager.notify((int) System.currentTimeMillis(), builder.build()); // ID random để không bị ghi đè
     }
 }

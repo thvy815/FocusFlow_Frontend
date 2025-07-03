@@ -2,17 +2,24 @@ package com.example.focusflow_frontend.presentation.group;
 
 import static android.view.View.VISIBLE;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
 import com.example.focusflow_frontend.data.model.User;
@@ -52,6 +59,12 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
         User member = userList.get(position);
         holder.tvName.setText(member.getUsername());
 
+        if (user.getId() == group.getLeaderId()) {
+            holder.ivCrownIcon.setVisibility(View.VISIBLE); // Hiện vương miện
+        } else {
+            holder.ivCrownIcon.setVisibility(View.GONE); // Ẩn nếu không phải leader
+        }
+
         // Chỉ hiển thị nút "Xóa" nếu người dùng hiện tại là leader và không phải chính mình
         if (group.getLeaderId() == user.getId() && member.getId() != user.getId()) {
             holder.removeIC.setVisibility(View.VISIBLE);
@@ -80,7 +93,11 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
         } else {
             holder.removeIC.setVisibility(View.GONE);
         }
-       // holder.userAVT.setImageResource(user.getAVT());
+
+        // Set avt
+        holder.avatarContainer.removeAllViews();
+        View avatarView = createAvatarView(holder.avatarContainer, member);
+        holder.avatarContainer.addView(avatarView);
     }
 
     @Override
@@ -90,12 +107,84 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
 
     static class MemberViewHolder extends RecyclerView.ViewHolder {
         TextView tvName;
-        ImageView userAVT, removeIC;
+        ImageView removeIC, ivCrownIcon;
+        LinearLayout avatarContainer;
         public MemberViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvUserName);
             removeIC = itemView.findViewById(R.id.remove);
-            userAVT = itemView.findViewById(R.id.avtUser);
+            avatarContainer = itemView.findViewById(R.id.avatarContainer);
+            ivCrownIcon = itemView.findViewById(R.id.leader);
+        }
+    }
+
+    private View createAvatarView(ViewGroup parent, User user) {
+        Context context = parent.getContext();
+        String avatarUrl = user.getAvatarUrl();
+
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+            // Có avatarUrl → ImageView
+            ImageView imageView = new ImageView(parent.getContext());
+            int size = (int) (parent.getContext().getResources().getDisplayMetrics().density * 40); // 40dp
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(8, 0, 8, 0);
+            imageView.setLayoutParams(params);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setBackgroundResource(R.drawable.bg_circle); // viền tròn nếu muốn
+
+            if (avatarUrl.startsWith("res:")) {
+                // 🔹 Ảnh từ resource nội bộ
+                int resId = Integer.parseInt(avatarUrl.substring(4));
+                Glide.with(context)
+                        .load(resId)
+                        .circleCrop()
+                        .placeholder(R.drawable.bg_circle)
+                        .into(imageView);
+            } else if (avatarUrl.startsWith("uri:")) {
+                // 🔹 Ảnh từ album, MediaStore, Google Photos, etc.
+                Uri uri = Uri.parse(avatarUrl.substring(4));
+                Log.d("AvatarDebug", "Parsed Uri: " + uri.toString());
+                Glide.with(context)
+                        .load(uri)
+                        .circleCrop()
+                        .placeholder(R.drawable.bg_circle)
+                        .into(imageView);
+            } else if (avatarUrl.startsWith("http")) {
+                // 🔹 URL online
+                Glide.with(context)
+                        .load(avatarUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.bg_circle)
+                        .into(imageView);
+            } else {
+                // Không rõ định dạng
+                imageView.setImageResource(R.drawable.bg_circle);
+            }
+
+            return imageView;
+        } else {
+            // Không có avatarUrl → dùng TextView bo tròn
+            TextView avatar = new TextView(parent.getContext());
+            int size = (int) (parent.getContext().getResources().getDisplayMetrics().density * 40);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(8, 0, 8, 0);
+            avatar.setLayoutParams(params);
+
+            avatar.setText(String.valueOf(user.getUsername().charAt(0)).toUpperCase());
+            avatar.setTextColor(parent.getContext().getResources().getColor(android.R.color.black));
+            avatar.setBackgroundResource(R.drawable.bg_circle);
+            avatar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            avatar.setGravity(android.view.Gravity.CENTER);
+            avatar.setTextSize(16);
+            int[] colors = {
+                    Color.parseColor("#FFB74D"), Color.parseColor("#64B5F6"),
+                    Color.parseColor("#81C784"), Color.parseColor("#E57373"),
+                    Color.parseColor("#BA68C8")
+            };
+            int colorIndex = Math.abs(user.getUsername().hashCode()) % colors.length;
+            avatar.setBackgroundTintList(ColorStateList.valueOf(colors[colorIndex]));
+
+            return avatar;
         }
     }
 }

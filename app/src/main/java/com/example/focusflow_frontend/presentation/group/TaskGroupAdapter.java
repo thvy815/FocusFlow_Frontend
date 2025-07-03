@@ -1,6 +1,8 @@
 package com.example.focusflow_frontend.presentation.group;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -265,6 +267,14 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             avatar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             avatar.setGravity(android.view.Gravity.CENTER);
             avatar.setTextSize(16);
+            int[] colors = {
+                    Color.parseColor("#FFB74D"), Color.parseColor("#64B5F6"),
+                    Color.parseColor("#81C784"), Color.parseColor("#E57373"),
+                    Color.parseColor("#BA68C8")
+            };
+            int colorIndex = Math.abs(user.getUsername().hashCode()) % colors.length;
+            avatar.setBackgroundTintList(ColorStateList.valueOf(colors[colorIndex]));
+
             return avatar;
         }
     }
