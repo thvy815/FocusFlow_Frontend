@@ -122,6 +122,7 @@ public class AuthViewModel extends AndroidViewModel {
                 errorMessage.postValue("Lỗi khi lấy người dùng: " + t.getMessage());
             }
         });
+
     }
 
     public void fetchUserById(int userId) {
@@ -229,13 +230,23 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
-    public void updateUser(String fullName, String username, String avatarUrl) {
-        UserUpdateRequest request = new UserUpdateRequest(fullName, username, avatarUrl);
+    public void updateUser(String fullNameStr, String usernameStr, String avatarUrlStr) {
+        UserUpdateRequest request = new UserUpdateRequest(fullNameStr, usernameStr, avatarUrlStr);
         userController.updateUser(request).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    currentUser.postValue(response.body());
+                    User user = response.body();
+
+                    // Nếu server chưa trả về avatar → giữ nguyên avatar hiện tại
+                    if (user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) {
+                        user.setAvatarUrl(avatarUrlStr); // giữ lại avatar đang dùng
+                    }
+
+                    currentUser.postValue(user);
+                    fullName.postValue(user.getFullName());
+                    userName.postValue(user.getUsername());
+                    avatarUrl.postValue(user.getAvatarUrl());
                 } else {
                     errorMessage.postValue("Cập nhật thất bại");
                 }
@@ -247,6 +258,8 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
+
+
     public void updateUserScore(int score) {
         Map<String, Integer> body = new HashMap<>();
         body.put("score", score);
@@ -325,5 +338,43 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
+    private final MutableLiveData<Boolean> avatarUpdateSuccess = new MutableLiveData<>();
+    public LiveData<Boolean> getAvatarUpdateSuccess() {
+        return avatarUpdateSuccess;
+    }
+
+    public void updateAvatarUrlToServer(Context context, String avatarUrl) {
+        Map<String, String> body = new HashMap<>();
+        body.put("avatarUrl", avatarUrl);
+
+        ApiClient.getUserController(context).updateAvatar(body).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("AVATAR", "Cập nhật avatar thành công trên server");
+                } else {
+                    Log.e("AVATAR", "Thất bại: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("AVATAR", "Lỗi mạng: " + t.getMessage());
+            }
+        });
+    }
+
+    private final MutableLiveData<String> avatarUrl = new MutableLiveData<>();
+    private final MutableLiveData<String> fullName = new MutableLiveData<>();
+    private final MutableLiveData<String> userName = new MutableLiveData<>();
+
+    public LiveData<String> getAvatarUrl() { return avatarUrl; }
+    public LiveData<String> getFullName() { return fullName; }
+    public LiveData<String> getUserName() { return userName; }
+
+
+
+
+
 
 }

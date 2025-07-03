@@ -219,8 +219,4 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .show();
     }
-
-    private void removeMemberClick(Context context){
-        Toast.makeText(context, "Hàm xóa member dòng 207", Toast.LENGTH_SHORT).show();
-    }
 }
