@@ -50,6 +50,14 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
     private MemberAdapter adapter;
     private GroupViewModel viewModel;
 
+    private boolean checkPermission() {
+        if (user == null || group == null || user.getId() != group.getLeaderId()) {
+            Toast.makeText(getContext(), "This action is only available to the group leader", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
     public static GroupMenuBottomSheet newInstance(Group group, User user) {
         GroupMenuBottomSheet fragment = new GroupMenuBottomSheet();
         Bundle args = new Bundle();
@@ -119,11 +127,12 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
             adapter.setUserList(users);
         });
 
-
-
         //Khi bam them nguoi:
         LinearLayout btnAdd = view.findViewById(R.id.add_layout);
-        btnAdd.setOnClickListener(v->addMemberClick());
+        btnAdd.setOnClickListener(v -> {
+            if (!checkPermission()) return;
+            addMemberClick();
+        });
 
         //Hien roi nhom:
         LinearLayout btnOut = view.findViewById(R.id.out_layout);
@@ -192,6 +201,7 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
                             () ->
                             {
                                 Toast.makeText(requireContext(), "You have left the group", Toast.LENGTH_SHORT).show();
+                                viewModel.setGroupRemoved(group.getId());
                                 handleLeaveGroup();
                                 dismiss(); // Đóng BottomSheet sau khi setup Handler
                             },
@@ -212,7 +222,9 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
                 .setMessage("Are you sure you want to disband this group?")
                 .setPositiveButton("Disband", (dialog, which) -> {
                     viewModel.deleteGroup(group.getId()); // Gọi API DELETE
+                    viewModel.setGroupRemoved(group.getId());
                     Toast.makeText(requireContext(), "Group disbanded", Toast.LENGTH_SHORT).show();
+
                     handleLeaveGroup();
                     dismiss(); // Đóng BottomSheet sau khi setup Handler
                 })

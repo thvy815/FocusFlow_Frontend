@@ -103,7 +103,7 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
 
     private boolean checkPermission() {
         if (user == null || group == null || user.getId() != group.getLeaderId()) {
-            Toast.makeText(getContext(), "❌ You are not authorized to perform this action.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "This action is only available to the group leader", Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;

@@ -100,12 +100,11 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     }
 
     public void removeGroupById(int id) {
-        Iterator<Group> iterator = groupList.iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().getId() == id) {
-                iterator.remove();
-                notifyDataSetChanged();
-                break;
+        for (int i = 0; i < groupList.size(); i++) {
+            if (groupList.get(i).getId() == id) {
+                groupList.remove(i);
+                notifyItemRemoved(i); // chỉ update 1 item, mượt hơn
+                return;
             }
         }
     }
