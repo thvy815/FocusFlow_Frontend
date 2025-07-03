@@ -26,11 +26,15 @@ import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
 import com.example.focusflow_frontend.presentation.login.SignInActivity;
 import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
+import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.TokenManager;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+
+import retrofit2.Retrofit;
 
 public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
     private AuthViewModel authViewModel;
@@ -121,22 +125,34 @@ public class ProfileSettingBottomSheet extends BottomSheetDialogFragment {
 
         TextView upgrade = view.findViewById(R.id.upgradeButton);
         TextView upgradeDesc = view.findViewById(R.id.upgradeDesc);
-        boolean isPro = ProUtils.isProValid(getContext());
-        if (isPro) {
-            upgradeDesc.setText("You're using Pro version");
-            upgrade.setVisibility(View.GONE);
-        } else {
-            upgrade.setVisibility(View.VISIBLE);
-            upgrade.setOnClickListener(v -> {
-                ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
-                sheet.setOnPlanSelectedListener((plan, amount) -> {
-                    if (getActivity() instanceof MainActivity) {
-                        ((MainActivity) getActivity()).createAndPayOrder(plan, amount);
-                    }
-                });
-                sheet.show(getParentFragmentManager(), "ZaloPayBottomSheet");
-            });
-        }
+        Retrofit retrofit = ApiClient.getRetrofit(requireContext());
+        ProUtils.isProValid(getContext(), retrofit, new ProStatusCallback() {
+            @Override
+            public void onResult(boolean isPro) {
+                if (isPro) {
+                    upgradeDesc.setText("You're using Pro version");
+                    upgrade.setVisibility(View.GONE);
+                } else {
+                    upgrade.setVisibility(View.VISIBLE);
+                    upgrade.setOnClickListener(v -> {
+                        ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
+                        sheet.setOnPlanSelectedListener((plan, amount) -> {
+                            if (getActivity() instanceof MainActivity) {
+                                ((MainActivity) getActivity()).createAndPayOrder(plan, amount);
+                            }
+                        });
+                        sheet.show(getParentFragmentManager(), "ZaloPayBottomSheet");
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e("ProCheck", "Lỗi kiểm tra Pro: " + message);
+                upgrade.setVisibility(View.VISIBLE); // fallback nếu lỗi
+            }
+        });
+
 
         view.findViewById(R.id.tvDone).setOnClickListener(v -> dismiss());
         view.findViewById(R.id.deleteAccount).setOnClickListener(v -> authViewModel.deleteCurrentUser());

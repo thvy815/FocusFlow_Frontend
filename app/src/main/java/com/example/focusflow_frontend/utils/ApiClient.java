@@ -2,6 +2,7 @@ package com.example.focusflow_frontend.utils;
 
 import android.content.Context;
 
+import com.example.focusflow_frontend.data.api.AiController;
 import com.example.focusflow_frontend.data.api.MissionApi;
 import com.example.focusflow_frontend.data.api.PomodoroController;
 import com.example.focusflow_frontend.data.api.PomodoroDetailController;
@@ -81,6 +82,8 @@ public class ApiClient {
     public static MissionApi getMissionApi(Context context) {
         return getRetrofit(context).create(MissionApi.class);
     }
-
+    public static AiController getAiController(Context context) {
+        return getRetrofit(context).create(AiController.class);
+    }
 
 }

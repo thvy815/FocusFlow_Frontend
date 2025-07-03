@@ -9,6 +9,6 @@ import retrofit2.http.PUT;
 public interface AiController {
     @POST("api/ai/chat")
     Call<String> chatWithAI(@Body Map<String, String> body);
-    @PUT("user/ai-usage")
-    Call<Void> incrementAiUsage(); // Gọi API để tăng số lượt AI đã dùng
+    @PUT("/api/user/ai-usage")
+    Call<String> incrementAiUsage(@Body Map<String, Integer> body);
 }

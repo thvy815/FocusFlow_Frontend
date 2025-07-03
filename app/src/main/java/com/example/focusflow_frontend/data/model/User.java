@@ -56,6 +56,15 @@ public class User implements Serializable {
         this.avatarUrl = avatarUrl;
     }
     private int aiUsageCount = 0;
+    private String planName;
+
+    public String getPlanName() {
+        return planName;
+    }
+
+    public void setPlanName(String planName) {
+        this.planName = planName;
+    }
 
     public int getAiUsageCount() {
         return aiUsageCount;

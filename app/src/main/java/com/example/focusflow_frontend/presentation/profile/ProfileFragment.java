@@ -23,12 +23,16 @@ import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
 import com.example.focusflow_frontend.data.viewmodel.StreakViewModel;
 import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
+import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.TokenManager;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.*;
+
+import retrofit2.Retrofit;
 
 public class ProfileFragment extends Fragment {
     private static final int PICK_IMAGE_REQUEST = 1;
@@ -106,7 +110,20 @@ public class ProfileFragment extends Fragment {
         avatarImage.setOnClickListener(v -> showImagePickDialog());
 
         // Upgrade Pro
-        btnUpgradePro.setVisibility(ProUtils.isProValid(getContext()) ? View.GONE : View.VISIBLE);
+        Retrofit retrofit = ApiClient.getRetrofit(requireContext());
+        ProUtils.isProValid(requireContext(), retrofit, new ProStatusCallback() {
+            @Override
+            public void onResult(boolean isProUser) {
+                btnUpgradePro.setVisibility(isProUser ? View.GONE : View.VISIBLE);
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e("ProfileFragment", "Lỗi kiểm tra Pro: " + message);
+                // Fallback nếu lỗi → vẫn hiển thị nút
+                btnUpgradePro.setVisibility(View.VISIBLE);
+            }
+        });
         btnUpgradePro.setOnClickListener(v -> openZaloPay());
 
         // Settings

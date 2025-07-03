@@ -106,6 +106,7 @@ public class AuthViewModel extends AndroidViewModel {
         });
     }
 
+
     public void fetchUserById(int userId) {
         userController.getUserById(userId).enqueue(new Callback<User>() {
             @Override
@@ -229,4 +230,23 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
+
+    // Hàm gọi lại server để lấy thông tin mới nhất của user
+    public void fetchUserInfo(Runnable onComplete) {
+        userController.getCurrentUser().enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    currentUser.postValue(response.body());
+                }
+                if (onComplete != null) onComplete.run();
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                if (onComplete != null) onComplete.run();
+            }
+        });
+    }
+
 }

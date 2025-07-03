@@ -3,6 +3,14 @@ package com.example.focusflow_frontend.utils.ZaloPayUtils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.focusflow_frontend.data.api.ProController;
+import com.example.focusflow_frontend.data.model.ProStatusResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+
 public class ProUtils {
     private static final String PREF_NAME = "user";
     private static final String KEY_IS_PRO = "isPro";
@@ -31,12 +39,59 @@ public class ProUtils {
     }
 
     // Kiểm tra người dùng còn hạn Pro hay không
-    public static boolean isProValid(Context context) {
+    // Kiểm tra trạng thái Pro thông minh: ưu tiên local, fallback server nếu cần
+
+    public static boolean isProValidLocal(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         boolean isPro = prefs.getBoolean(KEY_IS_PRO, false);
         long expireTime = prefs.getLong(KEY_EXPIRE_TIME, 0);
         return isPro && System.currentTimeMillis() < expireTime;
     }
+    public static void isProValid(Context context, Retrofit retrofit, ProStatusCallback callback) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        boolean isPro = prefs.getBoolean(KEY_IS_PRO, false);
+        long expireTime = prefs.getLong(KEY_EXPIRE_TIME, 0);
+        long now = System.currentTimeMillis();
+
+        if (isPro && now < expireTime) {
+            // Local còn hiệu lực → dùng luôn
+            callback.onResult(true);
+        } else {
+            // Local hết hạn hoặc chưa có → kiểm tra server
+            checkProFromServer(context, retrofit, callback);
+        }
+    }
+    public static void checkProFromServer(Context context, Retrofit retrofit, ProStatusCallback callback) {
+        ProController service = retrofit.create(ProController.class);
+
+        service.getProStatus().enqueue(new Callback<ProStatusResponse>() {
+            @Override
+            public void onResponse(Call<ProStatusResponse> call, Response<ProStatusResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ProStatusResponse data = response.body();
+
+                    SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                    prefs.edit()
+                            .putBoolean(KEY_IS_PRO, data.isPro())
+                            .putString(KEY_PLAN_NAME, data.getPlanName())
+                            .putLong(KEY_EXPIRE_TIME, data.getExpireTime())
+                            .apply();
+
+                    callback.onResult(data.isPro());
+                } else {
+                    callback.onError("Server trả về lỗi");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ProStatusResponse> call, Throwable t) {
+                callback.onError("Lỗi mạng: " + t.getMessage());
+            }
+        });
+    }
+
+
+
 
     // Trả về tên gói hiện tại
     public static String getPlanName(Context context) {
