@@ -2,7 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <solid android:color="#FFFFFF" /> <!-- Nền trắng -->
+    <solid android:color="@color/in" /> <!-- Nền trắng -->
 
     <stroke
         android:width="2dp"

@@ -2,14 +2,16 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/white"
+    android:background="@color/bgr"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="-54dp"
+        tools:layout_editor_absoluteY="-248dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,13 +66,13 @@
                 android:id="@+id/editTitle"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:background="@android:color/transparent"
+                android:background="@color/in"
                 android:fontFamily="@font/mpr1c_bold"
                 android:hint="New Task"
                 android:inputType="text"
                 android:maxLines="1"
                 android:padding="12dp"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </androidx.cardview.widget.CardView>
         <!-- Description -->
@@ -87,11 +89,12 @@
                 android:id="@+id/editDescription"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:background="@android:color/transparent"
+                android:background="@color/in"
                 android:fontFamily="@font/mpr1c_medium"
                 android:gravity="center_vertical"
                 android:hint="Description"
                 android:inputType="textMultiLine"
+                android:singleLine="false"
                 android:minLines="3"
                 android:padding="12dp"
                 android:textSize="18sp"
@@ -336,18 +339,19 @@
             android:id="@+id/scrollView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="0dp"
             android:layout_marginStart="20dp"
+            android:layout_marginTop="0dp"
             android:layout_marginEnd="20dp"
+            android:contentDescription="@string/app_name"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/btn_select_member"
-            android:contentDescription="@string/app_name">
+            app:layout_constraintTop_toBottomOf="@+id/btn_select_member">
 
             <LinearLayout
-                android:id="@+id/list_members" android:layout_width="match_parent"
+                android:id="@+id/list_members"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@color/white" />
+                android:background="@color/white"
+                android:orientation="vertical" />
 
         </ScrollView>
         <!-- Button Delete -->
@@ -358,12 +362,13 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="20dp"
-            android:backgroundTint="@android:color/black"
+            android:backgroundTint="@color/btn2"
             android:fontFamily="@font/mpr1c_bold"
             android:padding="12dp"
             android:text="Delete Task"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
         <View
             android:id="@+id/bottomSpacer"
             android:layout_width="match_parent"

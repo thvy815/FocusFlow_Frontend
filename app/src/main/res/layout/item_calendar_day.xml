@@ -3,8 +3,7 @@
     android:id="@+id/itemCalendarDay"
     android:layout_width="48dp"
     android:layout_height="48dp"
-    android:layout_margin="4dp"
-    android:background="@color/white">
+    android:background="@color/in">
 
     <!-- Ngày -->
     <TextView

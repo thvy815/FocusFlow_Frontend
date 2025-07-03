@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white"
+    android:background="@color/bgr"
     android:padding="30dp"
     android:gravity="center_horizontal">
 
     <TextView
         android:id="@+id/tvTitle"
         android:text="@string/mission"
-        android:textSize="40sp"
+        android:textSize="35sp"
         android:textStyle="bold"
         android:fontFamily="@font/mpr1c_extrabold"
         android:textColor="@color/black"

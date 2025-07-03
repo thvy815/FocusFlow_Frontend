@@ -1,8 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="48dp"
     android:layout_height="48dp"
-    android:layout_margin="4dp"
-    android:background="@color/white">
+    android:background="@color/in">
 
     <TextView
         android:id="@+id/calendarDayText"

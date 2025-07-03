@@ -9,7 +9,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#FFFFFF"
+        android:background="@color/bgr"
         android:id="@+id/focus_statistics">
 
         <LinearLayout
@@ -56,6 +56,7 @@
                     android:padding="16dp"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
+                    android:backgroundTint="@color/in"
                     android:background="@drawable/background">
 
                     <!--Total Pomo-->
@@ -205,6 +206,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_margin="6dp"
+                        android:backgroundTint="@color/in"
                         card_view:cardCornerRadius="10dp"
                         card_view:cardElevation="2dp"
                         card_view:cardBackgroundColor="#FFFFFF">
@@ -212,6 +214,7 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+
                             android:orientation="vertical"
                             android:paddingVertical="4dp"
                             android:paddingHorizontal="8dp">

@@ -3,7 +3,7 @@
     android:id="@+id/design_bottom_sheet"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@color/bgr">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -205,11 +205,11 @@
                 android:layout_marginTop="40dp"
                 android:layout_gravity="center"
                 android:text="Save Record"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textColor="@color/white"
-                android:fontFamily="@font/mpr1c_medium"
+                android:fontFamily="@font/mpr1c_extrabold"
                 android:textStyle="bold"
-                android:backgroundTint="@color/black" />
+                android:backgroundTint="@color/btn" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

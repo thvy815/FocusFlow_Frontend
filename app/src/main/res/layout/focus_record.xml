@@ -12,12 +12,13 @@
         android:layout_height="match_parent"
         app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
-        android:background="@android:color/white">
+        android:background="@color/bgr">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:backgroundTint="@color/bgr"
             android:padding="20dp">
 
             <!-- Header -->
@@ -41,7 +42,7 @@
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_marginTop="8dp"
-                android:background="#CCCCCC"
+                android:background="@color/in"
                 app:layout_constraintTop_toBottomOf="@id/headerLayout"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
@@ -70,7 +71,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/mpr1c_bold"
-                android:background="@drawable/bg_card"
+                android:background="@color/btn2"
                 android:gravity="center"
                 android:onClick="addRecordClick"
                 android:textColor="@android:color/white"

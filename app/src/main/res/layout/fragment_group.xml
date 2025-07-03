@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:background="@android:color/white">
+    android:background="@color/bgr">
 
     <!-- Thanh tiêu đề -->
     <LinearLayout
@@ -18,13 +18,6 @@
         android:layout_marginTop="15dp"
         android:gravity="center_vertical">
 
-        <!-- Avatar -->
-        <ImageView
-            android:id="@+id/imgAvatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/bg_circle"
-            android:contentDescription="Avatar"/>
 
         <!-- Tiêu đề -->
         <TextView
@@ -32,10 +25,12 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
+            android:textColor="@color/black"
             android:text="Group"
-            android:textSize="20sp"
+            android:textSize="35sp"
+            android:gravity="center"
             android:layout_gravity="center_vertical"
-            android:fontFamily="@font/mpr1c_bold"/>
+            android:fontFamily="@font/mpr1c_extrabold"/>
 
         <ImageView
             android:id="@+id/imgAdd"

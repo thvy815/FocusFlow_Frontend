@@ -7,7 +7,7 @@
     android:paddingVertical="12dp"
     android:gravity="center_vertical"
     android:id="@+id/profile_row_layout"
-    android:background="@color/white">
+    android:background="@color/in">
 
     <TextView
         android:id="@+id/titleText"
@@ -26,7 +26,7 @@
         android:contentDescription="subtract"
         android:onClick="sub_numeric"
         android:src="@drawable/ic_subtract"
-        android:padding="8dp"/>
+        android:padding="10dp"/>
 
     <TextView
         android:id="@+id/tv_numeric"
@@ -45,6 +45,6 @@
         android:contentDescription="add"
         android:onClick="add_numeric"
         android:src="@drawable/ic_add"
-        android:padding="8dp"/>
+        android:padding="10dp"/>
 
 </LinearLayout>
