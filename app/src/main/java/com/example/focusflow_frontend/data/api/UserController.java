@@ -53,6 +53,4 @@ public interface UserController {
 
     @POST("/auth/reset-password")
     Call<Void> resetPassword(@Query("token") String token, @Query("newPassword") String newPassword);
-    @PUT("api/user/avatar")
-    Call<Void> updateAvatar(@Body Map<String, String> avatarBody);
 }

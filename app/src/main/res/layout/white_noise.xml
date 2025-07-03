@@ -3,13 +3,13 @@
     android:id="@+id/design_bottom_sheet"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="@color/bgr">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:background="@color/white"
+        android:background="@color/bgr"
         android:padding="16dp">
 
         <!-- Header -->
@@ -28,12 +28,13 @@
                 android:id="@+id/tvWhiteNoise"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:text="White Noise"
                 android:textSize="22sp"
                 android:fontFamily="@font/mpr1c_bold"
                 android:textColor="@color/black"
-                android:gravity="start" />
+                android:gravity="center_horizontal" />
 
             <TextView
                 android:id="@+id/tvDone"

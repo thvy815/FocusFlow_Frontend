@@ -3,7 +3,8 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white">
+    android:padding="8dp"
+    android:background="@color/in">
 
     <!-- Tên tháng -->
     <TextView
@@ -25,36 +26,37 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:background="@color/bgr"
         android:weightSum="7"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp">
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Mon"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Tue"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Wed"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Thu"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Fri"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Sat"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
 
         <TextView android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="wrap_content" android:text="Sun"
-            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_medium"/>
+            android:gravity="center" android:textSize="12sp" android:fontFamily="@font/mpr1c_bold"/>
     </LinearLayout>
 </LinearLayout>

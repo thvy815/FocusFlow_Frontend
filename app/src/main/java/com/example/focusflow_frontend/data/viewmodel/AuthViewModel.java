@@ -35,6 +35,22 @@ public class AuthViewModel extends AndroidViewModel {
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final Map<Integer, MutableLiveData<User>> userLiveDataMap = new HashMap<>();
     private final MutableLiveData<List<User>> allUsers = new MutableLiveData<>();
+    private final MutableLiveData<Integer> userScore = new MutableLiveData<>(0);
+    public LiveData<Integer> getUserScore() {
+        return userScore;
+    }
+
+    public void increaseScore(int amount) {
+        Integer current = userScore.getValue();
+        if (current == null) current = 0;
+        int updated = current + amount;
+        userScore.setValue(updated);
+        Log.d("Score", "Score increased immediately to: " + updated);
+
+        // Cập nhật lên server nếu muốn
+        updateUserScore(updated);
+    }
+
 
     public LiveData<List<User>> getAllUsers() {
         return allUsers;
@@ -319,31 +335,6 @@ public class AuthViewModel extends AndroidViewModel {
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 if (onComplete != null) onComplete.run();
-            }
-        });
-    }
-    private final MutableLiveData<Boolean> avatarUpdateSuccess = new MutableLiveData<>();
-    public LiveData<Boolean> getAvatarUpdateSuccess() {
-        return avatarUpdateSuccess;
-    }
-
-    public void updateAvatarUrlToServer(Context context, String avatarUrl) {
-        Map<String, String> body = new HashMap<>();
-        body.put("avatarUrl", avatarUrl);
-
-        ApiClient.getUserController(context).updateAvatar(body).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("AVATAR", "Cập nhật avatar thành công trên server");
-                } else {
-                    Log.e("AVATAR", "Thất bại: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("AVATAR", "Lỗi mạng: " + t.getMessage());
             }
         });
     }

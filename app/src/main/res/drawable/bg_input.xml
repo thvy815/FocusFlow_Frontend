@@ -3,7 +3,7 @@
     android:shape="rectangle">
 
     <!-- Nền trắng -->
-    <solid android:color="@android:color/white" />
+    <solid android:color="@color/in" />
 
     <!-- Viền xám nhạt -->
     <stroke

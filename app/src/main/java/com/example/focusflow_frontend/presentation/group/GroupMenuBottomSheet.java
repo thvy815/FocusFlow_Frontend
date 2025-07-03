@@ -119,6 +119,8 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
             adapter.setUserList(users);
         });
 
+
+
         //Khi bam them nguoi:
         LinearLayout btnAdd = view.findViewById(R.id.add_layout);
         btnAdd.setOnClickListener(v->addMemberClick());
@@ -140,6 +142,12 @@ public class GroupMenuBottomSheet extends BottomSheetDialogFragment {
 
         return view;
     }
+
+    private void searchClick(GroupViewModel viewModel){
+        viewModel.requestFocusOnSearch(true); // gửi tín hiệu cho Detail
+        dismiss();
+    }
+    private boolean isNotification = true;
 
     private void addMemberClick(){
         AddMemberBottomSheet addSheet = new AddMemberBottomSheet();

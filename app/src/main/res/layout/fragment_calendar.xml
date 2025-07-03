@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/bgr">
 
     <!-- CalendarView -->
     <com.kizitonwose.calendar.view.CalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:layout_marginTop="10dp"
         app:cv_dayViewResource="@layout/item_calendar_day"
         app:cv_monthHeaderResource="@layout/item_calendar_header"
         app:layout_constraintEnd_toEndOf="parent"

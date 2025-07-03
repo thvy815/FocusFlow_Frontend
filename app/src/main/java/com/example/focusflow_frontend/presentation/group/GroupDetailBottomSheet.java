@@ -225,6 +225,7 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             adapter.removeTaskFromAdapter(deletedTaskId);
         });
 
+
         sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
     }
 
