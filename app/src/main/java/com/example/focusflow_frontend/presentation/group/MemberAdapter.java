@@ -59,10 +59,10 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.MemberView
         User member = userList.get(position);
         holder.tvName.setText(member.getUsername());
 
-        if (user.getId() == group.getLeaderId()) {
-            holder.ivCrownIcon.setVisibility(View.VISIBLE); // Hiện vương miện
+        if (member.getId() == group.getLeaderId()) {
+            holder.ivCrownIcon.setVisibility(View.VISIBLE);
         } else {
-            holder.ivCrownIcon.setVisibility(View.GONE); // Ẩn nếu không phải leader
+            holder.ivCrownIcon.setVisibility(View.GONE);
         }
 
         // Chỉ hiển thị nút "Xóa" nếu người dùng hiện tại là leader và không phải chính mình

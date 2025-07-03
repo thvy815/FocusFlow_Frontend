@@ -109,7 +109,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         return true;
     }
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -122,7 +121,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             user = (User) getArguments().getSerializable(ARG_USER);
             // Set group name
             groupNameTextView.setText(group.getGroupName());
-
         }
 
         // Kết nối WebSocket để nhận task mới theo thời gian thực
@@ -267,8 +265,9 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         sheet.setArguments(args);
 
         sheet.setOnTaskAddedListener(newTask -> {
-            adapter.addTaskToAdapter(newTask); // thêm task vào danh sách hiện tại
-            allTasks.add(newTask);             // cập nhật danh sách gốc
+            taskViewModel.fetchTasksByGroup(group.getId()); // đảm bảo đồng bộ với BE
+//            adapter.addTaskToAdapter(newTask); // thêm task vào danh sách hiện tại
+//            allTasks.add(newTask);             // cập nhật danh sách gốc
         });
 
         sheet.show(getParentFragmentManager(), "AddTaskBottomSheet");
