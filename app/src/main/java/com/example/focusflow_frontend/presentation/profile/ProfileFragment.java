@@ -1,117 +1,95 @@
 package com.example.focusflow_frontend.presentation.profile;
 
-import static java.lang.Math.log;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.example.focusflow_frontend.R;
-import com.example.focusflow_frontend.data.model.Streak;
+import com.example.focusflow_frontend.data.api.AvatarService;
+import com.example.focusflow_frontend.data.api.ImageUploadService;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
-import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
-import com.example.focusflow_frontend.data.viewmodel.StreakViewModel;
 import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
 import com.example.focusflow_frontend.utils.ApiClient;
-import com.example.focusflow_frontend.utils.TokenManager;
+import com.example.focusflow_frontend.utils.ImageApiClient;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.*;
 
-import retrofit2.Retrofit;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.*;
 
 public class ProfileFragment extends Fragment {
-    private static final int PICK_IMAGE_REQUEST = 1;
-
     private AuthViewModel authViewModel;
     private ImageView avatarImage;
-    private String savedAvatar;
+    private TextView usernameTextView;
+    private Button btnUpgradePro;
+    private ImageView btnSettings;
+
     private String fullname = "", username = "";
-    private int totalPomodoro = 0, maxStreak = 0;
-    private boolean isPomodoroReady = false, isStreakReady = false;
+
+    private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Uri imageUri = result.getData().getData();
+                    avatarImage.setImageURI(imageUri);
+                    uploadImageToImageServer(imageUri);
+                }
+            }
+    );
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         avatarImage = view.findViewById(R.id.avatarImage);
-        TextView usernameTextView = view.findViewById(R.id.userName);
-        LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
-        Button btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
-        ImageView btnSettings = view.findViewById(R.id.btnSetting);
+        usernameTextView = view.findViewById(R.id.userName);
+        btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
+        btnSettings = view.findViewById(R.id.btnSetting);
 
-        // Auth
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-        authViewModel.getCurrentUser();
+
         authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                fullname = user.getFullName();
-                username = user.getUsername();
+                fullname = user.getFullName() != null ? user.getFullName() : "";
+                username = user.getUsername() != null ? user.getUsername() : "";
                 usernameTextView.setText(fullname);
 
-                if (user.getAvatarUrl() != null) {
-                    savedAvatar = user.getAvatarUrl();
-                    if (savedAvatar.startsWith("res:")) {
-                        avatarImage.setImageResource(Integer.parseInt(savedAvatar.substring(4)));
-                    } else if (savedAvatar.startsWith("url:")) {
-                        String imageUrl = savedAvatar.substring(4);
-                        Glide.with(getContext()).load(imageUrl).into(avatarImage);
+                String avatarUrl = user.getAvatarUrl();
+                if (avatarUrl != null && avatarUrl.startsWith("url:")) {
+                    if (getContext() != null) {
+                        Glide.with(getContext())
+                                .load(avatarUrl.substring(4))
+                                .error(R.drawable.avatar1)
+                                .into(avatarImage);
                     }
+                } else {
+                    avatarImage.setImageResource(R.drawable.avatar1);
                 }
             }
         });
 
-        // Pomodoro
-        PomodoroViewModel pomodoroViewModel = new ViewModelProvider(this).get(PomodoroViewModel.class);
-        int userId = TokenManager.getUserId(getContext());
-        pomodoroViewModel.getAllPomodoro(getContext(), userId);
-        pomodoroViewModel.getPomodoroList().observe(getViewLifecycleOwner(), pomodoros -> {
-            if (pomodoros != null) {
-                totalPomodoro = pomodoros.size();
-                isPomodoroReady = true;
-                tryShowBadges(achievementLayout);
-            }
-        });
+        authViewModel.getCurrentUser();
 
-        // Streak
-        StreakViewModel streakViewModel = new ViewModelProvider(this).get(StreakViewModel.class);
-        streakViewModel.getStreakByUser(userId, new StreakViewModel.StreakCallback() {
-            @Override
-            public void onSuccess(Streak streak) {
-                maxStreak = streak.getMaxStreak();
-                isStreakReady = true;
-                tryShowBadges(achievementLayout);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e("STREAK_ERROR", errorMessage);
-                Toast.makeText(getContext(), "Failed to load streak: " + errorMessage, Toast.LENGTH_SHORT).show();
-                isStreakReady = true;
-                tryShowBadges(achievementLayout);
-            }
-        });
-
-        // Avatar
         avatarImage.setOnClickListener(v -> showImagePickDialog());
 
-        // Upgrade Pro
-        Retrofit retrofit = ApiClient.getRetrofit(requireContext());
-        ProUtils.isProValid(requireContext(), retrofit, new ProStatusCallback() {
+        ProUtils.isProValid(requireContext(), ApiClient.getRetrofit(requireContext()), new ProStatusCallback() {
             @Override
             public void onResult(boolean isProUser) {
                 btnUpgradePro.setVisibility(isProUser ? View.GONE : View.VISIBLE);
@@ -119,97 +97,20 @@ public class ProfileFragment extends Fragment {
 
             @Override
             public void onError(String message) {
-                Log.e("ProfileFragment", "Lỗi kiểm tra Pro: " + message);
-                // Fallback nếu lỗi → vẫn hiển thị nút
                 btnUpgradePro.setVisibility(View.VISIBLE);
             }
         });
+
         btnUpgradePro.setOnClickListener(v -> openZaloPay());
-
-        // Settings
         btnSettings.setOnClickListener(v -> openSettings());
-
-        // Optional: Streak & score
-        setStreakAndScore(view);
 
         return view;
     }
 
-    private void tryShowBadges(LinearLayout layout) {
-        if (isPomodoroReady && isStreakReady) {
-            List<Integer> earnedBadges = getEarnedBadges(totalPomodoro, maxStreak);
-            Map<Integer, String> descriptions = getBadgeDescriptions(totalPomodoro, maxStreak);
-            setUserBadges(layout, earnedBadges, descriptions);
-        }
-    }
-
-    private List<Integer> getEarnedBadges(int pomodoroCount, int streakCount) {
-        List<Integer> badges = new ArrayList<>();
-        if (pomodoroCount >= 3) badges.add(R.drawable.pomo3);
-        if (pomodoroCount >= 7) badges.add(R.drawable.pomo7);
-        if (pomodoroCount >= 100) badges.add(R.drawable.pomo100);
-        if (streakCount >= 7) badges.add(R.drawable.badge7);
-        if (streakCount >= 100) badges.add(R.drawable.badge100);
-        if (streakCount >= 1000) badges.add(R.drawable.badge1000);
-        return badges;
-    }
-
-    private Map<Integer, String> getBadgeDescriptions(int pomodoroCount, int streakCount) {
-        Map<Integer, String> map = new HashMap<>();
-        map.put(R.drawable.pomo3, pomodoroCount >= 3 ? "Congratulations! You have completed 3 Pomodoros." : "Complete 3 Pomodoros to earn this badge.");
-        map.put(R.drawable.pomo7, pomodoroCount >= 7 ? "Awesome! You have finished 7 Pomodoros." : "Complete 7 Pomodoros to unlock this badge.");
-        map.put(R.drawable.pomo100, pomodoroCount >= 100 ? "Incredible! You reached 100 Pomodoros." : "Complete 100 Pomodoros to get this badge.");
-        map.put(R.drawable.badge7, streakCount >= 7 ? "Nice! You maintained a 7-day streak." : "Reach a 7-day streak to earn this badge.");
-        map.put(R.drawable.badge100, streakCount >= 100 ? "Fantastic! You achieved a 100-day streak." : "Maintain a 100-day streak to earn this badge.");
-        map.put(R.drawable.badge1000, streakCount >= 1000 ? "Legendary! You completed a 1000-day streak." : "Reach a 1000-day streak to unlock this badge.");
-        return map;
-    }
-
-    private void setUserBadges(LinearLayout layout, List<Integer> earned, Map<Integer, String> descriptions) {
-        List<Integer> allBadges = Arrays.asList(
-                R.drawable.pomo3, R.drawable.pomo7, R.drawable.pomo100,
-                R.drawable.badge7, R.drawable.badge100, R.drawable.badge1000
-        );
-
-        layout.removeAllViews();
-        for (int badgeRes : allBadges) {
-            ImageView img = new ImageView(getContext());
-            img.setImageResource(badgeRes);
-            img.setAlpha(earned.contains(badgeRes) ? 1.0f : 0.3f);
-
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
-            params.setMargins(10, 0, 10, 0);
-            img.setLayoutParams(params);
-            img.setAdjustViewBounds(true);
-            img.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-            img.setOnClickListener(v -> showBadgeInfoDialog(badgeRes, descriptions.getOrDefault(badgeRes, "No description available.")));
-            layout.addView(img);
-        }
-    }
-    private void showBadgeInfoDialog(int badgeResId, String description) {
-        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_badge_info, null);
-
-        ImageView badgeImage = dialogView.findViewById(R.id.badgeImage);
-        TextView badgeDescription = dialogView.findViewById(R.id.badgeDescription);
-        ImageView closeButton = dialogView.findViewById(R.id.closeButton); // Nút đóng
-
-        badgeImage.setImageResource(badgeResId);
-        badgeDescription.setText(description);
-
-        AlertDialog dialog = new AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
-                .setView(dialogView)
-                .create();
-
-        closeButton.setOnClickListener(v -> dialog.dismiss());
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent); // Nền bo góc
-        dialog.show();
-    }
-
     private void showImagePickDialog() {
-        new AlertDialog.Builder(getContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Choose Avatar")
-                .setItems(new CharSequence[]{"From Gallery", "Predefined Avatars"}, (dialog, which) -> {
+                .setItems(new CharSequence[]{"From Gallery", "Select from Templates"}, (dialog, which) -> {
                     if (which == 0) openGallery();
                     else showPredefinedAvatarDialog();
                 })
@@ -220,56 +121,105 @@ public class ProfileFragment extends Fragment {
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
-        startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
+        galleryLauncher.launch(intent);
     }
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
-            Uri imageUri = data.getData();
 
-            // Hiển thị trước
-            avatarImage.setImageURI(imageUri);
-            Log.d("truoc storage", "loi");
-            // Tạo reference đến Firebase Storage
-            StorageReference storageRef = FirebaseStorage.getInstance().getReference("avatars/" + UUID.randomUUID().toString() + ".jpg");
-            Log.d("Image", "onActivityResult: ");
-            // Upload ảnh
-            storageRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        // Lấy URL sau khi upload thành công
-                        storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            String downloadUrl = uri.toString();
-                            savedAvatar = "url:" + downloadUrl;
+    private void uploadImageToImageServer(Uri imageUri) {
+        try {
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
+            if (inputStream == null) return;
 
-                            // Cập nhật avatar vào ViewModel hoặc server của bạn
-                            authViewModel.updateUser(fullname, username, savedAvatar);
-                        });
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Upload avatar thất bại", Toast.LENGTH_SHORT).show();
+            byte[] imageBytes = getBytes(inputStream);
+            RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), imageBytes);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", "avatar.jpg", requestFile);
+
+            ImageApiClient.getImageRetrofit()
+                    .create(ImageUploadService.class)
+                    .uploadAvatar(body)
+                    .enqueue(new Callback<Map<String, String>>() {
+                        @Override
+                        public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                String url = response.body().get("url");
+                                if (url != null) {
+                                    updateAvatar("url:" + url);
+                                }
+                            } else {
+                                showToast("Failed to upload image");
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Map<String, String>> call, Throwable t) {
+                            showToast("Connection error: " + t.getMessage());
+                        }
                     });
+
+        } catch (Exception e) {
+            showToast("Failed to read image: " + e.getMessage());
         }
     }
 
+    private void updateAvatar(String avatarUrl) {
+        if (fullname == null || fullname.isEmpty() || username == null || username.isEmpty()) {
+            if (authViewModel.getCurrentUserLiveData().getValue() != null) {
+                fullname = authViewModel.getCurrentUserLiveData().getValue().getFullName();
+                username = authViewModel.getCurrentUserLiveData().getValue().getUsername();
+            }
+        }
+
+        authViewModel.updateUser(fullname, username, avatarUrl);
+        authViewModel.fetchUserInfo(() -> showToast("Avatar updated successfully"));
+    }
+
+    private byte[] getBytes(InputStream inputStream) throws java.io.IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
+    }
 
     private void showPredefinedAvatarDialog() {
-        final int[] avatars = {R.drawable.avatar1, R.drawable.avatar2, R.drawable.avatar3, R.drawable.avatar4};
-        GridView grid = new GridView(getContext());
-        grid.setNumColumns(3);
-        grid.setAdapter(new ImageAdapter(getContext(), avatars));
+        ImageApiClient.getImageRetrofit()
+                .create(AvatarService.class)
+                .getAvatarUrls()
+                .enqueue(new Callback<List<String>>() {
+                    @Override
+                    public void onResponse(Call<List<String>> call, Response<List<String>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            showAvatarGridDialog(response.body().toArray(new String[0]));
+                        } else {
+                            showToast("Failed to retrieve avatar list");
+                        }
+                    }
 
-        AlertDialog dialog = new AlertDialog.Builder(getContext())
-                .setTitle("Select Avatar")
+                    @Override
+                    public void onFailure(Call<List<String>> call, Throwable t) {
+                        showToast("Network error: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void showAvatarGridDialog(String[] avatarUrls) {
+        GridView grid = new GridView(requireContext());
+        grid.setNumColumns(3);
+        grid.setAdapter(new UrlImageAdapter(requireContext(), avatarUrls));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle("Choose Avatar")
                 .setView(grid)
                 .setNegativeButton("Cancel", null)
                 .create();
 
         grid.setOnItemClickListener((parent, view, position, id) -> {
-            int resId = avatars[position];
-            savedAvatar = "res:" + resId;
-            avatarImage.setImageResource(resId);
-            authViewModel.updateUser(fullname, username, savedAvatar);
+            String selectedUrl = "url:" + avatarUrls[position];
+            if (getContext() != null) {
+                Glide.with(getContext()).load(avatarUrls[position]).into(avatarImage);
+            }
+            updateAvatar(selectedUrl);
             dialog.dismiss();
         });
 
@@ -287,26 +237,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private void openSettings() {
-        FragmentManager fm = getParentFragmentManager();
-        Fragment existing = fm.findFragmentByTag("ProfileSettingBottomSheet");
-        if (existing != null && existing.isAdded()) {
-            fm.beginTransaction().remove(existing).commit();
-        }
-
         ProfileSettingBottomSheet sheet = new ProfileSettingBottomSheet();
-        Bundle bundle = new Bundle();
-        bundle.putString("fullname", fullname);
-        bundle.putString("username", username);
-        if (savedAvatar != null) bundle.putString("savedAvatar", savedAvatar);
-        if (authViewModel.getCurrentUserLiveData().getValue() != null) {
-            bundle.putString("email", authViewModel.getCurrentUserLiveData().getValue().getEmail());
-        }
-        sheet.setArguments(bundle);
-        sheet.show(fm, "ProfileSettingBottomSheet");
+        sheet.show(getParentFragmentManager(), "ProfileSettingBottomSheet");
     }
 
-    private void setStreakAndScore(View view) {
-        ((TextView) view.findViewById(R.id.streakValue)).setText(""); // optional: bạn có thể đặt dữ liệu thật
-        ((TextView) view.findViewById(R.id.scoreValue)).setText("");
+    private void showToast(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 }
