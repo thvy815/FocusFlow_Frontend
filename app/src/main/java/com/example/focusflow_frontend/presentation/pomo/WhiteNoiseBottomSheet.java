@@ -11,10 +11,15 @@ import android.widget.TextView;
 import android.media.MediaPlayer;
 
 import com.example.focusflow_frontend.R;
+import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.ViewUtils;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+
+import retrofit2.Retrofit;
 
 public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
     private WhiteNoisePlayer whiteNoisePlayer;
@@ -66,15 +71,6 @@ public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
         tvDone.setOnClickListener(v -> {
             ViewUtils.handleBackClick(this);
         });
-
-//        MediaPlayer testPlayer = MediaPlayer.create(requireContext(), R.raw.clock_sound);
-//        testPlayer.start();
-//        testPlayer.setOnErrorListener((mp, what, extra) -> {
-//            Log.e("WhiteNoise", "MediaPlayer error: what=" + what + ", extra=" + extra);
-//            return true;
-//        });
-
-
         ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise1, R.drawable.volume_off);
         ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise2, R.drawable.clock);
         ViewUtils.setWhiteNoise(view, R.id.Row1, R.id.noise3, R.drawable.fan);
@@ -88,8 +84,24 @@ public class WhiteNoiseBottomSheet extends BottomSheetDialogFragment {
         ViewUtils.setVolume(view, R.id.Row1, R.id.noise2, R.raw.clock_sound, whiteNoisePlayer);
         ViewUtils.setVolume(view, R.id.Row1, R.id.noise3, R.raw.fan_sound, whiteNoisePlayer);
 
-        ViewUtils.setVolume(view, R.id.Row2, R.id.noise1, R.raw.rain_sound, whiteNoisePlayer);
-        ViewUtils.setVolume(view, R.id.Row2, R.id.noise2, R.raw.underwater_sound, whiteNoisePlayer);
+        Retrofit retrofit = ApiClient.getRetrofit(requireContext());
+        ProUtils.isProValid(requireContext(), retrofit, new ProStatusCallback() {
+            @Override
+            public void onResult(boolean isProUser) {
+                if (isProUser) {
+                    ViewUtils.setVolume(view, R.id.Row2, R.id.noise1, R.raw.rain_sound, whiteNoisePlayer);
+                    ViewUtils.setVolume(view, R.id.Row2, R.id.noise2, R.raw.underwater_sound, whiteNoisePlayer);
+                } else {
+                    ViewUtils.stopVolumeWithDialog(WhiteNoiseBottomSheet.this, view, R.id.Row2, R.id.noise1, whiteNoisePlayer, false);
+                    ViewUtils.stopVolumeWithDialog(WhiteNoiseBottomSheet.this, view, R.id.Row2, R.id.noise2, whiteNoisePlayer, false);
+                }
+            }
+            @Override
+            public void onError(String message) {
+                Log.e("WhiteNoiseBottomSheet", "Pro check failed: " + message);
+            }
+        });
+
         return view;
     }
 }

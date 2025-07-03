@@ -17,7 +17,6 @@ import com.example.focusflow_frontend.data.model.SignUpRequest;
 import com.example.focusflow_frontend.data.model.User;
 import com.example.focusflow_frontend.data.model.UserUpdateRequest;
 import com.example.focusflow_frontend.utils.ApiClient;
-import com.google.gson.Gson;
 
 import java.util.HashMap;
 import java.util.List;
@@ -292,4 +291,23 @@ public class AuthViewModel extends AndroidViewModel {
             }
         });
     }
+
+    // Hàm gọi lại server để lấy thông tin mới nhất của user
+    public void fetchUserInfo(Runnable onComplete) {
+        userController.getCurrentUser().enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    currentUser.postValue(response.body());
+                }
+                if (onComplete != null) onComplete.run();
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                if (onComplete != null) onComplete.run();
+            }
+        });
+    }
+
 }

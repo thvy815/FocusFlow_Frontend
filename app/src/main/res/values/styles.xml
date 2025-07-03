@@ -15,6 +15,12 @@
         <item name="android:fontFamily">@font/mpr1c_bold</item>
     </style>
 
+    <style name="CustomAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
     <!-- Style cho ngày của Calendar -->
     <style name="CalendarDateText">
         <item name="android:textSize">14sp</item>
@@ -28,15 +34,23 @@
     </style>
 
     <!-- Style cho dialog chatbox -->
-    <style name="ChatboxDialogTheme" parent="Theme.AppCompat.Light.Dialog">
-        <item name="android:windowMinWidthMajor">90%</item>
-        <item name="android:windowBackground">@drawable/bg_card</item>
+    <style name="ChatboxDialogTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
         <item name="android:windowIsFloating">true</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowBackground">@android:color/transparent</item> <!-- chuyển thành transparent -->
+        <item name="android:backgroundDimEnabled">false</item> <!-- tắt nền tối nếu muốn -->
     </style>
 <!--Style bo goc-->
     <style name="CircleImageView" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="RoundedImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item> <!-- Điều chỉnh độ bo góc ở đây -->
+    </style>
+
 </resources>
