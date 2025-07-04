@@ -70,7 +70,6 @@ public class StreakFragment extends Fragment {
         streakCountTextView = view.findViewById(R.id.streak_count);
         maxStreakTextView = view.findViewById(R.id.max_streak);
         calendarView = view.findViewById(R.id.calendarView);
-        buttonNextFragment = view.findViewById(R.id.buttonNextFragment);
 
         // Initialize ViewModel
         viewModel = new ViewModelProvider(this).get(StreakViewModel.class);
@@ -131,14 +130,6 @@ public class StreakFragment extends Fragment {
         });
 
         calendarView.scrollToDate(todayDate);
-
-        // Navigate to MissionFragment
-        buttonNextFragment.setOnClickListener(v -> {
-            FragmentTransaction tx = getParentFragmentManager().beginTransaction();
-            tx.replace(R.id.fragment_container, new MissionFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
 
         viewModel.getStreakByUser(userId);
 
