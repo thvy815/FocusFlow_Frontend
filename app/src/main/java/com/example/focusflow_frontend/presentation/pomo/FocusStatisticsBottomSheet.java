@@ -1,6 +1,7 @@
 package com.example.focusflow_frontend.presentation.pomo;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,7 +21,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Pomodoro;
 import com.example.focusflow_frontend.data.viewmodel.PomodoroViewModel;
+import com.example.focusflow_frontend.presentation.main.MainActivity;
+import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
+import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.ViewUtils;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
+import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -52,6 +58,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import retrofit2.Retrofit;
 
 public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 
@@ -155,7 +163,23 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
             // Gọi lại tất cả các hàm cập nhật dữ liệu
             updatePomodoroCounts();
             paintTrendChart(trendChart);
-            showTodayPieChart(pieChart);
+
+            Retrofit retrofit = ApiClient.getRetrofit(requireContext());
+
+            ProUtils.isProValid(requireContext(), retrofit, new ProStatusCallback() {
+                @Override
+                public void onResult(boolean isProUser) {
+                    if (isProUser) {
+                        showTodayPieChart(pieChart);
+                    } else {
+                        showUpgradeProDialog(requireContext());
+                    }
+                }
+                @Override
+                public void onError(String message) {
+                    Log.e("Pie chart", "Pro check failed: " + message);
+                }
+            });
             viewModel.fetchLatestPomodoro(requireContext(), userId);
 
             // Tắt vòng xoay sau 1 giây
@@ -164,6 +188,37 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
             }, 1000);
         });
     }
+    public static void showUpgradeProDialog(Context context) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
+        View dialogView = android.view.LayoutInflater.from(context).inflate(R.layout.dialog_upgrade_pro, null);
+        builder.setView(dialogView);
+
+        android.app.AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.show();
+
+        dialogView.findViewById(R.id.closeButton).setOnClickListener(v -> dialog.dismiss());
+        dialogView.findViewById(R.id.tvNoThanks).setOnClickListener(v -> dialog.dismiss());
+
+        dialogView.findViewById(R.id.btnUpgrade).setOnClickListener(v -> {
+            dialog.dismiss();
+            ZaloPayBottomSheet sheet = new ZaloPayBottomSheet();
+            sheet.setOnPlanSelectedListener((plan, amount) -> {
+                if (context instanceof MainActivity) {
+                    ((MainActivity) context).createAndPayOrder(plan, amount);
+                }
+            });
+
+            // Lấy FragmentManager từ context nếu có
+            if (context instanceof androidx.fragment.app.FragmentActivity) {
+                sheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(), "ZaloPayBottomSheet");
+            } else {
+                Log.e("UpgradeProDialog", "Context is not a FragmentActivity. Cannot show BottomSheet.");
+            }
+        });
+    }
+
     private void updatePomodoroCounts() {
         viewModel.fetchPomodorosByUser(requireContext(), userId); // đảm bảo có dữ liệu
 
