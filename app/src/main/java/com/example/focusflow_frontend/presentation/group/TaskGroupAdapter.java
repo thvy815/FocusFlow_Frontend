@@ -208,74 +208,60 @@ public class TaskGroupAdapter extends RecyclerView.Adapter<TaskGroupAdapter.Task
             priorityName = itemView.findViewById(R.id.priorityName);
         }
     }
-
     private View createAvatarView(ViewGroup parent, User user) {
         Context context = parent.getContext();
         String avatarUrl = user.getAvatarUrl();
 
-        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
-            // Có avatarUrl → ImageView
-            ImageView imageView = new ImageView(parent.getContext());
-            int size = (int) (parent.getContext().getResources().getDisplayMetrics().density * 40); // 40dp
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
-            params.setMargins(8, 0, 8, 0);
-            imageView.setLayoutParams(params);
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setBackgroundResource(R.drawable.bg_circle); // viền tròn nếu muốn
+        ImageView imageView = new ImageView(context);
+        int size = (int) (context.getResources().getDisplayMetrics().density * 40); // 40dp
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+        params.setMargins(8, 0, 8, 0);
+        imageView.setLayoutParams(params);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        imageView.setBackgroundResource(R.drawable.bg_circle);
 
-            if (avatarUrl.startsWith("res:")) {
-                // 🔹 Ảnh từ resource nội bộ
-                int resId = Integer.parseInt(avatarUrl.substring(4));
-                Glide.with(context)
-                        .load(resId)
-                        .circleCrop()
-                        .placeholder(R.drawable.bg_circle)
-                        .into(imageView);
-            } else if (avatarUrl.startsWith("uri:")) {
-                // 🔹 Ảnh từ album, MediaStore, Google Photos, etc.
-                Uri uri = Uri.parse(avatarUrl.substring(4));
-                Log.d("AvatarDebug", "Parsed Uri: " + uri.toString());
-                Glide.with(context)
-                        .load(uri)
-                        .circleCrop()
-                        .placeholder(R.drawable.bg_circle)
-                        .into(imageView);
-            } else if (avatarUrl.startsWith("http")) {
-                // 🔹 URL online
-                Glide.with(context)
-                        .load(avatarUrl)
-                        .circleCrop()
-                        .placeholder(R.drawable.bg_circle)
-                        .into(imageView);
-            } else {
-                // Không rõ định dạng
-                imageView.setImageResource(R.drawable.bg_circle);
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            try {
+                if (avatarUrl.startsWith("url:") || avatarUrl.startsWith("http")) {
+                    String finalUrl = avatarUrl.startsWith("url:") ? avatarUrl.substring(4) : avatarUrl;
+
+                    // Nếu là localhost → đổi thành 10.0.2.2 để load được từ Android Emulator
+                    if (finalUrl.contains("localhost")) {
+                        finalUrl = finalUrl.replace("localhost", "10.0.2.2");
+                    }
+
+                    Glide.with(context)
+                            .load(finalUrl)
+                            .circleCrop()
+                            .placeholder(R.drawable.avatar1)
+                            .error(R.drawable.avatar1)
+                            .into(imageView);
+
+                } else if (avatarUrl.startsWith("uri:")) {
+                    Uri uri = Uri.parse(avatarUrl.substring(4));
+                    Glide.with(context)
+                            .load(uri)
+                            .circleCrop()
+                            .placeholder(R.drawable.avatar1)
+                            .error(R.drawable.avatar1)
+                            .into(imageView);
+
+                } else if (avatarUrl.startsWith("res:")) {
+                    int resId = Integer.parseInt(avatarUrl.substring(4));
+                    imageView.setImageResource(resId);
+                } else {
+                    imageView.setImageResource(R.drawable.avatar1);
+                }
+            } catch (Exception e) {
+                imageView.setImageResource(R.drawable.avatar1);
             }
 
             return imageView;
+
         } else {
-            // Không có avatarUrl → dùng TextView bo tròn
-            TextView avatar = new TextView(parent.getContext());
-            int size = (int) (parent.getContext().getResources().getDisplayMetrics().density * 40);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
-            params.setMargins(8, 0, 8, 0);
-            avatar.setLayoutParams(params);
-
-            avatar.setText(String.valueOf(user.getUsername().charAt(0)).toUpperCase());
-            avatar.setTextColor(parent.getContext().getResources().getColor(android.R.color.black));
-            avatar.setBackgroundResource(R.drawable.bg_circle);
-            avatar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            avatar.setGravity(android.view.Gravity.CENTER);
-            avatar.setTextSize(16);
-            int[] colors = {
-                    Color.parseColor("#FFB74D"), Color.parseColor("#64B5F6"),
-                    Color.parseColor("#81C784"), Color.parseColor("#E57373"),
-                    Color.parseColor("#BA68C8")
-            };
-            int colorIndex = Math.abs(user.getUsername().hashCode()) % colors.length;
-            avatar.setBackgroundTintList(ColorStateList.valueOf(colors[colorIndex]));
-
-            return avatar;
+            // Không có avatar → dùng avatar mặc định luôn
+            imageView.setImageResource(R.drawable.avatar1);
+            return imageView;
         }
     }
 }

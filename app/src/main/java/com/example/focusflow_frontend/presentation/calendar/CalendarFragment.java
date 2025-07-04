@@ -49,6 +49,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -384,14 +385,28 @@ public class CalendarFragment extends Fragment {
         for (Task task : allTasks) {
             if (task.getDueDate() == null) continue;
 
-            LocalDate due = LocalDate.parse(task.getDueDate(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            LocalDate due = null;
+
+            String dueDate = task.getDueDate();
+            if (dueDate != null && !dueDate.equalsIgnoreCase("None") && !dueDate.trim().isEmpty()) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    due = LocalDate.parse(dueDate, formatter);
+                } catch (DateTimeParseException e) {
+                    Log.e("DateParse", "Không thể phân tích ngày: " + dueDate, e);
+                    // due vẫn là null
+                }
+            } else {
+                Log.d("DateCheck", "Ngày là None hoặc rỗng");
+            }
+
             String repeat = task.getRepeatStyle();
             boolean isMatch = false;
 
-            if (repeat == null || repeat.equalsIgnoreCase("None")) {
+            if ((repeat == null || repeat.equalsIgnoreCase("None")) && due != null) {
                 isMatch = due.equals(selectedDate);
             } else {
-                if (!selectedDate.isBefore(due)) { // chỉ xét khi selectedDate >= due
+                if (due != null && !selectedDate.isBefore(due)) { // chỉ xét khi selectedDate >= due
                     switch (repeat) {
                         case "Daily":
                             isMatch = true;
