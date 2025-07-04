@@ -366,6 +366,7 @@ public class CalendarFragment extends Fragment {
                 taskViewModel.fetchTasks(userId);
                 // Load lại streak
                 streakViewModel.getStreakByUser(userId);
+                calendarView.notifyCalendarChanged();
             }
 
             // Tắt vòng xoay sau 1s

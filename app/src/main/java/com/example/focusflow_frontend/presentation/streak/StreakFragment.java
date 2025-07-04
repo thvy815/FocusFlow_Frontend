@@ -152,7 +152,22 @@ public class StreakFragment extends Fragment {
             }
         });
 
+        setupSwipeToRefresh(view);
+
         return view;
+    }
+
+    private void setupSwipeToRefresh(View view) {
+        androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            viewModel.getStreakByUser(userId); // Gọi lại API để lấy streak mới
+            calendarView.notifyCalendarChanged();
+            // Sau khi dữ liệu đã load xong sẽ được cập nhật qua observer
+            // nên chỉ cần tắt hiệu ứng refresh sau 1 chút delay
+            swipeRefreshLayout.postDelayed(() -> {
+                swipeRefreshLayout.setRefreshing(false);
+            }, 1000); // 1s delay nhẹ để UX mượt
+        });
     }
 
     public static class DayViewContainer extends ViewContainer {
