@@ -90,10 +90,15 @@ public class ProfileFragment extends Fragment {
                 usernameTextView.setText(fullname);
 
                 String avatarUrl = user.getAvatarUrl();
-                if (avatarUrl != null && avatarUrl.startsWith("url:")) {
+                if (avatarUrl != null && (avatarUrl.startsWith("url:") || avatarUrl.startsWith("http"))) {
+                    String finalUrl = avatarUrl;
+                    if (avatarUrl.startsWith("url:")) {
+                        finalUrl = avatarUrl.substring(4); // Bỏ prefix "url:"
+                    }
+
                     if (getContext() != null) {
                         Glide.with(getContext())
-                                .load(avatarUrl.substring(4))
+                                .load(finalUrl)
                                 .error(R.drawable.avatar1)
                                 .into(avatarImage);
                     }
