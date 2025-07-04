@@ -95,7 +95,7 @@
                 android:id="@+id/btnUpgradePro"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:text="Upgrade to Pro"
                 android:textSize="16sp"
                 android:textColor="@android:color/white"
@@ -111,7 +111,7 @@
                 android:text="Overview"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="16dp"
                 android:fontFamily="@font/mpr1c_bold" />
 
             <!-- Streak + Score -->
@@ -183,7 +183,7 @@
                         android:id="@+id/XP_Icon"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/ic_pet_mission"
+                        android:src="@drawable/ic_event"
                         android:contentDescription="XP Icon" />
 
                     <LinearLayout
@@ -193,7 +193,7 @@
                         android:layout_marginStart="8dp">
 
                         <TextView
-                            android:id="@+id/scoreValue"
+                            android:id="@+id/taskValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text=""
@@ -205,7 +205,7 @@
                             android:id="@+id/TotalTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Score"
+                            android:text="Task"
                             android:textSize="16sp"
                             android:textColor="#757575"
                             android:fontFamily="@font/mpr1c_bold" />
@@ -221,7 +221,7 @@
                 android:text="Achievements"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="16dp"
                 android:fontFamily="@font/mpr1c_bold" />
 
             <HorizontalScrollView

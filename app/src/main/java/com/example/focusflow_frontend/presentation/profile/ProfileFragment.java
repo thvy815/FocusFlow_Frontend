@@ -21,11 +21,15 @@ import com.bumptech.glide.Glide;
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.api.AvatarService;
 import com.example.focusflow_frontend.data.api.ImageUploadService;
+import com.example.focusflow_frontend.data.model.Task;
 import com.example.focusflow_frontend.data.viewmodel.AuthViewModel;
+import com.example.focusflow_frontend.data.viewmodel.StreakViewModel;
+import com.example.focusflow_frontend.data.viewmodel.TaskViewModel;
 import com.example.focusflow_frontend.presentation.main.MainActivity;
 import com.example.focusflow_frontend.presentation.zalopay.ZaloPayBottomSheet;
 import com.example.focusflow_frontend.utils.ApiClient;
 import com.example.focusflow_frontend.utils.ImageApiClient;
+import com.example.focusflow_frontend.utils.TokenManager;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 
@@ -34,6 +38,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import okhttp3.MediaType;
@@ -43,13 +48,14 @@ import retrofit2.*;
 
 public class ProfileFragment extends Fragment {
     private AuthViewModel authViewModel;
+    private TaskViewModel taskViewModel;
+    private StreakViewModel streakViewModel;
+    private int userId;
     private ImageView avatarImage;
     private TextView usernameTextView;
     private Button btnUpgradePro;
     private ImageView btnSettings;
-
     private String fullname = "", username = "";
-
 
     private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -72,7 +78,11 @@ public class ProfileFragment extends Fragment {
         LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
         btnSettings = view.findViewById(R.id.btnSetting);
 
+        userId = TokenManager.getUserId(requireContext());
+
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+        streakViewModel = new ViewModelProvider(this).get(StreakViewModel.class);
         authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 fullname = user.getFullName() != null ? user.getFullName() : "";
@@ -118,7 +128,7 @@ public class ProfileFragment extends Fragment {
                 R.drawable.pomo100
         );
         setUserBadges(achievementLayout, earnedBadges);
-        setStreakAndScore(view);
+        setStreakAndTask(view);
 
         setupSwipeToRefresh(view);
 
@@ -173,11 +183,43 @@ public class ProfileFragment extends Fragment {
         return img;
     }
 
-    private void setStreakAndScore(View view) {
-        TextView streak = view.findViewById(R.id.streakValue);
-        TextView score = view.findViewById(R.id.scoreValue);
-        streak.setText("");  // Tuỳ bạn có dữ liệu hay không
-        score.setText("");
+    private void setStreakAndTask(View view) {
+        TextView tvStreak = view.findViewById(R.id.streakValue);
+        TextView task = view.findViewById(R.id.taskValue);
+
+        tvStreak.setText("");  // Tuỳ bạn có dữ liệu hay không
+        task.setText("");
+
+        // Observe task list
+        taskViewModel.fetchTasks(userId);
+        taskViewModel.getTaskList().observe(getViewLifecycleOwner(), tasks -> {
+            if (tasks == null) return;
+
+            int completedToday = 0;
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            String todayStr = sdf.format(new Date());
+
+            for (Task taskItem : tasks) {
+                if (taskItem.isCompleted() && taskItem.getDueDate() != null) {
+                    String dueDateStr = taskItem.getDueDate();
+                    if (todayStr.equals(dueDateStr)) {
+                        completedToday++;
+                    }
+                }
+            }
+
+            task.setText(String.valueOf(completedToday));
+        });
+
+        // Observe streak
+        streakViewModel.getStreakByUser(userId);
+        streakViewModel.getStreakLive().observe(getViewLifecycleOwner(), streak -> {
+            if (streak != null) {
+                tvStreak.setText(String.valueOf(streak.getCurrentStreak()));
+            } else {
+                tvStreak.setText("0");
+            }
+        });
     }
 
     private void showImagePickDialog() {
