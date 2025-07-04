@@ -1,5 +1,6 @@
 package com.example.focusflow_frontend.presentation.group;
 
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -41,6 +42,8 @@ public class GroupFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_group, container, false);
 
+
+
         // Khởi tạo ViewModel
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         viewModel = new ViewModelProvider(this).get(GroupViewModel.class);
@@ -53,6 +56,7 @@ public class GroupFragment extends Fragment {
                 setupRecyclerView(view);      // Hiển thị danh sách nhóm
                 setupSearchBar(view);         // Tìm kiếm nhóm
                 setupAddGroupButton(view);    // Thêm nhóm mới
+                setupSwipeToRefresh(view);    // Kéo để reload
             }
         });
 
@@ -62,6 +66,28 @@ public class GroupFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void setupSwipeToRefresh(View view) {
+        SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.btn3, R.color.teal, R.color.blue
+        );
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (currentUser != null) {
+                // Reload danh sách nhóm
+                viewModel.loadGroupsOfUser(currentUser.getId());
+
+                // Sau khi load xong → tắt vòng xoay loading
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                }, 1000); // delay cho mượt
+            } else {
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     // Cấu hình RecyclerView để hiển thị danh sách các nhóm

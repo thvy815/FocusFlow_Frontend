@@ -1,9 +1,11 @@
 package com.example.focusflow_frontend.presentation.calendar;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -76,6 +78,12 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         this.deleteListener = listener;
     }
 
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        super.onDismiss(dialog);
+        selectedMemberIds.clear(); // ← reset lại tránh dữ liệu bị nhớ từ lần trước
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -83,6 +91,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.bottom_sheet_add_task, container, false);
 
+        selectedMemberIds.clear();
         userId = TokenManager.getUserId(requireContext());
 
         editTitle = view.findViewById(R.id.editTitle);
@@ -133,6 +142,12 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             }
         }
 
+        if (group != null && userId != group.getLeaderId()) {
+            // Không phải leader => ẩn nút
+            btnAddTask.setVisibility(View.GONE);
+            btnDeleteTask.setVisibility(View.GONE);
+        }
+
         if (editingTask != null) {
             // Chế độ sửa
             btnAddTask.setText("Done");
@@ -149,42 +164,35 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             selectedRepeat = editingTask.getRepeatStyle();
 
             if (group != null) {
-                // Khởi tạo biến chứa dữ liệu
-                List<User>[] groupMembers = new List[]{new ArrayList<>()};
-                List<User>[] assignedUsers = new List[]{new ArrayList<>()};
+                final List<User>[] groupMembers = new List[]{null};
+                final List<User>[] assignedUsers = new List[]{null};
 
-                // Observer 1: thành viên trong nhóm
+                // Gọi render khi cả 2 đã sẵn sàng
+                Runnable tryRender = () -> {
+                    if (groupMembers[0] != null && assignedUsers[0] != null) {
+                        updateSelectedIdsAndRender(groupMembers[0], assignedUsers[0], listMembers);
+                    }
+                };
+
                 groupViewModel.getUsersInGroup().observe(getViewLifecycleOwner(), users -> {
                     if (users != null && !users.isEmpty()) {
                         groupMembers[0] = users;
-
-                        // Nếu đã có assignedUsers thì render
-                        if (!assignedUsers[0].isEmpty()) {
-                            updateSelectedIdsAndRender(groupMembers[0], assignedUsers[0], listMembers);
-                        }
                     } else {
-                        listMembers.removeAllViews();
-                        TextView noData = new TextView(getContext());
-                        noData.setText("No members found.");
-                        noData.setPadding(20, 10, 20, 10);
-                        listMembers.addView(noData);
+                        groupMembers[0] = new ArrayList<>();
                     }
+                    tryRender.run();
                 });
 
-                // Observer 2: thành viên được assign task
                 groupViewModel.refreshAssignedUsersOfTask(editingTask.getId());
-                groupViewModel.getAssignedUsersLiveData(editingTask.getId()).observe(getViewLifecycleOwner(), assigned -> {
-                    if (assigned != null) {
-                        assignedUsers[0] = assigned;
-                    } else {
-                        assignedUsers[0] = new ArrayList<>();
-                    }
-
-                    // Nếu đã có groupMembers thì render
-                    if (!groupMembers[0].isEmpty()) {
-                        updateSelectedIdsAndRender(groupMembers[0], assignedUsers[0], listMembers);
-                    }
-                });
+                groupViewModel.getAssignedUsersOfTask(editingTask.getId())
+                        .observe(getViewLifecycleOwner(), new Observer<List<User>>() {
+                            @Override
+                            public void onChanged(List<User> users) {
+                                groupViewModel.getAssignedUsersOfTask(editingTask.getId()).removeObserver(this);
+                                assignedUsers[0] = (users != null) ? users : new ArrayList<>();
+                                tryRender.run();
+                            }
+                        });
             }
         } else {
             if (group != null) {
@@ -235,20 +243,17 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
                 if (group != null) {
                     // Là task nhóm → cập nhật lại ct_ids
-                    groupViewModel.getCtIdsForGroupMembers(selectedMemberIds, group.getId());
-
-                    groupViewModel.getCtIdLiveData().observe(getViewLifecycleOwner(), ctIds -> {
+                    groupViewModel.getCtIdsForGroupMembers(selectedMemberIds, group.getId(), ctIds -> {
                         if (ctIds == null || ctIds.isEmpty()) {
                             Toast.makeText(getContext(), "Không tìm thấy ct_id", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
-                        TaskGroupRequest request = new TaskGroupRequest(editingTask, ctIds); // request có taskId
-                        taskViewModel.updateTask(request); // gửi lên BE
+                        TaskGroupRequest request = new TaskGroupRequest(editingTask, ctIds);
+                        taskViewModel.updateTask(request);
 
-                        taskViewModel.getUpdateSuccess().observe(getViewLifecycleOwner(), success -> {
+                        observeOnce(taskViewModel.getUpdateSuccess(), getViewLifecycleOwner(), success -> {
                             if (Boolean.TRUE.equals(success)) {
-                                // Cập nhật lại user assigned
                                 groupViewModel.refreshAssignedUsersOfTask(editingTask.getId());
                                 Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
                                 if (updateListener != null) updateListener.onTaskUpdated(editingTask);
@@ -289,11 +294,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                     return;
                 }
 
-                // Lấy ct_ids trước → xử lý sau trong observer
-                groupViewModel.getCtIdsForGroupMembers(selectedMemberIds, group.getId());
-
-                // Gọi API lấy ctIds → Sau khi nhận được mới gọi tạo Task
-                groupViewModel.getCtIdLiveData().observe(getViewLifecycleOwner(), ctIds -> {
+                groupViewModel.getCtIdsForGroupMembers(selectedMemberIds, group.getId(), ctIds -> {
                     if (ctIds == null || ctIds.isEmpty()) {
                         Toast.makeText(getContext(), "Không tìm thấy ct_id", Toast.LENGTH_SHORT).show();
                         return;
@@ -301,8 +302,9 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
                     TaskGroupRequest request = new TaskGroupRequest(newTask, ctIds);
                     taskViewModel.createTask(request);
+                    Log.d("DEBUG", "CreateTask called with title = " + title);
 
-                    taskViewModel.getCreatedTask().observe(getViewLifecycleOwner(), createdTask -> {
+                    observeOnce(taskViewModel.getCreatedTask(), getViewLifecycleOwner(), createdTask -> {
                         if (createdTask != null) {
                             Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
                             if (listener != null) listener.onTaskAdded(createdTask);
@@ -311,8 +313,6 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                             Toast.makeText(getContext(), "Add task failed", Toast.LENGTH_SHORT).show();
                         }
                     });
-
-
                 });
             } else {
                 // Task cá nhân
@@ -373,6 +373,16 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         btnSelectDate.setOnClickListener(v -> showDateBottomSheet());
 
         return view;
+    }
+
+    public static <T> void observeOnce(LiveData<T> liveData, LifecycleOwner owner, Observer<T> observer) {
+        liveData.observe(owner, new Observer<T>() {
+            @Override
+            public void onChanged(T t) {
+                observer.onChanged(t);
+                liveData.removeObserver(this); // 👈 chỉ gọi 1 lần rồi remove
+            }
+        });
     }
 
     private void updateSelectedIdsAndRender(List<User> users, List<User> assignedUsers, LinearLayout container) {

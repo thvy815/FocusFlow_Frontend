@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -346,21 +347,24 @@ public class GroupViewModel extends AndroidViewModel {
         return ctIdsLiveData;
     }
     // Gọi API để lấy danh sách ct_id của các member trong group
-    public void getCtIdsForGroupMembers(List<Integer> userIds, int groupId) {
+    public void getCtIdsForGroupMembers(List<Integer> userIds, int groupId, Consumer<List<Integer>> callback) {
         CtIdRequest request = new CtIdRequest(userIds, groupId);
         groupController.getCtIdsForUsersInGroup(request).enqueue(new Callback<List<Integer>>() {
             @Override
             public void onResponse(Call<List<Integer>> call, Response<List<Integer>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ctIdsLiveData.postValue(response.body());
+                    callback.accept(response.body()); // truyền về callback
                 } else {
                     ctIdsLiveData.postValue(null);
+                    callback.accept(null);
                 }
             }
 
             @Override
             public void onFailure(Call<List<Integer>> call, Throwable t) {
                 ctIdsLiveData.postValue(null);
+                callback.accept(null);
             }
         });
     }
@@ -389,6 +393,10 @@ public class GroupViewModel extends AndroidViewModel {
 
         final MutableLiveData<List<User>> liveData = assignedUsersMap.get(taskId);
         fetchAssignedUsers(taskId, liveData);
+    }
+
+    public void clearAssignedUsersCache() {
+        assignedUsersMap.clear();  // 🧹 clear cache khi mở nhóm mới
     }
 
     public LiveData<List<User>> getAssignedUsersLiveData(int taskId) {

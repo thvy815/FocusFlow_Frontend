@@ -3,6 +3,8 @@ package com.example.focusflow_frontend.presentation.pomo;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Pomodoro;
@@ -136,7 +139,30 @@ public class FocusStatisticsBottomSheet extends BottomSheetDialogFragment {
 //Back click
         ViewUtils.backClick(this, view, R.id.focus_statistics_title, R.id.ic_back);
 
+        setupSwipeToRefresh(view);
+
         return view;
+    }
+
+    private void setupSwipeToRefresh(View view) {
+        SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.orange, R.color.teal, R.color.blue
+        );
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Gọi lại tất cả các hàm cập nhật dữ liệu
+            updatePomodoroCounts();
+            paintTrendChart(trendChart);
+            showTodayPieChart(pieChart);
+            viewModel.fetchLatestPomodoro(requireContext(), userId);
+
+            // Tắt vòng xoay sau 1 giây
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                swipeRefreshLayout.setRefreshing(false);
+            }, 1000);
+        });
     }
     private void updatePomodoroCounts() {
         viewModel.fetchPomodorosByUser(requireContext(), userId); // đảm bảo có dữ liệu

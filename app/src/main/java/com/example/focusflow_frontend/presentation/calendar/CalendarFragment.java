@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +25,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Streak;
@@ -194,10 +197,10 @@ public class CalendarFragment extends Fragment {
 
                     // Nếu là ngày được chọn
                     if (day.getDate().equals(selectedDate)) {
-                        container.dayText.setBackgroundResource(R.drawable.bg_circle);
+                        container.dayText.setBackgroundResource(R.drawable.circle_task);
                         container.dayText.setTextColor(Color.BLACK);
                     } else if (taskDates.contains(day.getDate())) {
-                        container.dayText.setBackgroundResource(R.drawable.circle_task); // ngày có task
+                        container.dayText.setBackgroundResource(R.drawable.bg_circle); // ngày có task
                         container.dayText.setTextColor(Color.BLACK);
                     } else {
                         container.dayText.setBackground(null);
@@ -253,6 +256,8 @@ public class CalendarFragment extends Fragment {
                 tvStreakCount.setText("0");
             }
         });
+
+        setupSwipeToRefresh(view);
 
         return view;
     }
@@ -346,6 +351,29 @@ public class CalendarFragment extends Fragment {
             taskDates.remove(current);
         }
     }
+
+    private void setupSwipeToRefresh(View view) {
+        SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.orange, R.color.teal, R.color.blue
+        );
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (userId != -1) {
+                // Load lại task
+                taskViewModel.fetchTasks(userId);
+                // Load lại streak
+                streakViewModel.getStreakByUser(userId);
+            }
+
+            // Tắt vòng xoay sau 1s
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                swipeRefreshLayout.setRefreshing(false);
+            }, 1000);
+        });
+    }
+
 
     private void filterTasksByDate(LocalDate selectedDate) {
         filteredTasks.clear();

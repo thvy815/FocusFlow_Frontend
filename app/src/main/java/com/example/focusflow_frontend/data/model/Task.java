@@ -1,6 +1,7 @@
 package com.example.focusflow_frontend.data.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class Task implements Serializable {
     private Integer id;
@@ -14,6 +15,7 @@ public class Task implements Serializable {
     private String reminderStyle;
     private String repeatStyle;
     private boolean isCompleted = false;
+    private List<User> assignedUsers;
 
     public Task(){}
 
@@ -86,4 +88,6 @@ public class Task implements Serializable {
 
     public boolean isCompleted() { return isCompleted; }
     public void setCompleted(boolean isCompleted) { this.isCompleted = isCompleted; }
+    public List<User> getAssignedUsers() { return assignedUsers; }
+    public void setAssignedUsers(List<User> assignedUsers) { this.assignedUsers = assignedUsers; }
 }

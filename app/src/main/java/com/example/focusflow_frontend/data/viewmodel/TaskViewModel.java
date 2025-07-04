@@ -61,7 +61,7 @@ public class TaskViewModel extends AndroidViewModel {
     }
 
     public void fetchTasksByGroup(int groupId) {
-        taskController.getTasksByGroup(groupId).enqueue(new Callback<List<Task>>() {
+        taskController.getTasksByGroupWithUsers(groupId).enqueue(new Callback<List<Task>>() {
             @Override
             public void onResponse(Call<List<Task>> call, Response<List<Task>> response) {
                 if (response.isSuccessful() && response.body() != null) {

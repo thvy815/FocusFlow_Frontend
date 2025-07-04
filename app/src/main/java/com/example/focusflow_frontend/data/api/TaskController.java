@@ -23,6 +23,9 @@ public interface TaskController {
     @GET("api/tasks/group/{groupId}")
     Call<List<Task>> getTasksByGroup(@Path("groupId") Integer groupId);
 
+    @GET("api/tasks/group/{groupId}/with-users")
+    Call<List<Task>> getTasksByGroupWithUsers(@Path("groupId") int groupId);
+
     // API thêm task mới
     @POST("api/tasks")
     Call<Task> createTask(@Body TaskGroupRequest request);

@@ -10,7 +10,6 @@ import com.example.focusflow_frontend.data.api.ProController;
 
 import java.util.concurrent.TimeUnit;
 import com.example.focusflow_frontend.data.api.TaskController;
-import com.example.focusflow_frontend.data.api.UserController;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -71,16 +70,10 @@ public class ApiClient {
     public static ProController getProController(Context context) {
         return getRetrofit(context).create(ProController.class);
     }
-    public static UserController getUserController(Context context) {
-        return getRetrofit(context).create(UserController.class);
-    }
     public static TaskController getTaskController(Context context) {
         return getRetrofit(context).create(TaskController.class);
     }
     public static AiController getAiController(Context context) {
         return getRetrofit(context).create(AiController.class);
-    }
-    public static UserController getUserController(Context context) {
-        return getRetrofit(context).create(UserController.class);
     }
 }

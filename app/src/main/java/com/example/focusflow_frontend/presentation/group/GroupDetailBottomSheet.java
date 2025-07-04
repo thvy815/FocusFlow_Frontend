@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -25,6 +27,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.focusflow_frontend.R;
 import com.example.focusflow_frontend.data.model.Group;
@@ -41,8 +44,12 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
@@ -116,34 +123,36 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         View view = inflater.inflate(R.layout.bottom_sheet_group_detail, container, false);
 
         TextView groupNameTextView = view.findViewById(R.id.group_name);
+
+        // Setup ViewModel
+        viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
+        taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
+
         if (getArguments() != null) {
             group = (Group) getArguments().getSerializable(ARG_GROUP);
             user = (User) getArguments().getSerializable(ARG_USER);
             // Set group name
             groupNameTextView.setText(group.getGroupName());
+
+            allTasks.clear();                         // Xóa task nhóm cũ nếu có
+            viewModel.clearAssignedUsersCache();      // Xóa user nhóm cũ
+            connectWebSocket(group.getId());          // Kết nối WebSocket nhóm mới
+            taskViewModel.fetchTasksByGroup(group.getId()); // Gọi API task mới
         }
 
-        // Kết nối WebSocket để nhận task mới theo thời gian thực
-        connectWebSocket(group.getId());
-
-        // Setup ViewModel
-        viewModel = new ViewModelProvider(requireActivity()).get(GroupViewModel.class);
-        taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
         setupRecycleView(view);
-
-        // // Gọi API để lấy task theo groupId
-        taskViewModel.fetchTasksByGroup(group.getId());
 
         // Observe danh sách task ban đầu
         taskViewModel.getGroupTaskList().observe(getViewLifecycleOwner(), tasks -> {
+            List<Task> sorted = sortTasksByDueDate(new ArrayList<>(tasks));
             if (allTasks.isEmpty()) {
-                allTasks = new ArrayList<>(tasks); // Lưu bản gốc
+                allTasks = new ArrayList<>(sorted);
             }
-            adapter.setTaskList(tasks);
+            adapter.setTaskList(sorted);
         });
 
         viewModel.filterTask().observe(getViewLifecycleOwner(), filtered -> {
-            adapter.setTaskList(filtered);
+            adapter.setTaskList(sortTasksByDueDate(new ArrayList<>(filtered)));
         });
         // Setup tìm kiếm
         setupSearchBar(view);
@@ -166,7 +175,8 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         //Tro lai group
         ImageView imBack = view.findViewById(R.id.btnBack);
         imBack.setOnClickListener(v -> {dismiss();});
-        //Giai tan
+
+        setupSwipeToRefresh(view);
 
         return view;
     }
@@ -180,6 +190,43 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
+    private List<Task> sortTasksByDueDate(List<Task> tasks) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+
+        tasks.sort((t1, t2) -> {
+            try {
+                Date date1 = sdf.parse(t1.getDueDate());
+                Date date2 = sdf.parse(t2.getDueDate());
+                return date1.compareTo(date2); // tăng dần
+            } catch (ParseException | NullPointerException e) {
+                return 0; // nếu có lỗi khi parse thì giữ nguyên vị trí
+            }
+        });
+
+        return tasks;
+    }
+
+    private void setupSwipeToRefresh(View view) {
+        SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setColorSchemeResources(
+                R.color.orange, R.color.teal, R.color.blue
+        );
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (group != null) {
+                taskViewModel.fetchTasksByGroup(group.getId());
+
+                // Delay để đảm bảo loading smooth
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    swipeRefreshLayout.setRefreshing(false);
+                }, 800);
+            } else {
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+
     private void setupRecycleView(View view){
         // Setup RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.taskList);
@@ -188,8 +235,25 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         adapter = new TaskGroupAdapter(
                 new ArrayList<>(),
                 (task, isChecked) -> {
-                    task.setCompleted(isChecked);
-                    taskViewModel.updateTask(new TaskGroupRequest(task, null));
+                    boolean isLeader = user.getId() == group.getLeaderId();
+
+                    boolean isAssigned = false;
+                    if (task.getAssignedUsers() != null) {
+                        for (User u : task.getAssignedUsers()) {
+                            if (u.getId() == user.getId()) {
+                                isAssigned = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isLeader || isAssigned) {
+                        task.setCompleted(isChecked);
+                        taskViewModel.updateTask(new TaskGroupRequest(task, null));
+                    } else {
+                        Toast.makeText(getContext(), "⚠️ Only assigned users or leader can complete this task", Toast.LENGTH_SHORT).show();
+                        adapter.notifyItemChanged(adapter.getTaskIndexById(task.getId())); // reset lại
+                    }
                 }, // listener checkbox
                 task -> showEditTaskBottomSheet(task),
                 viewModel,
@@ -224,7 +288,6 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
             // Xóa task khỏi adapter nếu có
             adapter.removeTaskFromAdapter(deletedTaskId);
         });
-
 
         sheet.show(getParentFragmentManager(), "EditTaskBottomSheet");
     }
@@ -266,9 +329,8 @@ public class GroupDetailBottomSheet extends BottomSheetDialogFragment {
         sheet.setArguments(args);
 
         sheet.setOnTaskAddedListener(newTask -> {
-            taskViewModel.fetchTasksByGroup(group.getId()); // đảm bảo đồng bộ với BE
-//            adapter.addTaskToAdapter(newTask); // thêm task vào danh sách hiện tại
-//            allTasks.add(newTask);             // cập nhật danh sách gốc
+            adapter.addTaskToAdapter(newTask); // thêm task vào danh sách hiện tại
+            allTasks.add(newTask);             // cập nhật danh sách gốc
         });
 
         sheet.show(getParentFragmentManager(), "AddTaskBottomSheet");

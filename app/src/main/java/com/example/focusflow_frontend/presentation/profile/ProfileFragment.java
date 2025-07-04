@@ -2,6 +2,8 @@ package com.example.focusflow_frontend.presentation.profile;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.*;
@@ -10,8 +12,10 @@ import android.widget.*;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.focusflow_frontend.R;
@@ -26,6 +30,9 @@ import com.example.focusflow_frontend.utils.ZaloPayUtils.ProStatusCallback;
 import com.example.focusflow_frontend.utils.ZaloPayUtils.ProUtils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -42,6 +49,7 @@ public class ProfileFragment extends Fragment {
     private ImageView btnSettings;
 
     private String fullname = "", username = "";
+
 
     private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -61,10 +69,10 @@ public class ProfileFragment extends Fragment {
         avatarImage = view.findViewById(R.id.avatarImage);
         usernameTextView = view.findViewById(R.id.userName);
         btnUpgradePro = view.findViewById(R.id.btnUpgradePro);
+        LinearLayout achievementLayout = view.findViewById(R.id.achievementLayout);
         btnSettings = view.findViewById(R.id.btnSetting);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-
         authViewModel.getCurrentUserLiveData().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 fullname = user.getFullName() != null ? user.getFullName() : "";
@@ -104,7 +112,72 @@ public class ProfileFragment extends Fragment {
         btnUpgradePro.setOnClickListener(v -> openZaloPay());
         btnSettings.setOnClickListener(v -> openSettings());
 
+        List<Integer> earnedBadges = Arrays.asList(
+                R.drawable.badge100,
+                R.drawable.pomo3,
+                R.drawable.pomo100
+        );
+        setUserBadges(achievementLayout, earnedBadges);
+        setStreakAndScore(view);
+
+        setupSwipeToRefresh(view);
+
         return view;
+    }
+
+    private void setUserBadges(LinearLayout layout, List<Integer> earnedBadges) {
+        // Tất cả huy hiệu có thể có
+        List<Integer> allBadges = Arrays.asList(
+                R.drawable.badge1000,
+                R.drawable.badge100,
+                R.drawable.badge7,
+                R.drawable.pomo3,
+                R.drawable.pomo7,
+                R.drawable.pomo100
+        );
+        layout.removeAllViews(); // Xoá huy hiệu cũ nếu có
+
+        // Phân loại huy hiệu
+        List<Integer> earned = new ArrayList<>();
+        List<Integer> notEarned = new ArrayList<>();
+
+        for (int badge : allBadges) {
+            if (earnedBadges.contains(badge)) {
+                earned.add(badge);
+            } else {
+                notEarned.add(badge);
+            }
+        }
+
+        // Hiển thị huy hiệu đã đạt
+        for (int badgeRes : earned) {
+            layout.addView(createBadgeImageView(badgeRes, true));
+        }
+
+        // Hiển thị huy hiệu chưa đạt
+        for (int badgeRes : notEarned) {
+            layout.addView(createBadgeImageView(badgeRes, false));
+        }
+    }
+    // Tạo ImageView badge
+    private ImageView createBadgeImageView(int resId, boolean earned) {
+        ImageView img = new ImageView(getContext());
+        img.setImageResource(resId);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        params.setMargins(10, 0, 10, 0);
+        img.setLayoutParams(params);
+        img.setAdjustViewBounds(true);
+        img.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        img.setAlpha(earned ? 1.0f : 0.3f); // Làm mờ nếu chưa đạt
+        return img;
+    }
+
+    private void setStreakAndScore(View view) {
+        TextView streak = view.findViewById(R.id.streakValue);
+        TextView score = view.findViewById(R.id.scoreValue);
+        streak.setText("");  // Tuỳ bạn có dữ liệu hay không
+        score.setText("");
     }
 
     private void showImagePickDialog() {
@@ -123,6 +196,7 @@ public class ProfileFragment extends Fragment {
         intent.setType("image/*");
         galleryLauncher.launch(intent);
     }
+
 
     private void uploadImageToImageServer(Uri imageUri) {
         try {
@@ -201,6 +275,30 @@ public class ProfileFragment extends Fragment {
                         showToast("Network error: " + t.getMessage());
                     }
                 });
+    }
+
+    private void setupSwipeToRefresh(View view) {
+        SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Gọi lại API lấy user & update UI
+            authViewModel.fetchUserInfo(() -> {
+                swipeRefreshLayout.setRefreshing(false); // ẩn vòng xoay khi xong
+            });
+
+            // Bạn cũng có thể refresh badge, Pro status nếu muốn
+            ProUtils.isProValid(requireContext(), ApiClient.getRetrofit(requireContext()), new ProStatusCallback() {
+                @Override
+                public void onResult(boolean isProUser) {
+                    btnUpgradePro.setVisibility(isProUser ? View.GONE : View.VISIBLE);
+                }
+
+                @Override
+                public void onError(String message) {
+                    btnUpgradePro.setVisibility(View.VISIBLE);
+                }
+            });
+        });
     }
 
     private void showAvatarGridDialog(String[] avatarUrls) {
