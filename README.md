@@ -90,12 +90,13 @@
 ```bash
 git clone https://github.com/thvy815/FocusFlow-Frontend.git
 git clone https://github.com/thvy815/FocusFlow-Backend.git
+```
 
 2. Backend (Spring Boot)
 ```bash
 cd FocusFlow-Backend
 ./mvnw spring-boot:run
-
+```
 Mặc định server sẽ chạy tại http://localhost:8080
 
 3. Frontend (Android App)
@@ -104,6 +105,7 @@ Vào file ApiClient.java và chỉnh địa chỉ API như sau:
 
 ```java
 public static final String BASE_URL = "http://10.0.2.2:8080/";
+```
 
 Nếu chạy trên thiết bị thật, hãy thay 10.0.2.2 bằng địa chỉ IP nội bộ của máy backend (ví dụ: 192.168.1.5).
 Kết nối thiết bị hoặc mở AVD → Nhấn Run để chạy ứng dụng.
