@@ -5,7 +5,7 @@
   </a>
 </p>
 
-<h1 align="center">TO-DO APP FOCUSFLOW</h1>
+<h1 align="center">Ứng dụng quản lý công việc FocusFlow</h1>
 <h3 align="center">Đồ án Nhập môn ứng dụng di động SE114</h3>
 
 ## Members:
