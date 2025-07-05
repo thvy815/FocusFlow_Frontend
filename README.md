@@ -7,6 +7,7 @@
 
 <h1 align="center">Ứng dụng quản lý công việc FocusFlow</h1>
 <h3 align="center">Đồ án Nhập môn ứng dụng di động SE114</h3>
+<h3 align="center">Giảng viên phụ trách: Nguyễn Tấn Toàn SE114</h3>
 
 ## Members:
 
