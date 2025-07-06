@@ -95,13 +95,13 @@ git clone https://github.com/thvy815/FocusFlow-Backend.git
 
 2. Backend (Spring Boot)
 ```bash
-cd FocusFlow-Backend
+cd FocusFlow_Backend
 ./mvnw spring-boot:run
 ```
 Mặc định server sẽ chạy tại http://localhost:8080
 
 3. Frontend (Android App)
-Mở project FocusFlow-Frontend bằng Android Studio.
+Mở project FocusFlow_Frontend bằng Android Studio.
 Vào file ApiClient.java và chỉnh địa chỉ API như sau:
 
 ```java
